@@ -1,5 +1,5 @@
 clean:
-	rm MANIFEST
+	rm -f MANIFEST
 
 sdist:
 	./setup.py sdist

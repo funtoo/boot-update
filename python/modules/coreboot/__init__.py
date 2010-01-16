@@ -1,1 +1,1 @@
-__all__ = { "base", "extensions" }
+__all__ = [ "base", "extensions" ]
