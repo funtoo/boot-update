@@ -1,0 +1,7 @@
+# Header
+
+<?python
+if config.has_item("grub/timeout"):
+	print "set timeout=%s" % config.item("grub/timeout")
+	print
+?>

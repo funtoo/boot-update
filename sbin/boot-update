@@ -1,0 +1,41 @@
+#!/bin/sh
+
+quietopt=false
+i_mounted_it=false
+version=1.0
+boot=/boot
+
+qprint #initial newline
+mesg "${PURP}boot-update ${OFF}${CYANN}${version}${OFF}"
+mesg "${GREEN}Copyright 2009-2010 Funtoo Technologies${OFF}."
+mesg "Use the \"-v\" option to display licensing information."
+qprint
+[ "$1" = "-v" -o "$1" = "--version" ] && versinfo && exit 0
+
+if has_fstab_entry $boot 
+then
+	if ! is_mounted $boot 
+	then
+		i_mounted_it=true
+		mesg "Mounting ${CYANN}${boot}${OFF}..."
+		mount "$boot" || die "Couldn't mount $boot"
+	else
+		mesg "${CYANN}${boot}${OFF} already mounted."
+	fi
+else
+	mesg "No ${CYANN}/etc/fstab${OFF} entry for ${CYANN}${boot}${OFF}; not mounting."
+fi
+
+/sbin/boot-mkconfig -o ${boot}/grub/grub.cfg || die "grub-mkconfig failed."
+
+qprint
+cat "$boot"/grub/grub.cfg | grep menuentry | sed -e "s/{//" | list_menuentries
+qprint
+
+[ $? -ne 0 ] && exit 1
+
+if $i_mounted_it
+then
+	mesg "Unmounting ${CYANN}${boot}${OFF}..."
+	umount $boot || warn "Couldn't unmount $boot"
+fi

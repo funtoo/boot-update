@@ -1,0 +1,47 @@
+#!/usr/bin/python
+
+import string, os, sys, imp
+
+if len(sys.argv) > 2 and sys.argv[1] == "-o":
+	outf=open(sys.argv[2],"w")
+	sys.stdout=outf
+# Load /etc/boot.conf configuration file, add "config" object to globals for
+# template expansion.
+
+config=ConfigFile("/etc/boot.conf")
+extension_path="/usr/share/boot/modules"
+globals={"config":config}
+
+# load any extensions listed in grub { extensions foo bar } in /etc/boot.conf
+# These extensions get added to the global namespace for our template system, so
+# functions can be called:
+
+# Get a list of available extensions
+
+# Get a list of requested extensions
+req_extensions=config.item("boot/generate")
+
+# user specified "grub { extensions * }" so load them all
+if len(req_extensions) == 1 and req_extensions[0] == "*":
+	req_extensions=avail_extensions
+
+for x in req_extensions:
+	if x in avail_extensions:
+		einfo("Loading extension %s" % x )
+		description=(".py","r",imp.PY_SOURCE)
+		fp = open("%s/%s.py" % ( extension_path, x ),"r")
+		globals[x] = imp.load_module(x,fp,extension_path,description)
+		globals[x].init(config)
+	else:
+		raise
+		#error - extension not available
+
+# Now, we need to use our template system to process all files listed in 
+# grub { parse foo bar } -- and make our extensions available to our template
+# expander.
+
+for x in config.item("grub","parse"):
+	if os.path.isfile("/usr/share/boot/templates/"+x):
+		pytext("/usr/share/boot/templates/"+x,globals)
+
+# Done!

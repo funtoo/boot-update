@@ -1,0 +1,35 @@
+architecture:
+
+
+module
+	config
+		read and parse boot.conf - this should go in a separate module, and be utilized by boot-update
+
+	grub
+		read existing config file (this part currently in bash)
+			list boot entries
+			determine default boot entry
+			identify problems
+		generate new config file
+	
+	grub-legacy
+
+	boot-mkconfig can be deprecated or replaced with a skeleton python script that simply calls boot-update with options.
+
+boot-update:
+	load config
+	figure out what boot loader scripts I'm generating
+	for each boot loader:
+		load extension
+		generate config file
+		check generated config
+		display output (any warnings)
+	exit
+
+extensions API:
+	register:
+		config file creator
+		config file validator/checker
+
+
+
