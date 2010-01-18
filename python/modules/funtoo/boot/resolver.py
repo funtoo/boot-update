@@ -1,3 +1,5 @@
+import os, glob
+
 class Resolver:
 	def __init__(self,config):
 		self.config=config
@@ -19,47 +21,55 @@ class Resolver:
 						found.append([match,match[len(wild_glob)-2:]])
 		return found
 
-	def ParseAddSubtractLine(self,sect,var):
-		# This method parses a variable line containing "foo bar -oni" into two sub-lists ([foo, bar], [oni])
-		list=self.config.item(sect,var)
-		grab=[]
-		skip=[]
-		# put "foo" entries in grab, whereas "-bar" go in skip:
-		for item in list:
-			if item[0]=="-":
-				skip.append(item[1:])
-			else:
-				grab.append(item)
-		return ( grab, skip )	
-
-	def FindKernelsInSection(self,sect):
-		kgrab, kskip = self.ParseAddSubtractLine(sect,"kernel")
-		found=[]
-		for scanpath in self.config.item(sect,"scan"):
-			# get a list of kernels to skip, and to use. getScanMatches() will discount anything found previously in skip_matches
-			skip_matches=self.GetMatchingKernels(scanpath,kskip)
-			found += self.GetMatchingKernels(scanpath,kgrab,skip_matches)
-		return found	
-
-	def FindKernels(self):
-		sections = self.config.literals()
-		found = []
-		if len(sections) == 0:
-			# if no literal sections are defined (ie "Funtoo Linux",) just use the "default" section to add kernels
-			process = [ "default" ]
-		for sect in sections:
-			found.append([sect, self.FindKernelsInSection(sect)])
-		return found
-
 	def FindInitrds(self,sect,kernel,kext):
 		found=[]
 		base_path=os.path.dirname(kernel)
-		for initrd in self.config.item(sect,"initrd"):
+		for initrd in sect:
 			initrd=os.path.normpath(base_path+"/"+initrd.replace("[-v]",kext))
 			if os.path.exists(initrd):
 				found.append(initrd)
 		return found
 
+	def GetDevFSType(self,dev):
+		fn=open("/etc/fstab","r")
+		for line in fn.readlines():
+			split=line.split()
+			if (len(split) != 6):
+				continue
+			if split[0] == dev:
+				return split[2]
+		return ""
+
+	def GetRootFSDev(self):
+		fn=open("/etc/fstab","r")
+		for line in fn.readlines():
+			split=line.split()
+			if (len(split) != 6):
+				continue
+			if split[1] == "/":
+				return split[0]
+		return ""
+
+	def GenerateSections(self,l,sfunc):
+		c=self.config
+		bootsections=[]
+		for sect in c.getSections():
+			if sect not in c.builtins:
+				bootsections.append(sect)
+		for sect in bootsections:	
+			# Process boot entry section (which can generate multiple boot entries if multiple kernel matches are found)
+			findlist, skiplist = c.flagItemList("%s/%s" % ( sect, "kernel" ))
+			findmatch=[]
+
+			for scanpath in c.item(sect,"scan"):
+				skipmatch = self.GetMatchingKernels(scanpath, skiplist)
+				findmatch += self.GetMatchingKernels(scanpath, findlist, skipmatch)
+
+			# Generate individual boot entry using extension-supplied function
+
+			for kname, kext in findmatch:
+				sfunc(l,sect,kname,kext)
+	
 	def RelativePathTo(self,imagepath,mountpath):
 		# we expect /boot to be mounted if it is available when this is run
 		if os.path.ismount("/boot"):

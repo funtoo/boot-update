@@ -1,5 +1,5 @@
-class extension:
-	def init(self):
+class Extension:
+	def __init__(self):
 		# initialization should always succeed.
 		pass
 	
