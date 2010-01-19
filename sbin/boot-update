@@ -55,11 +55,11 @@ def cleanup(ok,allmsgs):
 		sys.exit(1)
 	else:
 		print
-		print GREEN+" * "+OFF+"Completed successfully",
+		out=GREEN+" * "+OFF+"Completed successfully"
 		if warnings:
-			print "with warnings."
+			print out+" with warnings."
 		else:
-			print "."
+			print out+"."
 		print
 		sys.exit(0)
 
