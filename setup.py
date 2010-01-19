@@ -10,9 +10,10 @@ setup(name='coreboot',
 	url='http://www.funtoo.org/en/funtoo/core/boot',
 	package_dir = { '':'python/modules' },
 	packages=[ 
-		'coreboot',
-		'coreboot.base',
-		'coreboot.extensions'
+		'funtoo',
+		'funtoo.core',
+		'funtoo.boot',
+		'funtoo.boot.extensions'
 	]
 )
 
