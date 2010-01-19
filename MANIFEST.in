@@ -1,4 +1,0 @@
-include LICENSE
-include etc/*
-include doc/*
-include sbin/*
