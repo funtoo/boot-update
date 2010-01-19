@@ -1,1 +1,1 @@
-__all__ = [ "grub" ]
+__all__ = [ "grub", "grub-legacy", "lilo" ]

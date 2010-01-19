@@ -283,17 +283,17 @@ class ConfigFile:
 					# real value appends to default value
 					return self.obj[defcat][name] + self.obj[cat][name][1:]
 				else:
-					# real value replaces default value
-					return self.obj[cat][name]
+					# real value replaces default value - return a COPY
+					return self.obj[cat][name][:]
 			else:
-				# only real value defined
-				return self.obj[cat][name]
+				# only real value defined - return a COPY
+				return self.obj[cat][name][:]
 		elif defcat and self.obj.has_key(defcat) and self.obj[defcat].has_key(name):
 			if bool:
 				return True
 			else:
-				# only default value defined
-				return self.obj[defcat][name]
+				# only default value defined - return a COPY so we can make changes without messing up later queries
+				return self.obj[defcat][name][:]
 		else:
 			# no value defined
 			if parents and self.parent:

@@ -7,7 +7,7 @@ boot=/boot
 
 qprint #initial newline
 mesg "${PURP}boot-update ${OFF}${CYANN}${version}${OFF}"
-mesg "${GREEN}Copyright 2009-2010 Funtoo Technologies${OFF}."
+mesg "${GREEN}Copyright 2010-2010 Funtoo Technologies${OFF}."
 mesg "Use the \"-v\" option to display licensing information."
 qprint
 [ "$1" = "-v" -o "$1" = "--version" ] && versinfo && exit 0

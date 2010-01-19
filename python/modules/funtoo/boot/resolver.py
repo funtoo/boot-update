@@ -30,32 +30,22 @@ class Resolver:
 				found.append(initrd)
 		return found
 
-	def GetDevFSType(self,dev):
-		fn=open("/etc/fstab","r")
-		for line in fn.readlines():
-			split=line.split()
-			if (len(split) != 6):
-				continue
-			if split[0] == dev:
-				return split[2]
-		return ""
-
-	def GetRootFSDev(self):
-		fn=open("/etc/fstab","r")
-		for line in fn.readlines():
-			split=line.split()
-			if (len(split) != 6):
-				continue
-			if split[1] == "/":
-				return split[0]
-		return ""
-
 	def GenerateSections(self,l,sfunc):
 		c=self.config
 		bootsections=[]
+
+		ok=True
+		allmsgs=[]
+	
+		default = c["boot/default"]
+		pos = 0
+		defpos = None
+		defnames = [] 
+
 		for sect in c.getSections():
 			if sect not in c.builtins:
 				bootsections.append(sect)
+
 		for sect in bootsections:	
 			# Process boot entry section (which can generate multiple boot entries if multiple kernel matches are found)
 			findlist, skiplist = c.flagItemList("%s/%s" % ( sect, "kernel" ))
@@ -68,7 +58,29 @@ class Resolver:
 			# Generate individual boot entry using extension-supplied function
 
 			for kname, kext in findmatch:
-				sfunc(l,sect,kname,kext)
+				if default == os.path.basename(kname):
+					# default match
+					if defpos != None:
+						allmsgs.append(["warn","multiple matches found for default boot entry \"%s\" - first match used." % default])
+					defpos = pos
+
+				defnames.append(kname)
+				ok, msgs = sfunc(l,sect,kname,kext)
+				allmsgs += msgs
+				if not ok:
+					return [ ok, allmsgs, defpos, defnames[defpos] ]
+				pos += 1
+			
+		if pos == 0:
+			ok = False
+			allmsgs.append(["fatal","No matching kernels or boot entries found in /etc/boot.conf."])
+
+		if defpos == None:
+			allmsgs.append(["warn","No boot/default match found - using first boot entry by default."])
+			# If we didn't find a specified default, use the first one
+			defpos = 0
+
+		return [ ok, allmsgs, defpos, defnames[defpos] ]
 	
 	def RelativePathTo(self,imagepath,mountpath):
 		# we expect /boot to be mounted if it is available when this is run
