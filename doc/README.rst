@@ -211,6 +211,15 @@ also inherited and used as the video mode for the kernel when a graphical boot
 (``uvesafb``, ``vesafb-tng``) is used. This option is only supported for
 ``grub``.
 
+``display :: background`` (O)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Specifies a a background image (JPEG, PNG and TGA formats are supported) to 
+display at boot. A single parameter should be specified that points to the
+background image to display. File should end with ``.jpg``, ``.jpeg``, ``.png``
+or ``.tga`` (capitalized suffixes are also OK.) Only supported for ``grub``.
+
+
 ``color`` Section
 -----------------
 

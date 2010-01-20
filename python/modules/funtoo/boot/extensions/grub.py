@@ -105,7 +105,7 @@ class GRUBExtension(Extension):
 			if len(bg):
 				if len(bg) == 1:
 					bgimg = bg[0]
-					bgext = bg[0].rsplit(".")[-1]
+					bgext = bg[0].rsplit(".")[-1].lower()
 				elif len(bg) == 2:
 					bgimg, bgext = bg
 				if bgext == "jpg":
