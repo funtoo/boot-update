@@ -186,7 +186,7 @@ Configuration Parameters by Section
 Specifies the boot loader that coreboot should generate a configuration files
 for, as well as the one that it should attempt to update, if necessary. This
 setting should be a single string, set to one of ``grub``, ``grub-legacy``
-or ``lilo``.
+or ``lilo``. **NOTE THAT LILO SUPPORT IS ALPHA QUALITY (for testing only.)**
 
 ``boot :: timeout`` (O)
 ~~~~~~~~~~~~~~~~~~~~~~~

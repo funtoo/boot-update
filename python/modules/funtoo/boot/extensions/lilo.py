@@ -97,6 +97,7 @@ class LILOExtension(Extension):
 	
 		allmsgs.append(["info","Configuration file %s generated - %s lines." % ( self.fn, len(l))])
 		allmsgs.append(["info","Kernel \"%s\" will be booted by default." % defname])
+		allmsgs.append(["warn","Please note that LILO support is *ALPHA* quality and is for testing only."])
 
 		return [ok, allmsgs, l]
 			
