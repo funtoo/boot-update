@@ -244,7 +244,7 @@ Specifies the menu highlight colors in ``fg/bg`` format.
 This setting specifies one or more directories to scan for kernels and 
 initrds. Typically, this is set to ``/boot``.
 
-``default :: kernels`` (R)
+``default :: kernel`` (R)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This setting specifies kernel image name, names or patterns, to find kernels to

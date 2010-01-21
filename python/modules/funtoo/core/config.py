@@ -156,7 +156,16 @@ class ConfigFile:
 					continue
 				# valid data in section
 				if not template:
-					self.obj[section][ls[0]]=ls[1:]
+					# skip the line if there was a "#" first.
+					if ls[0] == "#":
+						continue
+					# remove any comments that appear on the line
+					myline=" ".join(ls[1:])
+					compos=myline.find("#")
+					if compos != -1:
+						myline=myline[0:compos]
+					myline=myline.split()
+					self.obj[section][ls[0]]=myline
 				else:
 					if len(line) > 0 and line[0] == "	":
 						# remove initial tab in template

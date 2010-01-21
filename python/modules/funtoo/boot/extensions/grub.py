@@ -26,10 +26,7 @@ class GRUBExtension(Extension):
 		msgs=[]
 		ok=True
 		if not os.path.exists("/sbin/grub-probe"):
-			msgs.append(["fatal","/sbin/grub-probe does not exist"])
-			ok=False
-		if not os.path.exists("/sbin/grub-install"):
-			msgs.append(["fatal","/sbin/grub-install does not exist"])
+			msgs.append(["fatal","/sbin/grub-probe, required for boot/generate = grub,  does not exist"])
 			ok=False
 		return [ok, msgs]
 

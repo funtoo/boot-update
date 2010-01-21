@@ -24,7 +24,7 @@ class LILOExtension(Extension):
 		msgs=[]
 		ok=True
 		if not os.path.exists("/sbin/lilo"):
-			msgs.append(["fatal","/sbin/lilo does not exist"])
+			msgs.append(["fatal","/sbin/lilo, required for boot/generate = lilo, does not exist"])
 			ok=False
 		return [ok, msgs]
 

@@ -86,6 +86,10 @@ if not c.fileExists():
 	allmsgs.append(["fatal","Master configuration file \"%s\" does not exist." % cfile])
 	cleanup(ok,allmsgs)
 
+# Generate warnings for any invalid config file entries...
+for invalid in c.validate():
+	allmsgs.append(["warn","invalid config setting \"%s\"; ignored." % invalid])
+
 # Figure out what extension we should be loading...
 
 generate=c["boot/generate"]
@@ -126,11 +130,11 @@ imountedit = False
 
 if funtoo.boot.helper.fstabHasEntry("/boot"):
 	if not os.path.ismount("/boot"):
-		print "Mounting filesystem /boot..."
+		mesg("info","Mounting filesystem /boot...")
 		os.system("mount /boot")
 		imountedit=True
 else:
-	print "No /etc/fstab entry for /boot; not mounting."
+	mesg("info","No /etc/fstab entry for /boot; not mounting.")
 
 
 # Regenerate Config File:
@@ -146,7 +150,7 @@ if ok:
 # If we mounted /boot, we should unmount it:
 if imountedit:
 	print
-	print "Unmounting /boot"
+	mesg("info","Unmounting /boot")
 	os.system("umount /boot")
 
 cleanup(ok,allmsgs)

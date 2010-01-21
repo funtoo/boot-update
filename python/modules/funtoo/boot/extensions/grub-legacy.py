@@ -23,9 +23,6 @@ class GRUBLegacyExtension(Extension):
 	def isAvailable(self):
 		msgs=[]
 		ok=True
-		if not os.path.exists("/sbin/grub-install"):
-			msgs.append(["fatal","/sbin/grub-install does not exist"])
-			ok=False
 		return [ok, msgs]
 
 	def generateBootEntry(self,l,sect,kname,kext):
@@ -58,9 +55,6 @@ class GRUBLegacyExtension(Extension):
 			rootfs="/"
 
 		rootdev=fstabGetDeviceOfFilesystem(rootfs)
-		print "DEBUG: rootdev",rootdev
-		print "DEBUG: rootdev 0 5", rootdev[0:5]
-		print "DEBUG: rootdev 5-7", rootdev[5:7]
 		if rootdev[0:5] != "/dev/":
 			ok = False
 			allmsgs.append(["fatal","The grub-legacy extension cannot find a valid / or /boot entry in your /etc/fstab."])
