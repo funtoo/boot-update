@@ -1,3 +1,5 @@
 MANIFEST
 *.pyc
 dist/*
+stage
+coreboot-*

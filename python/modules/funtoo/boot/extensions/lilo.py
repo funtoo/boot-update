@@ -87,7 +87,7 @@ class LILOExtension(Extension):
 		ok, msgs, defpos, defname = r.GenerateSections(l,self.generateBootEntry)
 		allmsgs += msgs
 		if not ok:
-			return [ ok, allmsgs ]
+			return [ ok, allmsgs, l]
 		
 		if defpos != None:
 			l += [ 

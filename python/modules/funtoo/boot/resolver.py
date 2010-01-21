@@ -74,12 +74,12 @@ class Resolver:
 		if pos == 0:
 			ok = False
 			allmsgs.append(["fatal","No matching kernels or boot entries found in /etc/boot.conf."])
-
-		if defpos == None:
+			defpos = None
+			return [ ok, allmsgs, defpos, None ]
+		elif defpos == None:
 			allmsgs.append(["warn","No boot/default match found - using first boot entry by default."])
 			# If we didn't find a specified default, use the first one
 			defpos = 0
-
 		return [ ok, allmsgs, defpos, defnames[defpos] ]
 	
 	def RelativePathTo(self,imagepath,mountpath):
