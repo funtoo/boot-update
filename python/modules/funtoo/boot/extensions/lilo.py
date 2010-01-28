@@ -48,6 +48,10 @@ class LILOExtension(Extension):
 		if "root=auto" in params:
 			params.remove("root=auto")
 			myroot = fstabGetRootDevice()
+			if myroot[0:5] != "/dev/":
+				ok = False
+				allmsgs.append(["fatal","(root=auto) lilo - cannot find a valid / entry in /etc/fstab."])
+				return [ ok, allmsgs ]
 		else:
 			for item in params:
 				if item[0:5] == "root=":
@@ -61,7 +65,12 @@ class LILOExtension(Extension):
 	
 		if "rootfstype=auto" in params:
 			params.remove("rootfstype=auto")
-			params.append("rootfstype=%s" % fstabGetFilesystemOfDevice(myroot))
+			fstype = fstabGetFilesystemOfDevice(myroot)
+			if fstype == "":
+				ok = False
+				allmsgs.append(["fatal","(rootfstype=auto) lilo - cannot find a valid / entry in /etc/fstab."])
+				return [ ok, allmsgs ]
+			params.append("rootfstype=%s" % fstype)
 
 		l += [
 			"	read-only",

@@ -49,13 +49,24 @@ class GRUBExtension(Extension):
 		
 		if "root=auto" in params:
 			params.remove("root=auto")
-			params.append("root=%s" % fstabGetRootDevice())
+			rootdev = fstabGetRootDevice()
+			if rootdev[0:5] != "/dev/":
+				ok = False
+				allmsgs.append(["fatal","(root=auto) grub - cannot find a valid / entry in /etc/fstab."])
+				return [ ok, allmsgs ]	
+			params.append("root=%s" % rootdev)
 		
 		if "rootfstype=auto" in params:
 			params.remove("rootfstype=auto")
 			for item in params:
 				if item[0:5] == "root=":
-					params.append("rootfstype=%s" % fstabGetFilesystemOfDevice(item[5:]))
+					myroot=item[5:]
+					fstype = fstabGetFilesystemOfDevice(myroot)
+					if fstype == "":
+						ok = False
+						allmsgs.append(["fatal","(rootfstype=auto) grub - cannot find a valid / entry in /etc/fstab."])
+						return [ ok, allmsgs ]
+					params.append("rootfstype=%s" % fstype)
 					break
 
 		l.append("	linux %s %s" % ( kpath," ".join(params) ))
@@ -127,7 +138,7 @@ class GRUBExtension(Extension):
 		ok, msgs, defpos, defname = r.GenerateSections(l,self.generateBootEntry)
 		allmsgs += msgs
 		if not ok:
-			return [ ok, allmsgs ]
+			return [ ok, allmsgs, l ]
 		
 		if defpos != None:
 			l += [ 

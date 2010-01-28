@@ -37,16 +37,26 @@ class GRUBLegacyExtension(Extension):
 		
 		kpath=r.RelativePathTo(kname,"/boot")
 		params=self.config.item(sect,"params")
-		
 		if "root=auto" in params:
 			params.remove("root=auto")
-			params.append("root=%s" % fstabGetRootDevice())
+			rootdev = fstabGetRootDevice()
+			if rootdev[0:5] != "/dev/":
+				ok = False
+				allmsgs.append(["fatal","(root=auto) grub-legacy - cannot find a valid / entry in /etc/fstab."])
+				return [ ok, allmsgs ]
+
+			params.append("root=%s" % rootdev )
 		
 		if "rootfstype=auto" in params:
 			params.remove("rootfstype=auto")
+			fstype = fstabGetFilesystemOfDevice(myroot)
+			if fstype == "":
+				ok = False
+				allmsgs.append(["fatal","(rootfstype=auto) grub-legacy - cannot find a valid / entry in /etc/fstab."])
+				return [ ok, allmsgs ]
 			for item in params:
 				if item[0:5] == "root=":
-					params.append("rootfstype=%s" % fstabGetFilesystemOfDevice(item[5:]))
+					params.append("rootfstype=%s" % fstype)
 					break
 
 		if fstabHasEntry("/boot"):
@@ -57,7 +67,7 @@ class GRUBLegacyExtension(Extension):
 		rootdev=fstabGetDeviceOfFilesystem(rootfs)
 		if rootdev[0:5] != "/dev/":
 			ok = False
-			allmsgs.append(["fatal","The grub-legacy extension cannot find a valid / or /boot entry in your /etc/fstab."])
+			allmsgs.append(["fatal","The grub-legacy extension cannot find a valid / entry in your /etc/fstab."])
 			return [ ok, allmsgs ]
 		if rootdev[5:7] != "sd":
 			allmsgs.append(["warn","The grub-legacy encountered \"%s\", a non-\"sd\" device. Root setting may not be accurate." % rootdev])
@@ -89,7 +99,7 @@ class GRUBLegacyExtension(Extension):
 		ok, msgs, defpos, defname = r.GenerateSections(l,self.generateBootEntry)
 		allmsgs += msgs
 		if not ok:
-			return [ ok, allmsgs ]
+			return [ ok, allmsgs, l ]
 		
 		if defpos != None:
 			l += [ 
