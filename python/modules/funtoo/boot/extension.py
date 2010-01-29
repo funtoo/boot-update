@@ -84,7 +84,7 @@ class Extension:
 
 		# TRY VALIDATING CONFIG FILE	
 
-		self.mesg("info","Validating config file")
+		self.mesg("info","Validating config file %s" % self.fn)
 
 		ok, msgs = self.validateConfigFile(l)
 		allmsgs += msgs

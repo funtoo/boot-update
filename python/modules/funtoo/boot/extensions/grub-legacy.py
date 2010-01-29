@@ -60,24 +60,39 @@ class GRUBLegacyExtension(Extension):
 					break
 
 		if fstabHasEntry("/boot"):
+			# If /boot exists, then this is our grub "root" (where we look for boot loader stages and kernels)
 			rootfs="/boot"
+			rootdev=fstabGetDeviceOfFilesystem(rootfs)
 		else:
-			rootfs="/"
+			# If /boot doesn't exist, the root filesystem is treated as grub's "root"
+			rootfs = "/"
+			rootdev = None
+			for item in params:
+				if item[0:5] == "root=":
+					rootdev = item[5:]
+					break
+		if rootdev == None:
+			rootdev=fstabGetDeviceOfFilesystem(rootfs)
+		if rootdev == "":
+			ok = False
+			allmsgs.append(["fatal","grub-legacy - root filesystem undefined - update /etc/fstab or pass non-auto root= parameter."])
+			return [ ok, allmsgs ]
 
-		rootdev=fstabGetDeviceOfFilesystem(rootfs)
+		# Now that we have the grub root in /dev/sd?? format, attempt to convert it to (hd?,?) format
 		if rootdev[0:5] != "/dev/":
 			ok = False
-			allmsgs.append(["fatal","The grub-legacy extension cannot find a valid / entry in your /etc/fstab."])
+			allmsgs.append(["fatal","grub-legacy - %s is not a valid GRUB root - ensure /etc/fstab is correct or specify a root= parameter." % rootdev ] )
 			return [ ok, allmsgs ]
 		if rootdev[5:7] != "sd":
-			allmsgs.append(["warn","The grub-legacy encountered \"%s\", a non-\"sd\" device. Root setting may not be accurate." % rootdev])
+			allmsgs.append(["warn","grub-legacy - encountered \"%s\", a non-\"sd\" device. Root setting may not be accurate." % rootdev])
 		rootmaj = ord(rootdev[7]) - ord('a')
 		try:
 			rootmin = int(rootdev[8:]) - 1
 		except TypeError:
 			ok = False
-			allmsgs.append(["fatal","The grub-legacy extension couldn't calculate the root minor for \"%s\"." % rootdev])
+			allmsgs.append(["fatal","grub-legacy - couldn't calculate the root minor for \"%s\"." % rootdev])
 			return [ ok, allmsgs ]
+		# print out our grub-ified root setting
 		l.append("root (hd%s,%s)" % (rootmaj, rootmin ))
 		l.append("kernel %s %s" % ( kpath," ".join(params) ))
 		initrds=r.FindInitrds(sect, kname, kext)
