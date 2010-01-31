@@ -68,7 +68,7 @@ class Resolver:
 				ok, msgs = sfunc(l,sect,kname,kext)
 				allmsgs += msgs
 				if not ok:
-					return [ ok, allmsgs, defpos, defnames[defpos] ]
+					break
 				pos += 1
 			
 		if pos == 0:
