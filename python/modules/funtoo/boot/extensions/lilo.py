@@ -42,7 +42,7 @@ class LILOExtension(Extension):
 		self.bootitems.append(kname)
 		l.append("image=%s" % kname )
 		
-		params=self.config.item(sect,"params")
+		params=self.config.item(sect,"params").split()
 		myroot = None
 
 		if "root=auto" in params:

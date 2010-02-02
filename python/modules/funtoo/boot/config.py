@@ -2,8 +2,8 @@ from ..core import config
 
 class BootConfigFile(config.ConfigFile):
 
-	def inherit(self,cat):
-		if cat not in self.builtins:
+	def inherit(self,section):
+		if section not in self.builtins:
 			return "default"
 		return None
 
@@ -21,12 +21,12 @@ class BootConfigFile(config.ConfigFile):
 				"color" : [ "normal", "highlight" ],
 				"default" : [ "scan", "kernel", "initrd", "params" ]
 		}
-		for cat  in self.obj.keys():
-			if cat not in validmap.keys():
+		for section in self.sectionData.keys():
+			if section not in validmap.keys():
 				cmpto="default"
 			else:
-				cmpto=cat
-			for itemkey in self.obj[cat].keys():
+				cmpto=section
+			for itemkey in self.sectionData[section].keys():
 				if itemkey not in validmap[cmpto]:
-					invalid.append("%s/%s" % ( cat, itemkey ))
+					invalid.append("%s/%s" % ( section, itemkey ))
 		return invalid			

@@ -36,7 +36,7 @@ class GRUBLegacyExtension(Extension):
 		l.append("title %s - %s" % ( sect, kname ))
 		
 		kpath=r.RelativePathTo(kname,"/boot")
-		params=self.config.item(sect,"params")
+		params=self.config.item(sect,"params").split()
 		if "root=auto" in params:
 			params.remove("root=auto")
 			rootdev = fstabGetRootDevice()

@@ -27,7 +27,7 @@
 # be ideal, but clearly there should be a way to dump/write the file with all original comments intact. So this part of the code is incomplete, but the code
 # is good enough for simply reading in the config data.
 
-import os
+import os, sys
 
 class ConfigFile:
 	def __init__(self,fname=None,existing=True):
@@ -36,32 +36,28 @@ class ConfigFile:
 		# to keep self.sections and self.obj in sync. self.sections is used so that the ordering of the sections can be
 		# preserved when we dump the data.
 
-		self.sections=[]
-		self.obj={}
-		self.templates={}
+		self.orderedObjects = []
+		self.templates = {}
+		self.sectionData = {}
+		self.sectionDataOrder = {}
+
 		self.parent=None
 		self.defaults=""
+		
 		self.existing=existing
 		self.fname=fname
-		# orderedSections gives us an in-order list of all sections and templates in the config file, allowing us to
-		# write the sections out (ie. dump() it) in an order that the user is expecting.
-		self.orderedSections=[]
 
 		if self.existing and self.fileExists():
 			fn=open(self.fname,"r")
 			self.read(fn.readlines())
 			fn.close()
 	
-	def deburr(self,str):
-		# Helper method - remove " " from around a string
-		if str[0] != '"':
-			return str
-		elif str[0] == '"' and str[-1] == '"':
+	def deburr(self,str, delim):
+		str = str.strip().rstrip(delim).rstrip()
+		if len(str) > 2 and str[0] == '"' and str[-1] == '"':
 			return str[1:-1]
 		else:
-			# failed deburr - FIXME with real exception
-			print "UNEXPECTED DEBURR", str
-			raise
+			return str
 
 	def fileExists(self):
 		if not self.fname:
@@ -92,16 +88,22 @@ class ConfigFile:
 
 	def dump(self):
 		lines=[]
-
-		# FIXME: we need a way to exclude any default settings that were provided, if they are the same.
-		
-		for section in self.obj.keys():
-			lines.append("%s {\n" % section)
-			for line in self.obj[section].keys():
-				lines.append("	%s %s\n" % (line, " ".join(self.obj[section][line])))
-			lines.append("}\n")
-			lines.append("\n")
+		for obj, name in self.orderedObjects:
+			if obj == "section":
+				lines.append("section %s {\n" % name )
+				for var in self.sectionDataOrder[name]:
+					lines.append("	%s %s\n" % ( var, self.sectionData[name][var]) )
+				lines.append("}\n")
+			elif obj == "template":
+				for line in self.templates(name):
+					lines.append(line)
+			elif obj == "comment":
+				lines.append(name)
 		return lines
+
+	def printDump(self):
+		for line in self.dump():
+			sys.stdout.write(line)
 
 	def write(self):
 		base=os.path.dirname(self.fname)
@@ -118,74 +120,114 @@ class ConfigFile:
 	def readFromLines(self,lines):
 		self.read(lines.split("\n"))
 
-	def read(self,lines):
-		section=None
-		template=False
-		ln=0
-		for line in lines:
-			ln += 1
-			# strip comments
-			line = line[0:line.find("#")]
-			ls=line.split()
-			
-			if len(ls) == 0:
-				continue
-			if section == None:
-				if ls[-1] == "{":
-					section = self.deburr(" ".join(ls[:-1]))
-					self.orderedSections.append(section)
-					self.obj[section] = {}
-					template=False
-					continue
-				elif ls[-1] == "[":
-					section = self.deburr(" ".join(ls[:-1]))
-					self.orderedSections.append(section)
-					self.templates[section] = []		
-					template=True
-					continue
-				else:
-					print "UNEXPECTED", ls
-					# bogus data outside of section - Throw real exception here
-					raise 
-			else:
-				if ls[-1] == "{":
-					# invalid nested section
-					raise
-				elif ls[-1] == "[":
-					# invalid nested template
-					raise
-				elif ls[0] in [ "}", "]" ]:
-					section = None
-					continue
-				# valid data in section
-				if not template:
-					self.obj[section][ls[0]]=ls[1:]
-				else:
-					if len(line) > 0 and line[0] == "	":
-						# remove initial tab in template
-						self.templates[section].append(line[1:])
-					else:
-						self.templates[section].append(line)
+	"""
+	self.orderedObjects =
 
+	[ "section", "foo" ] 
+	
+	], [ "template", "bar" ] [ "comment", "# foasdflsdf asdl " ]
+
+	self.templates = {}
+	self.sectionData = { "foo" : { "bar": "alaksdf", "basl", "asdlkfds", }}
+	self.sectionDataOrder = { "foo", [ "bar", "basl" ] }	
+
+
+
+	"""
+
+
+	def read(self,lines):
+		ln=0
+		while ln < len(lines):	
+			if lines[ln].lstrip()[:1] == "#" or lines[ln].lstrip() == "":
+				# comment or whitespace (which is treated as a comment)
+				self.orderedObjects.append([ "comment", lines[ln] ])
+				ln += 1
+				continue
+			elif lines[ln].rstrip()[-1:] == "{":
+				# section start
+				section = self.deburr(lines[ln], "{")
+				if self.sectionData.has_key(section):
+					# duplicate section - bad
+					raise
+
+				# Initialize internal section data store
+				self.sectionData[section] = {}
+				self.sectionDataOrder[section] = []
+				
+				ln += 1
+				while ln < len(lines) and lines[ln].strip() != "}":
+					# strip comments from variable line - these comments don't get preserved on dump()
+					line = lines[ln][0:lines[ln].find("#")]
+					ls = line.split()
+					if len(ls) == 0:
+						# empty line, skip
+						ln += 1
+						continue
+					
+					# at least we have a variable name
+					
+					varname = ls[0]
+					vardata = " ".join(ls[1:])
+
+					if varname == "{":
+						# this is illegal
+						raise
+
+					if vardata == "":
+						# a variable but no data
+						raise
+
+					# record our variable data
+					self.sectionDataOrder[section].append(varname)
+					self.sectionData[section][varname] = vardata
+
+					ln += 1
+
+				self.orderedObjects.append(["section", section])
+				ln += 1
+
+			elif lines[ln].rstrip()[-1:] == "[":
+				template = self.deburr(lines[ln], "[")
+				
+				if self.templates.has_key(template):
+					# bad - duplicate template
+					raise
+				
+				ln += 1
+				tdata = []
+				while ln < len(lines) and lines[ln].strip() != "]":
+					tdata.append(lines[ln])
+					ln += 1
+				
+				self.templates[template] = tdata
+				self.orderedObjects.append(["template", template ])
+				ln += 1
+			else:
+				# no clue what this is
+				raise 
+		print "DEBUG: DUMP", self.printDump()
+	
 	# IMPLEMENT THIS:
 
 	def hasTemplate(self,template):
-		# TODO: Implement me
-		pass
+		if self.parent:
+			return self.parent.hasTemplate(template) or self.templates.has_key(template)
+		else:
+			return self.templates.has_key(template)
 
 	def hasLocalTemplate(self,template):
-		# TODO: Implement me
-		pass
+		return self.templates.has_key(template)
 
 	def hasItem(self,item):
-		return self.item(item,name=None,bool=True)
+		return self.item(item,varname=None,bool=True)
 
 	def condSubItem(self,item,str):
 		return self.subItem(item,str,cond=True)
 
 	def flagItemList(self,item):
 		# This method parses a variable line containing "foo bar -oni" into two sub-lists ([foo, bar], [oni])
-		list=self.item(item)
+		list=self.item(item).split()
 		grab=[]
 		skip=[]
 		# put "foo" entries in grab, whereas "-bar" go in skip:
@@ -198,47 +240,51 @@ class ConfigFile:
 
 	def getSections(self):
 		# might want to add ability to see only local sections, vs. parent sections too.
-		return self.obj.keys()
+		return self.sectionData.keys()
 
 	def subItem(self,item,str,cond=False):
 
 		# give this function "foo/bar" and "blah %s blah" and it will return "blah <value of foo/bar> blah"
 		# if cond=True, then we will zap the line (return "") if str points to a null ("") value
 		
-		if cond and not self.item(item,name=None):
+		if cond and not self.item(item,varname=None):
 			return ""
 		else:
-			return str % " ".join(self.item(item,name=None))
+			return str % self.item(item,varname=None)
 
 	def hasLocalItem(self,item):
 
-		return self.item(item,name=None,bool=True,parents=False)
+		return self.item(item,varname=None,bool=True,parents=False)
 
 	def __setitem__(self,key,value):
 
 		# Need to throw exception if value already exists in parents?
 
 		keysplit=key.split("/")
-		cat="/".join(keysplit[:-1])
-		name=keysplit[-1]
+		section="/".join(keysplit[:-1])
+		varname=keysplit[-1]
 
-		if not self.obj.has_key(cat):
-			self.obj[cat]={}
-			self.orderedSections.append(cat)
-		self.obj[cat][name]=value.split(" ")
+		if not self.sectionData.has_key(section):
+			# initialize internal data store
+			self.sectionData[section] = {}
+			self.sectionDataOrder[section] = []
+			# add to our ordered objects list so we output this section at the end when we dump()
+			self.orderedObjects.append(["section", section])
+		
+		self.sectionData[section][varname] = value
 
 	def __getitem__(self,item):
-		return " ".join(self.item(item,name=None))
+		return self.item(item,varname=None)
 
-	def inherit(self,cat):
+	def inherit(self,section):
 
 		# Override this in the subclass.
 		#
 		# This allows customized inheritance behavior - given current
-		# category of cat, what category does it inherit from? Return a
-		# string name of category to inherit from, or None for no
+		# section of "section", what section does it inherit from? Return a
+		# string name of section to inherit from, or None for no
 		# inheritance. For example, /etc/boot.conf's "Foobar Linux"
-		# sectio would inherit from the "default" section. Whereas some
+		# section would inherit from the "default" section. Whereas some
 		# other config file's "graphics" section may inherit from
 		# "default/graphics".
 
@@ -248,7 +294,7 @@ class ConfigFile:
 		# TODO: IMPLEMENT ME WITH INHERITANCE JUST LIKE self.item()
 		return self.templates[section]
 
-	def item(self,cat,name=None,bool=False,parents=True,defaults=True):
+	def item(self,section,varname=None,bool=False,parents=True,defaults=True):
 
 		# This is the master function for returning the value of a
 		# ConfigFile item, and also to get a boolean value of whether a
@@ -265,42 +311,39 @@ class ConfigFile:
 		# If defaults=False, we ignore any default sections defined via self.inherit(). 
 
 		# if name==None, then cat/name are autogenerated from the value in cat, which is expected to be "foo/bar"
-		if name==None:
-			keysplit=cat.split("/")
-			cat="/".join(keysplit[:-1])
-			name=keysplit[-1]
+		if varname==None:
+			keysplit=section.split("/")
+			section="/".join(keysplit[:-1])
+			varname=keysplit[-1]
 
-		defcat=None
+		defsection=None
 		if defaults:
-			defcat=self.inherit(cat)
+			defsection=self.inherit(section)
 
-		# this means we are dealing with a literal section like "Funtoo Linux", and we
-		# should inherit default settings from the default section
-		
-		if self.obj.has_key(cat) and self.obj[cat].has_key(name):
+		if self.sectionData.has_key(section) and self.sectionData[section].has_key(varname):
 			if bool:
 				return True
-			elif self.obj.has_key(defcat) and self.obj[defcat].has_key(name):
+			elif self.sectionData.has_key(defsection) and self.sectionData[defsection].has_key(varname):
 				# case 2: foo += bar -- append from default if it exists
-				if (len(self.obj[cat][name]) >= 2) and (self.obj[cat][name][0] == "+="):
+				if (len(self.sectionData[section][varname].split()) >= 2) and (self.sectionData[section][varname].split()[0] == "+="):
 					# real value appends to default value
-					return self.obj[defcat][name] + self.obj[cat][name][1:]
+					return self.sectionData[defsection][varname] + " " + self.sectionData[section][varname]
 				else:
-					# real value replaces default value - return a COPY
-					return self.obj[cat][name][:]
+					# real value replaces default value
+					return self.sectionData[section][varname]
 			else:
 				# only real value defined - return a COPY
-				return self.obj[cat][name][:]
-		elif defcat and self.obj.has_key(defcat) and self.obj[defcat].has_key(name):
+				return self.sectionData[section][varname]
+		elif defsection and self.sectionData.has_key(defsection) and self.sectionData[defsection].has_key(varname):
 			if bool:
 				return True
 			else:
-				# only default value defined - return a COPY so we can make changes without messing up later queries
-				return self.obj[defcat][name][:]
+				# only default value defined
+				return self.sectionData[defsection][varname]
 		else:
 			# no value defined
 			if parents and self.parent:
-				return self.parent.item(cat,name,bool=bool)
+				return self.parent.item(section,varname,bool=bool)
 			elif bool:
 				return False
 			else:

@@ -45,7 +45,7 @@ class GRUBExtension(Extension):
 		l.append("	search --no-floppy --fs-uuid --set %s" % self.command.BootDeviceUUID())
 		
 		kpath=r.RelativePathTo(kname,"/boot")
-		params=self.config.item(sect,"params")
+		params=self.config.item(sect,"params").split()
 		
 		if "root=auto" in params:
 			params.remove("root=auto")
@@ -109,7 +109,7 @@ class GRUBExtension(Extension):
 				"	insmod gfxterm",
 				"	insmod vbe",
 				"	terminal_output gfxterm" ]
-			bg = c.item("display","background")
+			bg = c.item("display","background").split()
 			if len(bg):
 				if len(bg) == 1:
 					bgimg = bg[0]
