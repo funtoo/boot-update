@@ -2,30 +2,12 @@
 
 # STATE OF THE CODE: 
 #
-# The template code is not fully implemented, and parts that need implementation are marked below.
-# The Exceptions need to be implemented, search for all "raise" to see where.
-# Right now, templates are defined using "[ ]" and config items are defined using "{ }", and the code will treat them as two separate namespaces.
-# dump() will not currently include templates in its output. So the template stuff is very preliminary.
-# There are incomplete changes to the template stuff when I realized that we should throw an exception for duplicate config items, and a template like this
-# would cause problems:
-# template {
-#		I am a dog.
-#		I love you.
-# }
-#
-# That is why I am moving to [ ] for templates, so the parser knows that it is handling a template, which means it can throw or warnings for dup config items,
-# but not throw exceptions or warnings when a template has matching first words.
-#
-# The latest implementation of self.item() is pretty nice, but needs testing.
-# self.haskey has been renamed to hasItem() for consistency.
-# deburr (helper function) has moved to self.deburr() (helper method)
-#
-# Right now, the section handling code is in flux. I have started adding some code to use self.sections to record an ordered list of sections in the file.
-# This allows self.dump() to dump the contents of the file with the sections in the expected order. Without this, sections are dumped in random order which
-# is not ideal.
-# But we have another issue right now which is that self.dump() will provide the contents of the file but all comments will be stripped. This may or may not
-# be ideal, but clearly there should be a way to dump/write the file with all original comments intact. So this part of the code is incomplete, but the code
-# is good enough for simply reading in the config data.
+# 1. Templates need testing.
+# 2. Line number data is collected for various things.
+# 3. dump() will remember comments that appear outside sections and templates.
+# 4. { } delimits a section, [ ] delimits a template.
+# 5. Overall, most key functionality is implemented and just needs testing.
+# 6. One exception is the exception code, which needs to be implemented.
 
 import os, sys
 
@@ -40,6 +22,12 @@ class ConfigFile:
 		self.templates = {}
 		self.sectionData = {}
 		self.sectionDataOrder = {}
+
+		self.lineData = {
+			"section" : {} ,
+			"sectionData" : {},
+			"template" : {},
+		}
 
 		self.parent=None
 		self.defaults=""
@@ -144,6 +132,7 @@ class ConfigFile:
 				self.orderedObjects.append([ "comment", lines[ln] ])
 				ln += 1
 				continue
+
 			elif lines[ln].rstrip()[-1:] == "{":
 				# section start
 				section = self.deburr(lines[ln], "{")
@@ -154,7 +143,10 @@ class ConfigFile:
 				# Initialize internal section data store
 				self.sectionData[section] = {}
 				self.sectionDataOrder[section] = []
-				
+			
+				# Record line number of section definition
+				self.lineData["section"][section] = ln + 1
+
 				ln += 1
 				while ln < len(lines) and lines[ln].strip() != "}":
 					# strip comments from variable line - these comments don't get preserved on dump()
@@ -182,6 +174,9 @@ class ConfigFile:
 					self.sectionDataOrder[section].append(varname)
 					self.sectionData[section][varname] = vardata
 
+					# record line number of variable data:
+					self.lineData["sectionData"]["%s/%s" % ( section, varname ) ] = ln + 1
+
 					ln += 1
 
 				self.orderedObjects.append(["section", section])
@@ -193,7 +188,9 @@ class ConfigFile:
 				if self.templates.has_key(template):
 					# bad - duplicate template
 					raise
-				
+			
+				self.lineData["template"][template] = ln + 1
+
 				ln += 1
 				tdata = []
 				while ln < len(lines) and lines[ln].strip() != "]":
