@@ -126,18 +126,14 @@ class GRUBExtension(Extension):
 		ok, msgs, defpos, defname = r.GenerateSections(l,self.generateBootEntry)
 		allmsgs += msgs
 		if not ok:
-			return [ ok, allmsgs, l ]
+			return [ ok, allmsgs, l, None ]
 		
-		if defpos != None:
-			l += [ 
-				""
-				"set default=%s" % defpos
-			]
+		l += [ 
+			""
+			"set default=%s" % defpos
+		]
 	
-		allmsgs.append(["norm","Configuration file %s generated - %s lines." % ( self.fn, len(l))])
-		allmsgs.append(["info","Kernel \"%s\" will be booted by default." % defname])
-
-		return [ok, allmsgs, l]
+		return [ok, allmsgs, l, defname]
 			
 class GRUBCommand:
 

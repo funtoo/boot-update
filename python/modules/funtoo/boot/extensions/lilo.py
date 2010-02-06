@@ -77,17 +77,14 @@ class LILOExtension(Extension):
 		ok, msgs, defpos, defname = r.GenerateSections(l,self.generateBootEntry)
 		allmsgs += msgs
 		if not ok:
-			return [ ok, allmsgs, l]
+			return [ ok, allmsgs, l, None]
 		
-		if defpos != None:
-			l += [ 
-				""
-				"default=%s" % defname
-			]
+		l += [ 
+			""
+			"default=%s" % defname
+		]
 	
-		allmsgs.append(["norm","Configuration file %s generated - %s lines." % ( self.fn, len(l))])
-		allmsgs.append(["info","Kernel \"%s\" will be booted by default." % defname])
 		allmsgs.append(["warn","Please note that LILO support is *ALPHA* quality and is for testing only."])
 
-		return [ok, allmsgs, l]
+		return [ok, allmsgs, l, defname]
 			

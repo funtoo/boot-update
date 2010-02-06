@@ -127,6 +127,7 @@ class Resolver:
 					# default match
 					if defpos != None:
 						allmsgs.append(["warn","multiple matches found for default boot entry \"%s\" - first match used." % default])
+						break
 					defpos = pos
 
 				defnames.append(kname)
