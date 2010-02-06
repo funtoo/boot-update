@@ -17,6 +17,11 @@ boot {
 	default bzImage
 }
 
+color {	
+	normal cyan/blue
+	highlight blue/cyan
+}
+
 default {
 	name Funtoo Linux
 	type linux
@@ -24,8 +29,7 @@ default {
 	kernel bzImage[-v] kernel[-v] vmlinuz[-v] vmlinux[-v]
 	initrd initramfs[-v]
 	params root=auto rootfstype=auto
-}
-""")
+}""")
 
 
 class BootConfigFile(config.ConfigFile):

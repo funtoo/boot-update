@@ -24,7 +24,7 @@ import funtoo.boot.extensions
 
 def versinfo():
 	print
-	print " Copyright "+CYANN+"2010"+OFF+" Funtoo Technologies"
+	print " Copyright "+CYANN+"2010"+OFF+" Funtoo Technologies."
 	print
 	print """ This program is free software; you can redistribute and/or modify it under
  the terms of the GNU General Public License version 3 as published by the

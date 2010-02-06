@@ -81,12 +81,16 @@ class ConfigFile:
 				lines.append("section %s {\n" % name )
 				for var in self.sectionDataOrder[name]:
 					lines.append("	%s %s\n" % ( var, self.sectionData[name][var]) )
-				lines.append("}\n\n")
+				lines.append("}\n")
+				lines.append("\n")
 			elif obj == "template":
 				for line in self.templates(name):
 					lines.append(line)
 			elif obj == "comment":
 				lines.append(name)
+		if lines[-1] == "\n":
+			# remove extra trailing newline
+			del lines[-1]
 		return lines
 
 	def printDump(self):
