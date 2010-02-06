@@ -323,16 +323,20 @@ class ConfigFile:
 		if self.sectionData.has_key(section) and self.sectionData[section].has_key(varname):
 			if bool:
 				return True
-			elif self.sectionData.has_key(defsection) and self.sectionData[defsection].has_key(varname):
-				# case 2: foo += bar -- append from default if it exists
-				if (len(self.sectionData[section][varname].split()) >= 2) and (self.sectionData[section][varname].split()[0] == "+="):
-					# real value appends to default value
-					return self.sectionData[defsection][varname] + " " + self.sectionData[section][varname]
+			elif (len(self.sectionData[section][varname].split()) >= 2) and (self.sectionData[section][varname].split()[0] == "+="):
+				# we have data, and we have the append operator -- set realdata to everything minus the initial "+="
+				realdata = " ".join(self.sectionData[section][varname].split()[1:])
+				if self.sectionData.has_key(defsection) and self.sectionData[defsection].has_key(varname):
+					# ah! We have a default value defined in our local config file. - combine with parent value
+					return self.sectionData[defsection][varname] + " " + realdata
+				elif parents and self.parent and self.parent.hasItem("%s/%s" % (  defsection, varname )):
+					# ah! one of our parents has a default section defined - combine with parent value
+					return self.parent.item(defsection, varname) + " " + realdata
 				else:
-					# real value replaces default value
-					return self.sectionData[section][varname]
+					# couldn't find a default section, so just return realdata
+					return realdata
 			else:
-				# only real value defined - return a COPY
+				# no append operator, so we just return our literal data
 				return self.sectionData[section][varname]
 		elif defsection and self.sectionData.has_key(defsection) and self.sectionData[defsection].has_key(varname):
 			if bool:

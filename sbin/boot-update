@@ -100,17 +100,7 @@ def update(c,ok,allmsgs):
 	if not ok:
 		cleanup(ok,allmsgs)
 
-	# Dynamically import the proper extension module (ie. grub.py, grub-legacy.py, lilo.py):
-
-	extname="funtoo.boot.extensions.%s" % generate
-	__import__(extname)
-	extmodule=sys.modules[extname]
-
-	# Create Boot Loader Extension object:
-	ext=extmodule.getExtension(c)
-	ext.mesg=mesg
-
-	# Before regenerating the config file, we want to auto-mount boot if it isn't already mounted:
+	# Before loading extension, we want to auto-mount boot if it isn't already mounted:
 	
 	imountedit = False
 
@@ -121,6 +111,17 @@ def update(c,ok,allmsgs):
 			imountedit=True
 	else:
 		mesg("info","No /etc/fstab entry for /boot; not mounting.")
+
+	# Dynamically import the proper extension module (ie. grub.py, grub-legacy.py, lilo.py):
+
+	extname="funtoo.boot.extensions.%s" % generate
+	__import__(extname)
+	extmodule=sys.modules[extname]
+
+	# Create Boot Loader Extension object:
+	ext=extmodule.getExtension(c)
+	ext.mesg=mesg
+
 
 	# Regenerate Config File:
 
@@ -142,6 +143,9 @@ def update(c,ok,allmsgs):
 if len(sys.argv)>=2 and (( "-v" in sys.argv ) or ( "--version" in sys.argv )):
 	versinfo()
 	sys.exit(0)
+
+if "-V" in sys.argv or ("--verbose" in sys.argv):
+	verbose=True
 
 ok=True
 allmsgs=[]

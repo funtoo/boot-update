@@ -49,7 +49,7 @@ class GRUBExtension(Extension):
 		
 		kpath=r.RelativePathTo(kname,"/boot")
 		
-		params=self.config.item(sect,"params").split()
+		params=self.config["%s/params" % sect].split()
 
 		ok, allmsgs, myroot = r.DoRootAuto(params,ok,allmsgs)
 		if not ok:
