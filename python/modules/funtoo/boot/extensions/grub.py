@@ -153,7 +153,7 @@ class GRUBCommand:
 	def GuppyMap(self):
 		out=commands.getstatusoutput("/sbin/grub-mkdevicemap")
 		if out[0] != 0:
-			print "grub-mkdevicemap "+argstring
+			print "grub-mkdevicemap"
 			print out[1]
 			sys.exit(1)
 
