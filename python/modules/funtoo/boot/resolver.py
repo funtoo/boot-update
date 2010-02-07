@@ -42,9 +42,9 @@ class Resolver:
 		if "root=auto" in params:
 			params.remove("root=auto")
 			rootdev = fstabGetRootDevice()
-			if rootdev[0:5] != "/dev/":
+			if (rootdev[0:5] != "/dev/") and (rootdev[0:5] != "UUID=") and (rootdev[0:6] != "LABEL="):
 				ok = False
-				allmsgs.append(["fatal","(root=auto) - cannot find a valid / entry in /etc/fstab."])
+				allmsgs.append(["fatal","(root=auto) - / entry in /etc/fstab not recognized (%s)." % rootdev])
 				return [ ok, allmsgs, None ]
 			params.append("root=%s" % rootdev )
 			return [ ok, allmsgs, rootdev ]	
@@ -91,9 +91,8 @@ class Resolver:
 					return [ ok, allmsgs, param[11:] ]
 		return [ ok, allmsgs, None ]
 
-	def GenerateSections(self,l,sfunc):
+	def GenerateSections(self,l,sfunc,ofunc=None):
 		c=self.config
-		bootsections=[]
 
 		ok=True
 		allmsgs=[]
@@ -103,15 +102,30 @@ class Resolver:
 		defpos = None
 		defnames = [] 
 
+		linuxsections = []
+		othersections = []
+
 		for sect in c.getSections():
 			if sect not in c.builtins:
-				bootsections.append(sect)
+				if c["%s/%s" % (sect, "type")] == "linux":
+					linuxsections.append(sect)
+				else:
+					othersections.append(sect)
 		
-		# if we have no specific boot entries, use the default settings.
-		if len(bootsections) == 0:
-			bootsections.append("default")
+		# if we have no linux boot entries, use the "default" section as the only linux boot entry to look for kernels
+		if len(linuxsections) == 0:
+			linuxsections.append("default")
 
-		for sect in bootsections:	
+		if ofunc:
+			for sect in othersections:
+				ok, msgs = ofunc(l,sect)
+				allmsgs += msgs
+				defnames.append(sect)
+				pos += 1
+				if not ok:
+					return [ ok, allmsgs, defpos, None ]
+	
+		for sect in linuxsections:	
 			# Process boot entry section (which can generate multiple boot entries if multiple kernel matches are found)
 			findlist, skiplist = c.flagItemList("%s/%s" % ( sect, "kernel" ))
 			findmatch=[]
@@ -123,6 +137,9 @@ class Resolver:
 			# Generate individual boot entry using extension-supplied function
 
 			for kname, kext in findmatch:
+				if default == sect:
+					# if our boot/default setting is set to the name of our section, then use this as our default.
+					defpos = pos
 				if default == os.path.basename(kname):
 					# default match
 					if defpos != None:

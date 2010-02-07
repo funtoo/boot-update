@@ -19,8 +19,8 @@ class GRUBExtension(Extension):
 	def __init__(self,config):
 		self.fn = "/boot/grub/grub.cfg"
 		self.config = config
-		self.command = GRUBCommand()
 		self.bootitems = []
+		self.GuppyMap()
 
 	def isAvailable(self):
 		msgs=[]
@@ -29,6 +29,44 @@ class GRUBExtension(Extension):
 			msgs.append(["fatal","/sbin/grub-probe, required for boot/generate = grub,  does not exist"])
 			ok=False
 		return [ok, msgs]
+	
+	def generateOtherBootEntry(self,l,sect):
+		global r
+		ok=True
+		msgs=[]
+		mytype = self.config["%s/type" % sect ].lower()
+		if mytype in [ "dos", "msdos", ]:
+			mytype = "dos"
+			myname = "DOS"
+		elif mytype in [ "windows", "windows 2000", "win2000", "windows xp", "winxp" ]:
+			mytype = "winxp"
+			myname = "Microsoft Windows 2000/XP"
+		elif mytype in [ "windows vista", "vista" ]:
+			mytype = "vista"
+			myname = "Microsoft Windows XP/Vista"
+		elif mytype in [ "windows 7", "win7" ]:
+			mytype = "win7"
+			myname = "Microsoft Windows 7"
+		else:
+			ok = False
+			msgs.append(["fatal","Unrecognized boot entry type \"%s\"" % mytype])
+			return [ ok, msgs ]
+		params=self.config["%s/params" % sect].split()
+		myroot = r.GetParam(params,"root=")
+		myname = "%s on %s" % ( myname, myroot )
+		# TODO check for valid root entry
+		self.PrepareGRUBForDevice(myroot,l)
+		l.append("")
+		l.append("menuentry \"%s\" {" % myname )
+		self.bootitems.append(myname)
+		retval, mygrubroot = self.DeviceGRUB(myroot)
+		l.append("	root %s" % mygrubroot )
+		if mytype == "win7":
+			l.append("	chainloader +4")
+		elif mytype in [ "vista", "dos", "winxp" ]:
+			l.append("	chainloader +1")
+		l.append("}")
+		return [ ok, msgs ]
 
 	def generateBootEntry(self,l,sect,kname,kext):
 		global r
@@ -40,15 +78,11 @@ class GRUBExtension(Extension):
 		label = r.GetBootEntryString( sect, kname ) 
 
 		l.append("menuentry \"%s\" {" % label )
+		# self.bootitems records all our boot items
 		self.bootitems.append(label)
-		
-		for mod in self.command.RequiredGRUBModules(self.command.BootDeviceDev()):
-			l.append("	insmod %s" % mod)
-		l.append("	set root=%s" % self.command.BootDeviceGRUB())
-		l.append("	search --no-floppy --fs-uuid --set %s" % self.command.BootDeviceUUID())
-		
+	
+		self.PrepareGRUBForFilesystem("/boot",l)
 		kpath=r.RelativePathTo(kname,"/boot")
-		
 		params=self.config["%s/params" % sect].split()
 
 		ok, allmsgs, myroot = r.DoRootAuto(params,ok,allmsgs)
@@ -61,7 +95,7 @@ class GRUBExtension(Extension):
 		l.append("	linux %s %s" % ( kpath," ".join(params) ))
 		initrds=r.FindInitrds(sect, kname, kext)
 		for initrd in initrds:
-			l.append("	initrd %s" % self.command.RelativePathTo(initrd,"/boot"))
+			l.append("	initrd %s" % self.RelativePathTo(initrd,"/boot"))
 		if self.config.hasItem("%s/gfxmode" % sect):
 			l.append("	set gfxpayload=%s" % self.config.item(sect,"gfxmode"))
 		else:
@@ -80,10 +114,7 @@ class GRUBExtension(Extension):
 
 		if c.hasItem("display/gfxmode"):
 			l.append("")
-			for mod in self.command.RequiredGRUBModules(self.command.BootDeviceDev()):
-				l.append("insmod %s" % mod)
-			l.append("set root=%s" % self.command.BootDeviceGRUB())
-			l.append("search --no-floppy --fs-uuid --set "+self.command.BootDeviceUUID())
+			self.PrepareGRUBForFilesystem("/boot",l)
 			font = None
 			if c.hasItem("display/font"):
 				font = c["display/font"]
@@ -123,7 +154,7 @@ class GRUBExtension(Extension):
 			]
 
 
-		ok, msgs, defpos, defname = r.GenerateSections(l,self.generateBootEntry)
+		ok, msgs, defpos, defname = r.GenerateSections(l,self.generateBootEntry,self.generateOtherBootEntry)
 		allmsgs += msgs
 		if not ok:
 			return [ ok, allmsgs, l, None ]
@@ -135,17 +166,6 @@ class GRUBExtension(Extension):
 	
 		return [ok, allmsgs, l, defname]
 			
-class GRUBCommand:
-
-	"""
-		This class provides an interface to the command-line GRUB utilities, as well as misc. functions used by the GRUB
-		config file generator.
-	"""
-
-	def __init__(self):
-		self.info={}
-		self.GuppyMap()
-
 	def GuppyMap(self):
 		out=commands.getstatusoutput("/sbin/grub-mkdevicemap")
 		if out[0] != 0:
@@ -153,34 +173,51 @@ class GRUBCommand:
 			print out[1]
 			sys.exit(1)
 
-	def Guppy(self,argstring):
+	def Guppy(self,argstring,fatal=True):
 		out=commands.getstatusoutput("/sbin/grub-probe "+argstring)
-		if out[0] != 0:
+		if fatal and out[0] != 0:
 			print "grub-probe "+argstring
 			print out[1]
 			sys.exit(1)
 		else:
-			return out[1]
+			return out
 
 	def RequiredGRUBModules(self,dev):
 		mods=[]
 		for targ in [ "abstraction", "fs" ]:
-			for mod in self.Guppy(" --device "+dev+" --target="+targ).split():
+			for mod in self.DeviceProbe(dev,targ):
 				mods.append(mod)
 		return mods
 
-	def BootDeviceDev(self):
-		if not self.info.has_key("bootdevice/dev"):
-			self.info["bootdevice/dev"]=self.Guppy(" --target=device /boot")
-		return self.info["bootdevice/dev"]
+	def DeviceProbe(self,dev,targ):
+		retval, mods = self.Guppy(" --device %s --target=%s" % (dev, targ))
+		if retval == 0:
+			return mods.split()
+		else:
+			return []
 
-	def BootDeviceUUID(self):
-		if not self.info.has_key("bootdevice/UUID"):	
-			self.info["bootdevice/UUID"]=self.Guppy(" --device "+self.BootDeviceDev()+" --target=fs_uuid 2> /dev/null")
-		return self.info["bootdevice/UUID"]
+	def DeviceOfFilesystem(self,fs):
+		retval,out=self.Guppy(" --target=device %s" % fs)
+		return retval,out
 
-	def BootDeviceGRUB(self):
-		if not self.info.has_key("bootdevice/GRUB"):	
-			self.info["bootdevice/GRUB"]=self.Guppy(" --device "+self.BootDeviceDev()+" --target=drive")
-		return self.info["bootdevice/GRUB"]
+	def DeviceUUID(self,dev):
+		retval,out=self.Guppy(" --device %s --target=fs_uuid 2> /dev/null" % dev)
+		return retval,out
 
+	def DeviceGRUB(self,dev):
+		retval,out=self.Guppy(" --device %s --target=drive" % dev) 
+		return retval,out
+
+	def PrepareGRUBForFilesystem(self,fs,l):
+		retval, dev = self.DeviceOfFilesystem(fs)
+		return self.PrepareGRUBForDevice(dev,l)
+
+	def PrepareGRUBForDevice(self,dev,l):
+		for mod in self.RequiredGRUBModules(dev):
+			l.append("	insmod %s" % mod)
+		retval, grubdev = self.DeviceGRUB(dev)
+		l.append("	set root=%s" % grubdev)
+		retval, uuid = self.DeviceUUID(dev)
+		if retval == 0:
+			l.append("	search --no-floppy --fs-uuid --set %s" % uuid )
+		# TODO: add error handling for retvals	
