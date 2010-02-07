@@ -32,52 +32,33 @@ class GRUBLegacyExtension(Extension):
 		allmsgs=[]
 
 		l.append("")
-		self.bootitems.append("%s - %s" % ( sect, kname))
-		l.append("title %s - %s" % ( sect, kname ))
+		label = r.GetBootEntryString( sect, kname )
 		
+		l.append("title %s" % label)
+		self.bootitems.append(label)
+
+		if config.item(sect,"type") == "chainloader":
+			l.append("chainloader +1")	
+
 		kpath=r.RelativePathTo(kname,"/boot")
 		params=self.config.item(sect,"params").split()
-		if "root=auto" in params:
-			params.remove("root=auto")
-			rootdev = fstabGetRootDevice()
-			if rootdev[0:5] != "/dev/":
-				ok = False
-				allmsgs.append(["fatal","(root=auto) grub-legacy - cannot find a valid / entry in /etc/fstab."])
-				return [ ok, allmsgs ]
 
-			params.append("root=%s" % rootdev )
-		
-		if "rootfstype=auto" in params:
-			params.remove("rootfstype=auto")
-			fstype = fstabGetFilesystemOfDevice(myroot)
-			if fstype == "":
-				ok = False
-				allmsgs.append(["fatal","(rootfstype=auto) grub-legacy - cannot find a valid / entry in /etc/fstab."])
-				return [ ok, allmsgs ]
-			for item in params:
-				if item[0:5] == "root=":
-					params.append("rootfstype=%s" % fstype)
-					break
-
+		ok, allmsgs, myroot = r.DoRootAuto(params,ok,allmsgs)
+		if not ok:
+			return [ ok, allmsgs ]
+		ok, allmsgs, fstype = r.DoRootfstypeAuto(params,ok,allmsgs)
+		if not ok:
+			return [ ok, allmsgs ]
+	
 		if fstabHasEntry("/boot"):
 			# If /boot exists, then this is our grub "root" (where we look for boot loader stages and kernels)
 			rootfs="/boot"
-			rootdev=fstabGetDeviceOfFilesystem(rootfs)
+			rootdev=myroot
 		else:
 			# If /boot doesn't exist, the root filesystem is treated as grub's "root"
 			rootfs = "/"
-			rootdev = None
-			for item in params:
-				if item[0:5] == "root=":
-					rootdev = item[5:]
-					break
-		if rootdev == None:
-			rootdev=fstabGetDeviceOfFilesystem(rootfs)
-		if rootdev == "":
-			ok = False
-			allmsgs.append(["fatal","grub-legacy - root filesystem undefined - update /etc/fstab or pass non-auto root= parameter."])
-			return [ ok, allmsgs ]
-
+			rootdev = r.GetParam(params,"root=")
+		
 		# Now that we have the grub root in /dev/sd?? format, attempt to convert it to (hd?,?) format
 		if rootdev[0:5] != "/dev/":
 			ok = False
@@ -122,7 +103,7 @@ class GRUBLegacyExtension(Extension):
 				"default %s" % defpos
 			]
 	
-		allmsgs.append(["info","Configuration file %s generated - %s lines." % ( self.fn, len(l))])
+		allmsgs.append(["norm","Configuration file %s generated - %s lines." % ( self.fn, len(l))])
 		allmsgs.append(["info","Kernel \"%s\" will be booted by default." % defname])
 
 		return [ok, allmsgs, l]

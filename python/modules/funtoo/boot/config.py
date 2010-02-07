@@ -1,5 +1,33 @@
 from ..core import config
 
+class DefaultBootConfigFile(config.ConfigFile):
+
+	def inherit(self,section):
+		if section not in self.builtins:
+			return "default"
+		return None
+
+	def __init__(self,fn=None,existing=False):
+		self.builtins = [ "default" ]
+		config.ConfigFile.__init__(self,fn,existing)
+		self.readFromLines("""
+boot {
+	generate grub
+	timeout 5
+	default bzImage
+}
+
+default {
+	name Funtoo Linux
+	type linux
+	scan /boot
+	kernel bzImage[-v] kernel[-v] vmlinuz[-v] vmlinux[-v]
+	initrd initramfs[-v]
+	params root=auto rootfstype=auto
+}
+""")
+
+
 class BootConfigFile(config.ConfigFile):
 
 	def inherit(self,section):
@@ -12,6 +40,7 @@ class BootConfigFile(config.ConfigFile):
 		# not boot entries.
 		self.builtins = [ "boot", "display", "default", "altboot", "color" ]
 		config.ConfigFile.__init__(self,fn,existing)
+		self.parent=DefaultBootConfigFile()
 
 	def validate(self):
 		invalid=[]
@@ -19,7 +48,7 @@ class BootConfigFile(config.ConfigFile):
 				"boot" : [ "generate", "timeout", "default" ],
 				"display" : [ "gfxmode", "background" ],
 				"color" : [ "normal", "highlight" ],
-				"default" : [ "scan", "kernel", "initrd", "params" ]
+				"default" : [ "scan", "kernel", "initrd", "params", "type" ]
 		}
 		for section in self.sectionData.keys():
 			if section not in validmap.keys():

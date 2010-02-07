@@ -37,37 +37,26 @@ class GRUBExtension(Extension):
 		allmsgs=[]
 
 		l.append("")
-		self.bootitems.append("%s - %s" % (sect, kname))
-		l.append("menuentry \"%s - %s\" {" % ( sect, kname ))
+		label = r.GetBootEntryString( sect, kname ) 
+
+		l.append("menuentry \"%s\" {" % label )
+		self.bootitems.append(label)
+		
 		for mod in self.command.RequiredGRUBModules(self.command.BootDeviceDev()):
 			l.append("	insmod %s" % mod)
 		l.append("	set root=%s" % self.command.BootDeviceGRUB())
 		l.append("	search --no-floppy --fs-uuid --set %s" % self.command.BootDeviceUUID())
 		
 		kpath=r.RelativePathTo(kname,"/boot")
+		
 		params=self.config.item(sect,"params").split()
-		
-		if "root=auto" in params:
-			params.remove("root=auto")
-			rootdev = fstabGetRootDevice()
-			if rootdev[0:5] != "/dev/":
-				ok = False
-				allmsgs.append(["fatal","(root=auto) grub - cannot find a valid / entry in /etc/fstab."])
-				return [ ok, allmsgs ]	
-			params.append("root=%s" % rootdev)
-		
-		if "rootfstype=auto" in params:
-			params.remove("rootfstype=auto")
-			for item in params:
-				if item[0:5] == "root=":
-					myroot=item[5:]
-					fstype = fstabGetFilesystemOfDevice(myroot)
-					if fstype == "":
-						ok = False
-						allmsgs.append(["fatal","(rootfstype=auto) grub - cannot find a valid / entry in /etc/fstab."])
-						return [ ok, allmsgs ]
-					params.append("rootfstype=%s" % fstype)
-					break
+
+		ok, allmsgs, myroot = r.DoRootAuto(params,ok,allmsgs)
+		if not ok:
+			return [ ok, allmsgs ]
+		ok, allmsgs, fstype = r.DoRootfstypeAuto(params,ok,allmsgs)
+		if not ok:
+			return [ ok, allmsgs ]
 
 		l.append("	linux %s %s" % ( kpath," ".join(params) ))
 		initrds=r.FindInitrds(sect, kname, kext)
@@ -78,7 +67,6 @@ class GRUBExtension(Extension):
 		else:
 			l.append("	set gfxpayload=keep")
 		l.append("}")
-
 		return [ ok, allmsgs ]
 
 	def generateConfigFile(self):
@@ -146,7 +134,7 @@ class GRUBExtension(Extension):
 				"set default=%s" % defpos
 			]
 	
-		allmsgs.append(["info","Configuration file %s generated - %s lines." % ( self.fn, len(l))])
+		allmsgs.append(["norm","Configuration file %s generated - %s lines." % ( self.fn, len(l))])
 		allmsgs.append(["info","Kernel \"%s\" will be booted by default." % defname])
 
 		return [ok, allmsgs, l]
@@ -160,12 +148,20 @@ class GRUBCommand:
 
 	def __init__(self):
 		self.info={}
+		self.GuppyMap()
+
+	def GuppyMap(self):
+		out=commands.getstatusoutput("/sbin/grub-mkdevicemap")
+		if out[0] != 0:
+			print "grub-mkdevicemap "+argstring
+			print out[1]
+			sys.exit(1)
 
 	def Guppy(self,argstring):
 		out=commands.getstatusoutput("/sbin/grub-probe "+argstring)
 		if out[0] != 0:
-			print "error: guppy fail! fail bad!"
 			print "grub-probe "+argstring
+			print out[1]
 			sys.exit(1)
 		else:
 			return out[1]

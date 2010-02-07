@@ -30,6 +30,66 @@ class Resolver:
 				found.append(initrd)
 		return found
 
+	def GetBootEntryString(self,sect,kname):
+		if sect == "default" and self.config["default/name"] != "":
+			osname = self.config["default/name"]
+		else:
+			osname = sect
+		return "%s - %s" % ( osname, kname )
+
+	def DoRootAuto(self,params,ok,allmsgs):
+		if "root=auto" in params:
+			params.remove("root=auto")
+			rootdev = fstabGetRootDevice()
+			if rootdev[0:5] != "/dev/":
+				ok = False
+				allmsgs.append(["fatal","(root=auto) - cannot find a valid / entry in /etc/fstab."])
+				return [ ok, allmsgs, None ]
+			params.append("root=%s" % rootdev )
+			return [ ok, allmsgs, rootdev ]	
+		else:
+			for param in params:
+				if param[0:5] == "root=":
+					return [ ok, allmsgs, param[5:] ]
+		ok = False
+		allmsgs.append(["fatal","(root=auto) - cannot find a root= setting in params."])
+		return [ ok, allmsgs, None ]
+
+	def ZapParam(self,params,param):
+		pos = 0
+		while pos < len(params):
+			if params[pos][0:len(param)] == param:
+				del params[pos]
+				continue
+			pos += 1
+
+	def GetParam(self,params,param):
+		pos = 0
+		while pos < len(params):
+			if params[pos][0:len(param)] == param:
+				return params[pos][len(param):]
+			pos += 1
+		return None
+
+	def DoRootfstypeAuto(self,params,ok,allmsgs):
+		if "rootfstype=auto" in params:
+			params.remove("rootfstype=auto")
+			for item in params:
+				if item[0:5] == "root=":
+					myroot=item[5:]
+					fstype = fstabGetFilesystemOfDevice(myroot)
+					if fstype == "":
+						ok = False
+						allmsgs.append(["fatal","(rootfstype=auto) - cannot find a valid / entry in /etc/fstab."])
+						return [ ok, allmsgs, None ]
+					params.append("rootfstype=%s" % fstype)
+					break
+		else:
+			for param in params:
+				if param[0:11] == "rootfstype=":
+					return [ ok, allmsgs, param[11:] ]
+		return [ ok, allmsgs, None ]
+
 	def GenerateSections(self,l,sfunc):
 		c=self.config
 		bootsections=[]
@@ -45,13 +105,17 @@ class Resolver:
 		for sect in c.getSections():
 			if sect not in c.builtins:
 				bootsections.append(sect)
+		
+		# if we have no specific boot entries, use the default settings.
+		if len(bootsections) == 0:
+			bootsections.append("default")
 
 		for sect in bootsections:	
 			# Process boot entry section (which can generate multiple boot entries if multiple kernel matches are found)
 			findlist, skiplist = c.flagItemList("%s/%s" % ( sect, "kernel" ))
 			findmatch=[]
 
-			for scanpath in c.item(sect,"scan"):
+			for scanpath in c.item(sect,"scan").split():
 				skipmatch = self.GetMatchingKernels(scanpath, skiplist)
 				findmatch += self.GetMatchingKernels(scanpath, findlist, skipmatch)
 

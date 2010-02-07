@@ -43,34 +43,15 @@ class LILOExtension(Extension):
 		l.append("image=%s" % kname )
 		
 		params=self.config.item(sect,"params").split()
-		myroot = None
 
-		if "root=auto" in params:
-			params.remove("root=auto")
-			myroot = fstabGetRootDevice()
-			if myroot[0:5] != "/dev/":
-				ok = False
-				allmsgs.append(["fatal","(root=auto) lilo - cannot find a valid / entry in /etc/fstab."])
-				return [ ok, allmsgs ]
-		else:
-			for item in params:
-				if item[0:5] == "root=":
-					myroot = item[5:]
-					params.remove(item)
-					break
-		
-		if myroot == None:
-			allmsgs.append(["warn","No root= parameter specified for boot entry \"%s\" - using current root filesystem." % sect])
-			myroot=fstabGetRootDevice()
-	
-		if "rootfstype=auto" in params:
-			params.remove("rootfstype=auto")
-			fstype = fstabGetFilesystemOfDevice(myroot)
-			if fstype == "":
-				ok = False
-				allmsgs.append(["fatal","(rootfstype=auto) lilo - cannot find a valid / entry in /etc/fstab."])
-				return [ ok, allmsgs ]
-			params.append("rootfstype=%s" % fstype)
+		ok, allmsgs, myroot = r.DoRootAuto(params,ok,allmsgs)
+		if not ok:
+			return [ ok, allmsgs ]
+		ok, allmsgs, myfstype = r.DoRootfstypeAuto(params,ok,allmsgs)
+		if not ok:
+			return [ ok, allmsgs ]
+
+		r.ZapParam(params,"root=")
 
 		l += [
 			"	read-only",
@@ -104,7 +85,7 @@ class LILOExtension(Extension):
 				"default=%s" % defname
 			]
 	
-		allmsgs.append(["info","Configuration file %s generated - %s lines." % ( self.fn, len(l))])
+		allmsgs.append(["norm","Configuration file %s generated - %s lines." % ( self.fn, len(l))])
 		allmsgs.append(["info","Kernel \"%s\" will be booted by default." % defname])
 		allmsgs.append(["warn","Please note that LILO support is *ALPHA* quality and is for testing only."])
 

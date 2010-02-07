@@ -81,7 +81,7 @@ class ConfigFile:
 				lines.append("section %s {\n" % name )
 				for var in self.sectionDataOrder[name]:
 					lines.append("	%s %s\n" % ( var, self.sectionData[name][var]) )
-				lines.append("}\n")
+				lines.append("}\n\n")
 			elif obj == "template":
 				for line in self.templates(name):
 					lines.append(line)
@@ -150,7 +150,11 @@ class ConfigFile:
 				ln += 1
 				while ln < len(lines) and lines[ln].strip() != "}":
 					# strip comments from variable line - these comments don't get preserved on dump()
-					line = lines[ln][0:lines[ln].find("#")]
+					comfind = lines[ln].find("#")
+					if comfind != -1:
+						line = lines[ln][0:comfind]
+					else:
+						line = lines[ln]
 					ls = line.split()
 					if len(ls) == 0:
 						# empty line, skip
@@ -203,7 +207,6 @@ class ConfigFile:
 			else:
 				# no clue what this is
 				raise 
-		print "DEBUG: DUMP", self.printDump()
 	
 	# IMPLEMENT THIS:
 
