@@ -77,13 +77,12 @@ class Extension:
 
 		# TRY GENERATING CONFIG FILE - in memory, not yet written to disk
 
-		ok, msgs, l, defname = self.generateConfigFile()
+		ok, msgs, l = self.generateConfigFile()
 		allmsgs += msgs
 		if not ok:
 			return [ "config generation", ok, allmsgs ]
 		
 		allmsgs.append(["info","Configuration file %s generated - %s lines." % ( self.fn, len(l))])
-		allmsgs.append(["norm","Boot entry \"%s\" will be booted by default." % defname])
 
 		# TRY VALIDATING CONFIG FILE	
 

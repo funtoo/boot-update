@@ -92,15 +92,15 @@ class GRUBLegacyExtension(Extension):
 		l.append(c.condSubItem("boot/timeout", "timeout %s"))
 		# pass our boot entry generator function to GenerateSections, and everything is taken care of for our boot entries
 
-		ok, msgs, defpos, defname = r.GenerateSections(l,self.generateBootEntry)
+		ok, msgs, self.defpos, self.defname = r.GenerateSections(l,self.generateBootEntry)
 		allmsgs += msgs
 		if not ok:
-			return [ ok, allmsgs, l, None ]
+			return [ ok, allmsgs, l ]
 		
 		l += [ 
 			""
 			"default %s" % defpos
 		]
 	
-		return [ok, allmsgs, l, defname]
+		return [ok, allmsgs, l ]
 			

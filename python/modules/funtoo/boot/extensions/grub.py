@@ -37,30 +37,25 @@ class GRUBExtension(Extension):
 		mytype = self.config["%s/type" % sect ].lower()
 		if mytype in [ "dos", "msdos", ]:
 			mytype = "dos"
-			myname = "DOS"
 		elif mytype in [ "windows", "windows 2000", "win2000", "windows xp", "winxp" ]:
 			mytype = "winxp"
-			myname = "Microsoft Windows 2000/XP"
 		elif mytype in [ "windows vista", "vista" ]:
 			mytype = "vista"
-			myname = "Microsoft Windows XP/Vista"
 		elif mytype in [ "windows 7", "win7" ]:
 			mytype = "win7"
-			myname = "Microsoft Windows 7"
 		else:
 			ok = False
 			msgs.append(["fatal","Unrecognized boot entry type \"%s\"" % mytype])
 			return [ ok, msgs ]
 		params=self.config["%s/params" % sect].split()
 		myroot = r.GetParam(params,"root=")
-		myname = "%s on %s" % ( myname, myroot )
+		myname = sect
 		# TODO check for valid root entry
-		self.PrepareGRUBForDevice(myroot,l)
 		l.append("")
 		l.append("menuentry \"%s\" {" % myname )
+		self.PrepareGRUBForDevice(myroot,l)
 		self.bootitems.append(myname)
 		retval, mygrubroot = self.DeviceGRUB(myroot)
-		l.append("	root %s" % mygrubroot )
 		if mytype == "win7":
 			l.append("	chainloader +4")
 		elif mytype in [ "vista", "dos", "winxp" ]:
@@ -154,17 +149,17 @@ class GRUBExtension(Extension):
 			]
 
 
-		ok, msgs, defpos, defname = r.GenerateSections(l,self.generateBootEntry,self.generateOtherBootEntry)
+		ok, msgs, self.defpos, self.defname = r.GenerateSections(l,self.generateBootEntry,self.generateOtherBootEntry)
 		allmsgs += msgs
 		if not ok:
-			return [ ok, allmsgs, l, None ]
+			return [ ok, allmsgs, l]
 		
 		l += [ 
 			""
-			"set default=%s" % defpos
+			"set default=%s" % self.defpos
 		]
 	
-		return [ok, allmsgs, l, defname]
+		return [ok, allmsgs, l]
 			
 	def GuppyMap(self):
 		out=commands.getstatusoutput("/sbin/grub-mkdevicemap")

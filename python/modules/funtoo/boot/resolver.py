@@ -98,6 +98,7 @@ class Resolver:
 		allmsgs=[]
 	
 		default = c["boot/default"]
+
 		pos = 0
 		defpos = None
 		defnames = [] 
@@ -116,15 +117,6 @@ class Resolver:
 		if len(linuxsections) == 0:
 			linuxsections.append("default")
 
-		if ofunc:
-			for sect in othersections:
-				ok, msgs = ofunc(l,sect)
-				allmsgs += msgs
-				defnames.append(sect)
-				pos += 1
-				if not ok:
-					return [ ok, allmsgs, defpos, None ]
-	
 		for sect in linuxsections:	
 			# Process boot entry section (which can generate multiple boot entries if multiple kernel matches are found)
 			findlist, skiplist = c.flagItemList("%s/%s" % ( sect, "kernel" ))
@@ -137,22 +129,33 @@ class Resolver:
 			# Generate individual boot entry using extension-supplied function
 
 			for kname, kext in findmatch:
-				if default == sect:
-					# if our boot/default setting is set to the name of our section, then use this as our default.
-					defpos = pos
-				if default == os.path.basename(kname):
+				if (default == sect) or (default == os.path.basename(kname)):
 					# default match
 					if defpos != None:
 						allmsgs.append(["warn","multiple matches found for default boot entry \"%s\" - first match used." % default])
-						break
-					defpos = pos
-
+					else:
+						defpos = pos
 				defnames.append(kname)
 				ok, msgs = sfunc(l,sect,kname,kext)
 				allmsgs += msgs
 				if not ok:
 					break
 				pos += 1
+
+		if ofunc:
+			for sect in othersections:
+				ok, msgs = ofunc(l,sect)
+				allmsgs += msgs
+				defnames.append(sect)
+				if default == sect:
+					if defpos != None:
+						allmsgs.append(["warn","multiple matches found for default boot entry \"%s\" - first match used." % default])
+					else:
+						defpos = pos
+				pos += 1
+				if not ok:
+					return [ ok, allmsgs, defpos, None ]
+	
 			
 		if pos == 0:
 			ok = False

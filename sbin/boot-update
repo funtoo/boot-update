@@ -47,7 +47,9 @@ def mesg(type,line):
 	elif type == "norm":
 		print GREEN+" *"+OFF+" "+line
 	elif type == "boot":
-		print CYAN+" >>> "+GREEN+line+OFF
+		print "           "+line
+	elif type == "defboot":
+		print CYAN+" DEFAULT > "+GREEN+line+OFF
 	elif type == "warn":
 		print RED+" *"+OFF+" "+line
 
@@ -128,8 +130,13 @@ def update(c,ok,allmsgs):
 	step, ok, msgs = ext.regenerate()
 	allmsgs += msgs
 	if ok:
-		for bootitem in ext.bootitems:
-			mesg("boot",bootitem)
+		pos = 0
+		while pos < len(ext.bootitems):
+			if pos == ext.defpos:
+				mesg("defboot",ext.bootitems[pos])
+			else:
+				mesg("boot",ext.bootitems[pos])
+			pos += 1
 		print
 
 	# If we mounted /boot, we should unmount it:

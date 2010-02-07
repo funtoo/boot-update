@@ -39,8 +39,31 @@ class ConfigFile:
 			fn=open(self.fname,"r")
 			self.read(fn.readlines())
 			fn.close()
-	
-	def deburr(self,str, delim):
+
+	def quotesplit(self,str):
+		# split a string, but respect double-quotes for grouping strings with whitespace
+		# Note that a string like "foo bar o"ni" will ignore the middle quote and will consider
+		# 'o"ni' as a single string. But that's ok.
+		parts = str.split()
+		newparts = []
+		pos = 0
+		accum = False
+		while pos < len(parts):
+			if accum == False:
+				newparts.append(parts[pos])
+			else:
+				newparts[-1] = newparts[-1] + " " + parts[pos]
+				if parts[pos][-1:] == "\"":
+					# remove embedded quotes
+					newparts[-1] = newparts[-1][1:-1]
+					accum = False
+			if parts[pos][:1] == "\"" and ( (parts[pos][-1:] != "\"") or len(parts[pos]) == 1):
+				accum = True
+			pos += 1
+		return newparts
+
+	def deburr(self,str,delim):
+		# remove surrounding quotes
 		str = str.strip().rstrip(delim).rstrip()
 		if len(str) > 2 and str[0] == '"' and str[-1] == '"':
 			return str[1:-1]
