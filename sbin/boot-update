@@ -9,7 +9,7 @@ GREEN="[32;01m"
 RED="[31;01m"
 PURP="[35;01m"
 OFF="[0m"
-version="1.4"
+version="1.4_beta1"
 verbose=False
 
 # This is needed for testing from the root of the git repo - must come before funtoo imports
@@ -23,6 +23,7 @@ import funtoo.boot.helper
 import funtoo.boot.extensions
 
 def versinfo():
+	print " coreboot %s" % version
 	print
 	print " Copyright "+CYANN+"2010"+OFF+" Funtoo Technologies."
 	print
@@ -147,7 +148,7 @@ def update(c,ok,allmsgs):
 	cleanup(ok,allmsgs)
 
 
-if len(sys.argv)>=2 and (( "-v" in sys.argv ) or ( "--version" in sys.argv )):
+if len(sys.argv)>=2 and (( "-l" in sys.argv ) or ( "--license" in sys.argv )):
 	versinfo()
 	sys.exit(0)
 
@@ -164,7 +165,7 @@ Uses settings in /etc/boot.conf to generate new grub, grub-legacy or lilo (alpha
 
 Options:
   -h, --help		Display this information
-  -v, --version		Display version and licensing information
+  -l, --license		Display license information
   -V, --verbose		Verbose mode
   --show		Show current configuration
   --showdefaults	Show default inherited settings
