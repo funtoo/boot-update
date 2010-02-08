@@ -22,10 +22,10 @@ class Resolver:
 						found.append([match,match[len(wild_glob)-2:]])
 		return found
 
-	def FindInitrds(self,sect,kernel,kext):
+	def FindInitrds(self,initrds,kernel,kext):
 		found=[]
 		base_path=os.path.dirname(kernel)
-		for initrd in sect:
+		for initrd in initrds.split():
 			initrd=os.path.normpath(base_path+"/"+initrd.replace("[-v]",kext))
 			if os.path.exists(initrd):
 				found.append(initrd)

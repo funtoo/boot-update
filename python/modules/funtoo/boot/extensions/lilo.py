@@ -58,9 +58,10 @@ class LILOExtension(Extension):
 			"	root=%s" % myroot,
 			"	append=\"%s\"" % " ".join(params)
 		]
-		initrds=r.FindInitrds(sect, kname, kext)
+		initrds=self.config.item(sect,"initrd")
+		initrds=r.FindInitrds(initrds, kname, kext)
 		for initrd in initrds:
-			l.append("	initrd=" % self.command.RelativePathTo(initrd,"/boot"))
+			l.append("	initrd=" % r.RelativePathTo(initrd,"/boot"))
 		l.append("")
 
 		return [ ok, allmsgs ]

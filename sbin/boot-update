@@ -158,7 +158,17 @@ ok=True
 allmsgs=[]
 cfile="/etc/boot.conf"
 
+def help():
+	print """Usage: boot-update [options] 
+Uses settings in /etc/boot.conf to generate new grub, grub-legacy or lilo (alpha) config file.
 
+Options:
+  -h, --help		Display this information
+  -v, --version		Display version and licensing information
+  -V, --verbose		Verbose mode
+  --show		Show current configuration
+  --showdefaults	Show default inherited settings
+"""
 # Load /etc/boot.conf master configuration file:
 
 c=funtoo.boot.config.BootConfigFile(cfile)
@@ -173,6 +183,8 @@ if len(sys.argv)>=3 and sys.argv[1] == "--show":
 elif len(sys.argv)>=2 and sys.argv[1] == "--showdefaults":
 	for line in c.parent.dump():
 		sys.stdout.write(line)
+elif len(sys.argv)>=2 and (sys.argv[1] in [ "-h", "--help"]):
+	help()
 else:
 	banner()
 	update(c,ok,allmsgs)

@@ -88,6 +88,7 @@ class GRUBExtension(Extension):
 			return [ ok, allmsgs ]
 
 		l.append("	linux %s %s" % ( kpath," ".join(params) ))
+		initrds=self.config.item(sect,"initrd")
 		initrds=r.FindInitrds(sect, kname, kext)
 		for initrd in initrds:
 			l.append("	initrd %s" % self.RelativePathTo(initrd,"/boot"))

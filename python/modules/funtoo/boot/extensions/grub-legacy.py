@@ -76,9 +76,10 @@ class GRUBLegacyExtension(Extension):
 		# print out our grub-ified root setting
 		l.append("root (hd%s,%s)" % (rootmaj, rootmin ))
 		l.append("kernel %s %s" % ( kpath," ".join(params) ))
-		initrds=r.FindInitrds(sect, kname, kext)
+		initrds=self.config.item(sect,"initrd")
+		initrds=r.FindInitrds(initrds, kname, kext)
 		for initrd in initrds:
-			l.append("initrd %s" % self.command.RelativePathTo(initrd,"/boot"))
+			l.append("initrd %s" % r.RelativePathTo(initrd,"/boot"))
 		l.append("")
 
 		return [ ok, allmsgs ]
