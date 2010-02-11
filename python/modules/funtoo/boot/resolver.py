@@ -52,8 +52,7 @@ class Resolver:
 			for param in params:
 				if param[0:5] == "root=":
 					return [ ok, allmsgs, param[5:] ]
-		ok = False
-		allmsgs.append(["fatal","(root=auto) - cannot find a root= setting in params."])
+		allmsgs.append(["warn","(root=auto) - cannot find a root= setting in params."])
 		return [ ok, allmsgs, None ]
 
 	def ZapParam(self,params,param):
