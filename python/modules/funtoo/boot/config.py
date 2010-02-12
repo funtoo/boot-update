@@ -23,11 +23,9 @@ color {
 }
 
 default {
-	name Funtoo Linux
 	type linux
 	scan /boot
 	kernel bzImage[-v] kernel[-v] vmlinuz[-v] vmlinux[-v]
-	initrd initramfs[-v]
 	params root=auto rootfstype=auto
 }""")
 

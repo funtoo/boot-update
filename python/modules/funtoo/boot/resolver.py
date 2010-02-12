@@ -32,11 +32,7 @@ class Resolver:
 		return found
 
 	def GetBootEntryString(self,sect,kname):
-		if sect == "default" and self.config["default/name"] != "":
-			osname = self.config["default/name"]
-		else:
-			osname = sect
-		return "%s - %s" % ( osname, kname )
+		return "%s - %s" % ( sect, kname )
 
 	def DoRootAuto(self,params,ok,allmsgs):
 		if "root=auto" in params:
@@ -112,9 +108,11 @@ class Resolver:
 				else:
 					othersections.append(sect)
 		
-		# if we have no linux boot entries, use the "default" section as the only linux boot entry to look for kernels
+		# if we have no linux boot entries, throw an error - force user to be explicit.
 		if len(linuxsections) == 0:
-			linuxsections.append("default")
+			allmsgs.append(["fatal","No boot entries are defined in /etc/boot.conf."])
+			ok=False
+			return[ ok, allmsgs, None, None ] 
 
 		for sect in linuxsections:	
 			# Process boot entry section (which can generate multiple boot entries if multiple kernel matches are found)
