@@ -46,15 +46,15 @@ class GRUBLegacyExtension(Extension):
 		myroot = r.GetParam(params,"root=")
 		myname = sect
 		# TODO check for valid root entry
-		l.append("")
 		l.append("title %s" % myname )
 		#self.PrepareGRUBForDevice(myroot,l)
 		self.bootitems.append(myname)
 		retval, mygrubroot = self.DeviceGRUB(myroot)
+		l.append("root %s" % mygrubroot )
 		if mytype == "win7":
-			l.append("	chainloader +4")
+			l.append("chainloader +4")
 		elif mytype in [ "vista", "dos", "winxp" ]:
-			l.append("	chainloader +1")
+			l.append("chainloader +1")
 		l.append("")
 		return [ ok, msgs ]
 
@@ -69,6 +69,11 @@ class GRUBLegacyExtension(Extension):
 
 	def DeviceGRUB(self,dev):
 		retval,out=self.Guppy(" --device %s --target=drive" % dev) 
+		if retval == 0:
+			# Convert GRUB "count from 1" (hdx,y) format to legacy "count from 0" format
+			mys = out[1:-1].split(",")
+			mys = ( mys[0], repr(int(mys[1]) - 1) )
+			out = "(%s,%s)" % mys
 		return retval,out
 
 	def generateBootEntry(self,l,sect,kname,kext):
@@ -77,7 +82,6 @@ class GRUBLegacyExtension(Extension):
 		ok=True
 		allmsgs=[]
 
-		l.append("")
 		label = r.GetBootEntryString( sect, kname )
 		
 		l.append("title %s" % label)
@@ -101,23 +105,10 @@ class GRUBLegacyExtension(Extension):
 			# If /boot doesn't exist, the root filesystem is treated as grub's "root"
 			rootfs = "/"
 			rootdev = r.GetParam(params,"root=")
-		
-		# Now that we have the grub root in /dev/sd?? format, attempt to convert it to (hd?,?) format
-		if rootdev[0:5] != "/dev/":
-			ok = False
-			allmsgs.append(["fatal","grub-legacy - %s is not a valid GRUB root - ensure /etc/fstab is correct or specify a root= parameter." % rootdev ] )
-			return [ ok, allmsgs ]
-		if rootdev[5:7] != "sd":
-			allmsgs.append(["warn","grub-legacy - encountered \"%s\", a non-\"sd\" device. Root setting may not be accurate." % rootdev])
-		rootmaj = ord(rootdev[7]) - ord('a')
-		try:
-			rootmin = int(rootdev[8:]) - 1
-		except TypeError:
-			ok = False
-			allmsgs.append(["fatal","grub-legacy - couldn't calculate the root minor for \"%s\"." % rootdev])
-			return [ ok, allmsgs ]
+
+		retval, mygrubroot = self.DeviceGRUB(rootdev)	
 		# print out our grub-ified root setting
-		l.append("root (hd%s,%s)" % (rootmaj, rootmin ))
+		l.append("root %s" % mygrubroot )
 		l.append("kernel %s %s" % ( kpath," ".join(params) ))
 		initrds=self.config.item(sect,"initrd")
 		initrds=r.FindInitrds(initrds, kname, kext)
@@ -143,7 +134,7 @@ class GRUBLegacyExtension(Extension):
 		
 		l += [ 
 			""
-			"default %s" % defpos
+			"default %s" % self.defpos
 		]
 	
 		return [ok, allmsgs, l ]
