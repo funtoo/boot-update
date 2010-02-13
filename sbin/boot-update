@@ -22,10 +22,16 @@ import funtoo.boot.config
 import funtoo.boot.helper
 import funtoo.boot.extensions
 
-def versinfo():
-	print " coreboot %s" % version
+def banner(extra=True):
 	print
-	print " Copyright "+CYANN+"2010"+OFF+" Funtoo Technologies."
+	print " "+PURP+"boot-update "+OFF+CYANN+version+OFF+" /",
+	print "Copyright 2010 Funtoo Technologies",
+	if extra:
+		print "(\"-l\" for license info, \"-h\" for help)"
+	print
+
+def versinfo():
+	banner(extra=False)
 	print
 	print """ This program is free software; you can redistribute and/or modify it under
  the terms of the GNU General Public License version 3 as published by the
@@ -34,12 +40,19 @@ def versinfo():
  Funtoo Technologies, LLC. (or its successors, if any.)
  """
 
-def banner():
+def help():
+	banner(extra=False)
 	print
-	print " "+PURP+"boot-update "+OFF+CYANN+version+OFF+" /",
-	print "Copyright 2010 Funtoo Technologies",
-	print "(\"-v\" for license info)"
-	print
+	print """ Usage: boot-update [options] 
+ Uses settings in /etc/boot.conf to generate new grub, grub-legacy or lilo (alpha) config file.
+
+ Options:
+   --showdefaults		Show hard-coded (user-overrideable) settings
+   -V, --verbose		Verbose mode
+   -h, --help			Display this information
+   -l, --license		Display license information
+"""
+
 
 def mesg(type,line):
 	global verbose
@@ -158,18 +171,6 @@ if "-V" in sys.argv or ("--verbose" in sys.argv):
 ok=True
 allmsgs=[]
 cfile="/etc/boot.conf"
-
-def help():
-	print """Usage: boot-update [options] 
-Uses settings in /etc/boot.conf to generate new grub, grub-legacy or lilo (alpha) config file.
-
-Options:
-  -h, --help		Display this information
-  -l, --license		Display license information
-  -V, --verbose		Verbose mode
-  --show		Show current configuration
-  --showdefaults	Show default inherited settings
-"""
 # Load /etc/boot.conf master configuration file:
 
 c=funtoo.boot.config.BootConfigFile(cfile)
@@ -182,6 +183,9 @@ if not c.fileExists():
 if len(sys.argv)>=3 and sys.argv[1] == "--show":
 	print c[sys.argv[2]]
 elif len(sys.argv)>=2 and sys.argv[1] == "--showdefaults":
+	print "# These are default, hard-coded settings that can be overridden by the"
+	print "# /etc/boot.conf file."
+	print
 	for line in c.parent.dump():
 		sys.stdout.write(line)
 elif len(sys.argv)>=2 and (sys.argv[1] in [ "-h", "--help"]):
