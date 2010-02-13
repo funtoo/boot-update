@@ -109,10 +109,12 @@ class Resolver:
 					othersections.append(sect)
 		
 		# if we have no linux boot entries, throw an error - force user to be explicit.
-		if len(linuxsections) == 0:
+		if len(linuxsections) + len(othersections) == 0:
 			allmsgs.append(["fatal","No boot entries are defined in /etc/boot.conf."])
 			ok=False
 			return[ ok, allmsgs, None, None ] 
+		if len(linuxsections) == 0:
+			allmsgs.append(["warn","No Linux boot entries are defined. You may not be able to re-enter Linux."])
 
 		for sect in linuxsections:	
 			# Process boot entry section (which can generate multiple boot entries if multiple kernel matches are found)
