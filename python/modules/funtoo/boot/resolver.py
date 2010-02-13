@@ -101,6 +101,18 @@ class Resolver:
 		linuxsections = []
 		othersections = []
 
+		try:
+			timeout = int(c["boot/timeout"])
+		except ValueError:
+			ok = False
+			allmsgs.append(["fatal","Invalid value \"%s\" for boot/timeout." % timeout])
+			return [ ok, allmsgs, None, None ]
+
+		if timeout == 0:
+			allmsgs.append(["warn","boot/timeout value is zero - boot menu will not appear!"])
+		elif timeout < 3:
+			allmsgs.append(["norm","boot/timeout value is below 3 seconds."])
+
 		for sect in c.getSections():
 			if sect not in c.builtins:
 				if c["%s/%s" % (sect, "type")] == "linux":

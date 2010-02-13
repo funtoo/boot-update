@@ -112,7 +112,10 @@ def update(c,ok,allmsgs):
 	if generate not in funtoo.boot.extensions.__all__:
 		ok=False
 		allmsgs.append(["fatal","extension for boot loader \"%s\" (specified in boot/generate) not found." % generate ])
-	
+
+	mesg("norm","Generating config for %s..." % generate)
+	print
+
 	if not ok:
 		cleanup(ok,allmsgs)
 
