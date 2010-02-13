@@ -24,6 +24,52 @@ class GRUBLegacyExtension(Extension):
 		msgs=[]
 		ok=True
 		return [ok, msgs]
+	
+	def generateOtherBootEntry(self,l,sect):
+		global r
+		ok=True
+		msgs=[]
+		mytype = self.config["%s/type" % sect ].lower()
+		if mytype in [ "dos", "msdos", ]:
+			mytype = "dos"
+		elif mytype in [ "windows", "windows 2000", "win2000", "windows xp", "winxp" ]:
+			mytype = "winxp"
+		elif mytype in [ "windows vista", "vista" ]:
+			mytype = "vista"
+		elif mytype in [ "windows 7", "win7" ]:
+			mytype = "win7"
+		else:
+			ok = False
+			msgs.append(["fatal","Unrecognized boot entry type \"%s\"" % mytype])
+			return [ ok, msgs ]
+		params=self.config["%s/params" % sect].split()
+		myroot = r.GetParam(params,"root=")
+		myname = sect
+		# TODO check for valid root entry
+		l.append("")
+		l.append("title %s" % myname )
+		#self.PrepareGRUBForDevice(myroot,l)
+		self.bootitems.append(myname)
+		retval, mygrubroot = self.DeviceGRUB(myroot)
+		if mytype == "win7":
+			l.append("	chainloader +4")
+		elif mytype in [ "vista", "dos", "winxp" ]:
+			l.append("	chainloader +1")
+		l.append("")
+		return [ ok, msgs ]
+
+	def Guppy(self,argstring,fatal=True):
+		out=commands.getstatusoutput("/sbin/grub-probe "+argstring)
+		if fatal and out[0] != 0:
+			print "grub-probe "+argstring
+			print out[1]
+			sys.exit(1)
+		else:
+			return out
+
+	def DeviceGRUB(self,dev):
+		retval,out=self.Guppy(" --device %s --target=drive" % dev) 
+		return retval,out
 
 	def generateBootEntry(self,l,sect,kname,kext):
 		global r
@@ -36,9 +82,6 @@ class GRUBLegacyExtension(Extension):
 		
 		l.append("title %s" % label)
 		self.bootitems.append(label)
-
-		if config.item(sect,"type") == "chainloader":
-			l.append("chainloader +1")	
 
 		kpath=r.RelativePathTo(kname,"/boot")
 		params=self.config.item(sect,"params").split()
@@ -93,7 +136,7 @@ class GRUBLegacyExtension(Extension):
 		l.append(c.condSubItem("boot/timeout", "timeout %s"))
 		# pass our boot entry generator function to GenerateSections, and everything is taken care of for our boot entries
 
-		ok, msgs, self.defpos, self.defname = r.GenerateSections(l,self.generateBootEntry)
+		ok, msgs, self.defpos, self.defname = r.GenerateSections(l,self.generateBootEntry, self.generateOtherBootEntry)
 		allmsgs += msgs
 		if not ok:
 			return [ ok, allmsgs, l ]
