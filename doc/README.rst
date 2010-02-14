@@ -295,7 +295,7 @@ how to specify a Windows 7 boot entry::
 
         "My Windows 7" {
                 type win7
-                params = /dev/sda6
+                params root=/dev/sda6
         }
 
 ``default :: scan`` (O)
