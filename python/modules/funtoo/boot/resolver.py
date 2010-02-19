@@ -37,21 +37,34 @@ class Resolver:
 		return "%s - %s" % ( sect, kname )
 
 	def DoRootAuto(self,params,ok,allmsgs):
+		rootarg=None
+		doauto=False
 		if "root=auto" in params:
 			params.remove("root=auto")
+			rootarg="root"
+			doauto=True
+		if "real_root=auto" in params:
+			params.remove("real_root=auto")
+			rootarg="real_root"
+			doauto=True
+		if doauto:
 			rootdev = fstabGetRootDevice()
 			if (rootdev[0:5] != "/dev/") and (rootdev[0:5] != "UUID=") and (rootdev[0:6] != "LABEL="):
 				ok = False
 				allmsgs.append(["fatal","(root=auto) - / entry in /etc/fstab not recognized (%s)." % rootdev])
-				return [ ok, allmsgs, None ]
-			params.append("root=%s" % rootdev )
-			return [ ok, allmsgs, rootdev ]	
+			else:
+				params.append("%s=%s" % ( rootarg, rootdev ))
+			return [ ok, allmsgs, rootdev ]
 		else:
+			# nothing to do - but we'll generate a warning if there is no root or real_root specified in params, and return the root dev.
 			for param in params:
-				if param[0:5] == "root=":
+				if (param[0:5] == "root="):
 					return [ ok, allmsgs, param[5:] ]
-		allmsgs.append(["warn","(root=auto) - cannot find a root= setting in params."])
-		return [ ok, allmsgs, None ]
+				elif (param[0:10] == "real_root="):
+					return [ ok, allmsgs, param[10:] ]
+			# if we got here, we didn't find a root or real_root
+			allmsgs.append(["warn","(root=auto) - cannot find a root= or real_root= setting in params."])
+			return [ ok, allmsgs, None ]
 
 	def ZapParam(self,params,param):
 		pos = 0
