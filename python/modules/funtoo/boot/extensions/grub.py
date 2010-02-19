@@ -89,9 +89,9 @@ class GRUBExtension(Extension):
 
 		l.append("	linux %s %s" % ( kpath," ".join(params) ))
 		initrds=self.config.item(sect,"initrd")
-		initrds=r.FindInitrds(sect, kname, kext)
+		initrds=r.FindInitrds(initrds, kname, kext)
 		for initrd in initrds:
-			l.append("	initrd %s" % self.RelativePathTo(initrd,"/boot"))
+			l.append("	initrd %s" % r.RelativePathTo(initrd,"/boot"))
 		if self.config.hasItem("%s/gfxmode" % sect):
 			l.append("	set gfxpayload=%s" % self.config.item(sect,"gfxmode"))
 		else:
