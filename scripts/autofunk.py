@@ -1,6 +1,26 @@
 #!/usr/bin/python2.6
 
+import sys
 import commands
+import fnmatch
+import string
+
+modlist = []
+buckets = { "driver" : "kernel/drivers/*", "fs" : "kernel/fs/*", "sound" : "kernel/sound/*" }
+modcat = {}
+
+for cat in buckets.keys():
+	modcat[cat] = []
+
+a=commands.getstatusoutput("find /lib/modules/`uname -r` -iname *.ko")
+for line in a[1].split("\n"):
+	ls = line.split("/")
+	subpath = "/".join(ls[4:])
+	shortname = ls[-1][:-3].replace("_","-")
+	modlist.append(ls)
+	for modtype in buckets.keys():
+		if fnmatch.fnmatch(subpath,buckets[modtype]):
+			modcat[modtype].append(shortname)
 
 a=commands.getstatusoutput("lsmod | sed 1d")
 
@@ -8,24 +28,12 @@ deps={}
 
 for line in a[1].split("\n"):
 	ls = line.split()
+	key = ls[0].replace("_","-")
 	if len(ls)==4:
-		deps[ls[0]] = [int(ls[2]), ls[3].split(",")]
+		mydeps = ls[3].replace("_","-").split(",")
+		deps[key] = [int(ls[2]), mydeps]
 	else:
-		deps[ls[0]] = [int(ls[2]), []]
-
-def is_driver(key):
-	a = commands.getstatusoutput("find /lib/modules/*/kernel/drivers -iname %s.ko" % key)
-	if a[1] == "":
-		return False
-	else:
-		return True
-
-def is_fs(key):
-	a = commands.getstatusoutput("find /lib/modules/*/kernel/fs -iname %s.ko" % key)
-	if a[1] == "":
-		return False
-	else:
-		return True
+		deps[key] = [int(ls[2]), []]
 
 def has_deps(key):
 	num, deplist = deps[key]
@@ -53,6 +61,7 @@ def has_deps(key):
 
 for key in deps.keys():
 	if has_deps(key):
-		if is_fs(key) or is_driver(key):
-			print key
+		if key in modcat["fs"]  or key in modcat["driver"]:
+			if key not in modcat["sound"]:
+				print key
 
