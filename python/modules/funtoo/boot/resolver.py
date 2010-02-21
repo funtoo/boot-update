@@ -26,9 +26,7 @@ class Resolver:
 		found=[]
 		base_path=os.path.dirname(kernel)
 		for initrd in initrds.split():
-			print 'DEBUG',initrd
 			initrd=os.path.normpath(base_path+"/"+initrd.replace("[-v]",kext))
-			print 'DEBUG looking for',initrd
 			if os.path.exists(initrd):
 				found.append(initrd)
 		return found
