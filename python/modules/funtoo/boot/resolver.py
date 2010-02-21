@@ -1,6 +1,23 @@
 import os, glob
 from helper import *
 
+def bracketzap(str,wild=True):
+	wstart = str.find("[")
+	if wstart == -1:
+		return str
+	wstop = str.rfind("]")
+	if wstop == -1:
+		return str
+	if wstart > wstop:
+		return str
+	if wild:
+		if str[wstart:wstop+1] == "[-v]":
+			return str[0:wstart]+"-*"+str[wstop+1:]
+		else:
+			return str[0:wstart]+str[wstart+1:wstop]+str[wstop+1:]
+	else:
+		return str[0:wstart]+str[wstop+1:]
+
 class Resolver:
 	def __init__(self,config):
 		self.config=config
@@ -9,8 +26,10 @@ class Resolver:
 		# find kernels in scanpath that match globs in globlist, and return them
 		found=[]
 		for pattern in globlist:
-			base_glob = os.path.normpath(scanpath+"/"+pattern.replace("[-v]",""))
-			wild_glob = os.path.normpath(scanpath+"/"+pattern.replace("[-v]","-*"))	
+			#base_glob = os.path.normpath(scanpath+"/"+pattern.replace("[-v]",""))
+			base_glob = os.path.normpath(scanpath+"/"+bracketzap(pattern,wild=False))
+			#wild_glob = os.path.normpath(scanpath+"/"+pattern.replace("[-v]","-*"))	
+			wild_glob = os.path.normpath(scanpath+"/"+bracketzap(pattern,wild=True))
 			for match in glob.glob(base_glob):
 				if match not in skip and match not in found:
 					# append the matching kernel, and "" representing that no [-v] extension was used
@@ -32,7 +51,7 @@ class Resolver:
 		return found
 
 	def GetBootEntryString(self,sect,kname):
-		return "%s - %s" % ( sect, kname )
+		return "%s - %s" % ( sect, os.path.basename(kname) )
 
 	def DoRootAuto(self,params,ok,allmsgs):
 		rootarg=None
@@ -105,7 +124,7 @@ class Resolver:
 		ok=True
 		allmsgs=[]
 	
-		default = c["boot/default"]
+		default = c.deburr(c["boot/default"])
 
 		pos = 0
 		defpos = None

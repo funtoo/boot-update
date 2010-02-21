@@ -11,6 +11,18 @@
 
 import os, sys
 
+
+class ConfigFileError(Exception):
+	def __init__(self, *args):
+		self.args = args
+	def __str__(self):
+		if len(self.args) == 1:
+			return str(self.args[0])
+		else:
+			return "(no message)"
+
+
+
 class ConfigFile:
 	def __init__(self,fname=None,existing=True):
 		
@@ -40,6 +52,9 @@ class ConfigFile:
 			self.read(fn.readlines())
 			fn.close()
 
+# neat function, but we're not using it right now:
+
+	"""
 	def quotesplit(self,str):
 		# split a string, but respect double-quotes for grouping strings with whitespace
 		# Note that a string like "foo bar o"ni" will ignore the middle quote and will consider
@@ -61,10 +76,12 @@ class ConfigFile:
 				accum = True
 			pos += 1
 		return newparts
-
-	def deburr(self,str,delim):
+"""
+	def deburr(self,str,delim=None):
 		# remove surrounding quotes
-		str = str.strip().rstrip(delim).rstrip()
+		str = str.strip()
+		if delim != None:
+			str = str.rstrip(delim).rstrip()
 		if len(str) > 2 and str[0] == '"' and str[-1] == '"':
 			return str[1:-1]
 		else:
@@ -152,7 +169,7 @@ class ConfigFile:
 
 
 	def read(self,lines):
-		ln=0
+		ln = 0 
 		while ln < len(lines):	
 			if lines[ln].lstrip()[:1] == "#" or lines[ln].lstrip() == "":
 				# comment or whitespace (which is treated as a comment)
@@ -165,7 +182,7 @@ class ConfigFile:
 				section = self.deburr(lines[ln], "{")
 				if self.sectionData.has_key(section):
 					# duplicate section - bad
-					raise
+					raise ConfigFileError, "Duplicate config file section \"%s\" on line %s" % ( section, ln+1)
 
 				# Initialize internal section data store
 				self.sectionData[section] = {}
@@ -195,11 +212,11 @@ class ConfigFile:
 
 					if varname == "{":
 						# this is illegal
-						raise
+						raise ConfigFileError, "Illegal variable name \"{\" on line %s" % ln+1
 
 					if vardata == "":
 						# a variable but no data
-						raise
+						raise ConfigFileError, "Variable name \"%s\" has no data on line %s" % (varname, ln+1)
 
 					# record our variable data
 					self.sectionDataOrder[section].append(varname)
@@ -218,8 +235,7 @@ class ConfigFile:
 				
 				if self.templates.has_key(template):
 					# bad - duplicate template
-					raise
-			
+					raise ConfigFileError, "Duplicate template \"%s\" on line %s" % ( template, ln+1)	
 				self.lineData["template"][template] = ln + 1
 
 				ln += 1
@@ -233,7 +249,7 @@ class ConfigFile:
 				ln += 1
 			else:
 				# no clue what this is
-				raise 
+				raise ConfigFileError, "Unexpected data \"%s\" on line %s" % (lines[ln], ln+1 )
 	
 	# IMPLEMENT THIS:
 

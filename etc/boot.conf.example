@@ -1,11 +1,11 @@
 boot {
 	generate grub
-	default bzImage 
+	default "Funtoo Linux" 
 	timeout 3 
 }
 
 "Funtoo Linux" {
-	kernel bzImage
+	kernel bzImage[-v]
 }
 
 "Funtoo Linux genkernel" {

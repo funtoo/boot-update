@@ -9,7 +9,7 @@ GREEN="[32;01m"
 RED="[31;01m"
 PURP="[35;01m"
 OFF="[0m"
-version="1.4_beta3"
+version="1.4_beta4"
 verbose=False
 
 # This is needed for testing from the root of the git repo - must come before funtoo imports
@@ -21,6 +21,7 @@ if os.path.isdir(".git") and os.path.basename(os.getcwd()) == "coreboot":
 import funtoo.boot.config
 import funtoo.boot.helper
 import funtoo.boot.extensions
+from funtoo.core.config import ConfigFileError
 
 def banner(extra=True):
 	print
@@ -48,6 +49,7 @@ def help():
 
  Options:
    --showdefaults		Show hard-coded (user-overrideable) settings
+   --show [sect/var]		Display variable "var" defined in section "sect"
    -V, --verbose		Verbose mode
    -h, --help			Display this information
    -l, --license		Display license information
@@ -175,12 +177,16 @@ ok=True
 allmsgs=[]
 cfile="/etc/boot.conf"
 # Load /etc/boot.conf master configuration file:
-
-c=funtoo.boot.config.BootConfigFile(cfile)
-
-if not c.fileExists():
-	ok=False
-	allmsgs.append(["fatal","Master configuration file \"%s\" does not exist." % cfile])
+try:
+	c=funtoo.boot.config.BootConfigFile(cfile)
+	if not c.fileExists():
+		ok=False
+		allmsgs.append(["fatal","Master configuration file \"%s\" does not exist." % cfile])
+except ConfigFileError, e:
+	ok = False
+	banner()
+	allmsgs.append(["fatal","Parse Error: %s" % e])
+if not ok:
 	cleanup(ok,allmsgs)
 
 if len(sys.argv)>=3 and sys.argv[1] == "--show":
