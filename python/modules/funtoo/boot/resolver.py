@@ -111,6 +111,7 @@ class Resolver:
 
 		pos = 0
 		defpos = None
+		def_mtime = None
 		defnames = [] 
 
 		linuxsections = []
@@ -154,19 +155,30 @@ class Resolver:
 
 			# Generate individual boot entry using extension-supplied function
 
+			found_multi = False
+
 			for kname, kext in findmatch:
 				if (default == sect) or (default == os.path.basename(kname)):
 					# default match
 					if defpos != None:
-						allmsgs.append(["warn","multiple matches found for default boot entry \"%s\" - first match used." % default])
+						found_multi = True
+						curtime = os.stat(kname)[8]
+						if curtime > def_mtime:
+							# this kernel is newer, use it instead
+							defpos = pos
+							def_mtime = curtime
 					else:
 						defpos = pos
+						def_mtime = os.stat(kname)[8]
 				defnames.append(kname)
 				ok, msgs = sfunc(l,sect,kname,kext)
 				allmsgs += msgs
 				if not ok:
 					break
 				pos += 1
+						
+			if found_multi:			
+				allmsgs.append(["warn","multiple matches found for default \"%s\" - most recent used." % default])
 
 		if ofunc:
 			for sect in othersections:
