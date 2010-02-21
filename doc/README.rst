@@ -17,7 +17,7 @@ Introduction
 
 .. role:: change
 
-**Funtoo Core Networking has been enabled in Funtoo stable (funtoo) and unstable (~funtoo) builds -- see** :change:`2009.2` **and emerge sys-apps/coreboot to use it.**
+**Funtoo Core Boot Framework has been enabled in Funtoo stable (funtoo) and unstable (~funtoo) builds -- see** :change:`2009.2` **and emerge sys-apps/coreboot to use it.**
 **Docs updated to reflect coreboot-1.4_beta2.**
 
 The Funtoo Core Boot Framework is currently in development (and masked in
