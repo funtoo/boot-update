@@ -1,0 +1,30 @@
+boot {
+	generate grub
+	default bzImage 
+	timeout 3 
+}
+
+"Funtoo Linux" {
+	kernel bzImage
+}
+
+"Funtoo Linux genkernel" {
+	kernel kernel-genkernel[-v]
+	initrd initramfs-genkernel[-v]
+	params += real_root=auto 
+} 
+
+"Funtoo Linux uvesafb" { 
+	kernel bzImage-uvesafb[-v]
+	params += video=uvesafb:1440x900-8,mtrr=2
+}
+
+"Windows 7" {
+	type win7 
+	params root=/dev/sda1
+}
+
+"Windows XP" {
+	type winxp
+	params root=/dev/sda4
+}
