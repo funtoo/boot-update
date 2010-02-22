@@ -214,13 +214,36 @@ class ConfigFile:
 						# this is illegal
 						raise ConfigFileError, "Illegal variable name \"{\" on line %s" % ln+1
 
-					if vardata == "":
+					if len(ls) < 2 or (vardata == ""):
 						# a variable but no data
 						raise ConfigFileError, "Variable name \"%s\" has no data on line %s" % (varname, ln+1)
 
-					# record our variable data
-					self.sectionDataOrder[section].append(varname)
-					self.sectionData[section][varname] = vardata
+					# the following conditional block allows additional += lines to append to variables without
+					# throwing an exception, as follows:
+					#
+					# foo {
+					#	params root=auto
+					#	params += init=/bin/bash
+					# }
+					#
+					# Note that if this file is dumped (ie. written back to disk,) then the params will appear
+					# as a single line. This is because the multi-line variable is expanded when the file is
+					# read in, because it's easier that way.
+					#
+					# Also note that a single variable with an initial "+=" will be evaluated using a different
+					# code path, at variable resolution time. An initial "+=" means "inherit from default section",
+					# whereas successive "+="'s hit the code path here and mean "append to previously-defined
+					# line."
+
+					if self.sectionData[section].has_key(varname):
+						if ls[1] == "+=":
+							self.sectionData[section][varname] += " %s" % " ".join(ls[2:])
+						else:
+							raise ConfigFileError, "Duplicate variable \"%s\" on line %s" % ( varname, ln+1 )
+					else:
+						# record our variable data
+						self.sectionDataOrder[section].append(varname)
+						self.sectionData[section][varname] = vardata
 
 					# record line number of variable data:
 					self.lineData["sectionData"]["%s/%s" % ( section, varname ) ] = ln + 1
