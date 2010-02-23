@@ -16,9 +16,13 @@ SYNOPSIS
 
 The standard invocation of the command is as follows with no options or
 arguments, which causes a boot loader configuration file to be (re)generated based
-on settings in */etc/boot.conf*:
+on settings in ``/etc/boot.conf``:
 
   **boot-update**
+
+Typically, **boot-update** would be run if the contents of ``/etc/boot.conf``
+were changed by the user, or additional kernels were installed. This would allow
+the boot loader menu to reflect these changes.
 
 OPTIONS
 -------
@@ -32,15 +36,15 @@ OPTIONS
 DESCRIPTION
 -----------
 
-*boot-update* is a tool, part of the Funtoo Core Boot Framework, that will
-generate a boot loader configuration file based on settings stored in
-*/etc/boot.conf*. *boot-update* was originally created as an enhanced
-replacement of the upstream GRUB-1.97+ configuration system, where the boot
-loader configuration file stored at */boot/grub/grub.cfg* is quite complex and
-is not intended to be edited directly by system administrators.
+*boot-update* is a system tool, part of the Funtoo Core Boot Framework, that
+will generate a boot loader configuration file based on settings stored in
+``/etc/boot.conf``. *boot-update* was originally created as an enhanced
+replacement of the upstream GRUB-1.97+ configuration system. GRUB-1.97+'s boot
+loader configuration file is stored at ``/boot/grub/grub.cfg``, is quite
+complex and is not intended to be edited directly by system administrators.
 
 *boot-update* has since been extended to support GRUB (*sys-boot/grub*), GRUB
-Legacy (*sys-boot/grub-legacy*) and alpha LILO (*sys-boot/lilo*) support.  This
+Legacy (*sys-boot/grub-legacy*) and (alpha) LILO (*sys-boot/lilo*).  This
 allows a single file, */etc/boot.conf*, to store boot-related information in a
 boot-loader-independent way, thus simplifying boot loader configuration and
 providing advanced features to all popular boot loaders.
