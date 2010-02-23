@@ -1,12 +1,13 @@
-Funtoo Core Boot Framework
-==========================
-
-The Funtoo Core Boot Framework consists of independently-developed source code
-that is released under its own distinct licensing terms.
-
-The Funtoo Core Boot Framework is distributed under the following terms:
+COPYRIGHT
+---------
 
 Copyright 2009-2010 Funtoo Technologies, LLC.
+
+LICENSE
+-------
+
+The Funtoo Core Boot Framework consists of independently-developed source code
+that is released under its own distinct licensing terms:
 
 This program is free software; you can redistribute and/or modify it under the
 terms of the GNU General Public License version 3 as published by the Free
@@ -14,6 +15,6 @@ Software Foundation. Alternatively you may (at your option) use any other
 license that has been publicly approved for use with this program by Funtoo
 Technologies, LLC. (or its successors, if any.)
 
-At this time (December 2009), no other licenses other than the default license
+At this time (February 2010), no other licenses other than the default license
 (GNU GPL version 3) have been approved by Funtoo Technologies, LLC for use with
 this program.
