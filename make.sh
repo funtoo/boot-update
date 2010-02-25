@@ -8,7 +8,7 @@ sdist() {
 	cd doc
 	cat boot-update.8.rst | sed -e "s/##VERSION##/$VERSION/g" | rst2man.py > boot-update.8
 	cat boot.conf.5.rst | sed -e "s/##VERSION##/$VERSION/g" | rst2man.py > boot.conf.5
-	git add boot-upate.8 boot.conf.5
+	git add boot-update.8 boot.conf.5
 	cd ..
 	git commit -a -m "$VERSION distribution release"
 	git archive --format=tar --prefix=coreboot-${VERSION}/ HEAD > dist/coreboot-${VERSION}.tar
