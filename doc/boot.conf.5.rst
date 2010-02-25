@@ -7,7 +7,7 @@ Funtoo global boot loader configuration file
 ---------------------------------------------
 
 :Author: Daniel Robbins <drobbins@funtoo.org>
-:Version: 1.4
+:Version: ##VERSION## 
 :Manual section: 5
 :Manual group: Funtoo Linux Core System
 
@@ -19,17 +19,15 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-In Funtoo Linux, */etc/boot.conf* is intended to serve as the master
-configuration meta-file for all boot loaders. The data in */etc/boot.conf* is
-used by the Funtoo Core Boot Framework to generate specific configuration files
-for various boot loaders as necessary.
+The data in */etc/boot.conf* is used by *boot-update(8)* to generate specific
+configuration files for various boot loaders as necessary.
 
 The benefit of */etc/boot.conf* is that it provides a single location to
 store all boot-related information. It also provides a single, consistent file
 format and feature set for configuring all boot loaders.
 
-Thanks to *boot-update(8)*, there is also a consistent process for updating
-boot loader information, regardless of the actual boot loader used.
+*boot-update(8)* utilizes */etc/boot.conf* to provide a consistent process for
+updating boot loader configuration, regardless of the actual boot loader used.
 
 Here is a sample */etc/boot.conf* configuration file:
 

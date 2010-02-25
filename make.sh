@@ -5,6 +5,11 @@ VERSION=`cat VERSION`
 sdist() {
 	install -d dist
 	rm -f dist/coreboot-$VERSION*
+	cd doc
+	cat boot-update.8.rst | sed -e "s/##VERSION##/$VERSION/g" | rst2man.py > boot-update.8
+	cat boot.conf.5.rst | sed -e "s/##VERSION##/$VERSION/g" | rst2man.py > boot.conf.5
+	cd ..
+	git commit -a -m "$VERSION distribution release"
 	git archive --format=tar --prefix=coreboot-${VERSION}/ HEAD > dist/coreboot-${VERSION}.tar
 	bzip2 dist/coreboot-$VERSION.tar
 }

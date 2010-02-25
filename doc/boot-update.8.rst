@@ -7,7 +7,7 @@ Automatically create a boot loader configuration file
 -----------------------------------------------------
 
 :Author: Daniel Robbins <drobbins@funtoo.org>
-:Version: 1.4
+:Version: ##VERSION## 
 :Manual section: 8
 :Manual group: Funtoo Linux Core System
 
@@ -16,18 +16,18 @@ SYNOPSIS
 
 The standard invocation of the command is as follows with no options or
 arguments, which causes a boot loader configuration file to be (re)generated based
-on settings in ``/etc/boot.conf``:
+on settings in */etc/boot.conf*:
 
   **boot-update**
 
-Typically, **boot-update** would be run if the contents of ``/etc/boot.conf``
+Typically, **boot-update** would be run if the contents of */etc/boot.conf*
 were changed by the user, or additional kernels were installed. This would allow
 the boot loader menu to reflect these changes.
 
 OPTIONS
 -------
 
---show VARIABLE         Print the value of VARIABLE from ``/etc/boot.conf`` to stdout and exit.
+--show VARIABLE         Print the value of VARIABLE from */etc/boot.conf* to stdout and exit.
 --showdefaults          Print hard-coded default config file values to stdout and exit.
 --verbose, -V           Run in verbose mode; show additional output.
 --help, -h              Show help summary and exit.
@@ -38,9 +38,9 @@ DESCRIPTION
 
 *boot-update* is a system tool, part of the Funtoo Core Boot Framework, that
 will generate a boot loader configuration file based on settings stored in
-``/etc/boot.conf``. *boot-update* was originally created as an enhanced
+*/etc/boot.conf*. *boot-update* was originally created as an enhanced
 replacement of the upstream GRUB-1.97+ configuration system. GRUB-1.97+'s boot
-loader configuration file is stored at ``/boot/grub/grub.cfg``, is quite
+loader configuration file is stored at */boot/grub/grub.cfg*, is quite
 complex and is not intended to be edited directly by system administrators.
 
 *boot-update* has since been extended to support GRUB (*sys-boot/grub*), GRUB
@@ -52,7 +52,7 @@ providing advanced features to all popular boot loaders.
 The normal way to use *boot-update* is to run the command with no options
 or arguments as root, which will cause a new boot loader configuration file
 to be generated. For detailed information on the process that *boot-update*
-uses to generate boot loader configuration files, please see boot.conf(5).
+uses to generate boot loader configuration files, please see *boot.conf(5)*.
 
 .. include:: ../LICENSE
 
