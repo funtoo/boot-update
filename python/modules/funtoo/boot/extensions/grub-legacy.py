@@ -16,7 +16,7 @@ def getExtension(config):
 class GRUBLegacyExtension(Extension):
 
 	def __init__(self,config):
-		self.fn = "/boot/grub/grub.conf"
+		self.fn = "/boot/grub-legacy/grub.conf"
 		self.config = config
 		self.bootitems = []
 
@@ -59,6 +59,7 @@ class GRUBLegacyExtension(Extension):
 		return [ ok, msgs ]
 
 	def Guppy(self,argstring,fatal=True):
+		# grub-probe is from grub-1.97+ -- we use it here as well
 		out=commands.getstatusoutput("/sbin/grub-probe "+argstring)
 		if fatal and out[0] != 0:
 			print "grub-probe "+argstring
