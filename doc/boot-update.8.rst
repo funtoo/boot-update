@@ -54,7 +54,7 @@ or arguments as root, which will cause a new boot loader configuration file
 to be generated. For detailed information on the process that *boot-update*
 uses to generate boot loader configuration files, please see *boot.conf(5)*.
 
-.. include:: ../LICENSE
+.. include:: ./LICENSE
 
 SEE ALSO
 --------

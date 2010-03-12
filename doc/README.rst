@@ -75,5 +75,5 @@ This will auto-generate the ``/boot/grub-legacy/grub.conf`` required for booting
 Note that grub-legacy-0.97-r11 and later stores ``grub.conf`` in the ``/boot/grub-legacy``
 directory.
 
-.. include:: ../LICENSE
+.. include:: ./LICENSE
 
