@@ -365,7 +365,7 @@ Specifies the regular display colors in *fg/bg* format. Defaults to *cyan/blue*.
 Specifies the menu highlight colors in *fg/bg* format. Defaults to *blue/cyan*.
 
 
-.. include:: ./LICENSE
+.. include:: ../LICENSE
 
 SEE ALSO
 --------
