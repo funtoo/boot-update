@@ -31,8 +31,8 @@ Man Pages
 Consult the following man pages for detailed, up-to-date information on configuration
 file settings and command-line arguments:
 
-.. _boot-update(8): boot-update.8.rst
-.. _boot.conf(5): boot.conf.5.rst
+.. _boot-update(8): doc/boot-update.8.html
+.. _boot.conf(5): doc/boot.conf.5.html
 
 - `boot-update(8)`_
 - `boot.conf(5)`_
@@ -40,12 +40,17 @@ file settings and command-line arguments:
 GRUB 1.97+ Quick Start
 ======================
 
+.. _GPT/GUID: /en/funtoo/core/partition/
+
 If using sys-boot/grub-1.97+, perform the following steps:
 
-- Partition disk using GPT/GUID (recommended) or MBR partitions.
+- Partition disk using `GPT/GUID`_ (recommended) or MBR partitions.
 - Install kernel/initrd to /boot
-- ``emerge sys-apps/coreboot``
-- ``grub-install --no-floppy /dev/sda``
+
+::
+
+        emerge sys-apps/coreboot
+        grub-install --no-floppy /dev/sda
 
 Ensure that ``/etc/fstab`` is updated, and edit ``/etc/boot.conf`` to reflect
 your installation. Then run::
@@ -61,9 +66,12 @@ If using sys-boot/grub-legacy-0.97, perform the following steps:
 
 - Partition disk using MBR partitions (GPT not supported)
 - Install kernel/initrd to /boot
-- ``emerge sys-apps/coreboot``
-- ``emerge sys-boot/grub-legacy`` (0.97-r11 or greater)
-- ``grub-install-legacy /dev/sda``
+
+::
+
+        emerge sys-apps/coreboot
+        emerge sys-boot/grub-legacy #(0.97-r11 or greater)
+        grub-install-legacy /dev/sda
 
 Ensure that ``/etc/fstab`` is correct, and edit ``/etc/boot.conf`` to reflect
 your installation. Ensure a ``generate grub-legacy`` setting in the ``boot``
