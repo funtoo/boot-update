@@ -112,14 +112,17 @@ can just provide the name of a kernel image.
 initrd/initramfs
 ~~~~~~~~~~~~~~~~
 
-The *initrd* variable specifies one or more initrds or initramfs images.  Since Linux
-allows multiple initramfs images to be loaded at boot time, you can specify more than one initrd in
-a boot entry, and the specified initrds will be loaded in succession abt boot time. Note
-that this is different from the *kernel* option - where multiple matches will generate
-multiple boot entries, since you can only load one kernel at boot.
+The *initrd* variable specifies one or more initrds or initramfs images, like
+this::
+
+        "Funtoo Linux" {
+                kernel bzImage
+                initrd initramfs.igz
+        }
 
 *initrd* also allows the use of the *[-v]* wildcard to allow you to create
-matching pairs of kernels and initrds. Here's how it works -- assume you have
+matching pairs of kernels and initrds on disk that boot-update will associate
+with one another automatically by suffix. Here's how it works -- assume you have
 the following boot entry::
 
         "Funtoo Linux" {
@@ -130,47 +133,95 @@ the following boot entry::
 The */etc/boot.conf* entry above will look for all kernels matching *bzImage*
 and *bzImage-** and generate a boot entry for each one. For the boot entry for
 *bzImage*, the *initramfs[-v]* wildcard will pull in the initramfs *initramfs*
-if it exists -- otherwise the initramfs will be silently excluded. For the boot
-entry for *bzImage-2.6.24*, the initramfs *initramfs-2.6.24* will be used if it
-exists.
+if it exists -- if not, it will be skipped. For the boot entry for
+*bzImage-2.6.24*, the initramfs *initramfs-2.6.24* will be used if it exists.
 
 If you are using the enhanced glob wildcard functionality in your *kernel*
 option (such as *bzImage[-2.6*]*, above), then remember that you should still
 use *[-v]* in your *initrd* option. *[-v]* is the only pattern that is supported
 for initrds.
 
+Multiple initrds
+~~~~~~~~~~~~~~~~
+
+Since Linux allows multiple initramfs images to be loaded at boot time, you can
+specify more than one initrd in a boot entry, and the specified initrds will be
+loaded in succession abt boot time. Note that this is different from the
+*kernel* option - where multiple matches will generate multiple boot entries,
+since you can only load one kernel at boot. Here's an example::
+
+        "Funtoo Linux" {
+                kernel bzImage
+                initrd initramfs-1.igz initramfs-2.igz
+        }
+
+In the above example, a single boot entry will be generated, which will load
+*initramfs-1.igz* and *initramfs-2.igz* as the primary and secondary initramfs
+respectively, and then boot the kernel *bzImage*.
+
+Note that the *+=* operator can be used to either extend the default initramfs
+setting or to specify multiple initramfs images over multiple lines. Here's
+a boot entry that is equivalent to the previous example::
+
+        "Funtoo Linux" {
+                kernel bzImage
+                # load initramfs-1.igz:
+                initrd initramfs-1.igz 
+                # also load initramfs-2.igz:
+                initrd += initramfs-2.igz
+        }
+
+And in the following example, the initial *+=* tells coreboot to append 
+*initramfs-1.igz* to the default initramfs list::
+
+        "Funtoo Linux" {
+                kernel bzImage
+                # load our default initramfs image(s), plus this one:
+                initrd += initramfs-1.igz
+        }
+
 Parameters
 ~~~~~~~~~~
 
 The *params* variable specifies kernel parameters used to boot the kernel. Typical
 kernel parameters, such as *init=/bin/bash*, *root=/dev/sda3* or others can
-be specified as necessary. 
+be specified as necessary. Here's a sophisticated example from Andreas Matuschek
+that was posted on the funtoo-dev mailing list::
 
-If a setting is not defined in the boot entry section but *is* defined
-in the *defaults* section, then the boot entry section inherits
-the setting from the *default* section. A boot entry setting can also
-*extend* a default setting by using the *+=* operator as the first parameter.
+        "Funtoo Linux On Ice" {
+                params root=/dev/sda2
+                params += rootfstype=jfs
+                params += usbcore.autosuspend=1
+                params += acpi_sleep=s3_bios,s3_mode
+                params += hpet=force
+                params += video=radeonfb:ywrap,mtrr:1,1024x768-32@60
+                params += quiet
+                params += splash=silent,kdgraphics,theme:natural_gentoo
+                params += CONSOLE=/dev/tty1
+                kernel vmlinuz[-v]
+                initrd ramfs
+        }
 
-If not specified, the default *params* setting of *root=auto rootfstype=auto*
-is used -- these are special parameters that will be explained in the following
-section.
-
-When *+=* is used as the first argument for *params*, the default setting can
-be *extended* with additional parameters.  For example, the *params* setting
-for *"Funtoo Linux uvesafb"* above is *root=auto rootfstype=auto
-video=uvesafb:1024x768-8,mtrr:2,ypan*.
+As you can see, when  *+=* is used as the first argument for *params*, the
+default setting can be *extended* with additional parameters. If the first
+*params root=/dev/sda2* line was instead written as *params += root=/dev/sda2*,
+then all the parameters specified in this boot entry would *extend* the default
+params settings. But in this case, Andreas specified the first *params*
+parameter in this boot entry without a *+=*, so his settings replace the
+default settings.
 
 Special Parameters
 ~~~~~~~~~~~~~~~~~~
 
 **+=**
 
-  When *+=* is specified at the beginning of the first *params* definition in a
-  section, then the params after the *+=* will be added to the default
-  parameters defined in *default/params* (type *boot-update --showdefaults* to
-  see default settings.)  In addition, multiple *params* lines can appear in a
-  section, as long as successive *params* lines begin with *+=*. This allows
-  the *params* value to be defined over multiple lines.
+  When *+=* is specified at the beginning of the first *params* or *initrd*
+  definition in a section, then the arguments after the *+=* will be added to
+  the default parameters defined in *default/params* or *default/initrd* (type
+  *boot-update --showdefaults* to see default settings.)  In addition, multiple
+  *params* or *initrd* lines can appear in a section, as long as the successive
+  lines begin with *+=*. This allows the *params* and *initrd* values to be
+  defined over multiple lines.
 
 **root=auto**
 
