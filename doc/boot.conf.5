@@ -162,16 +162,26 @@ within brackets, which work similarly to \fI[\-v]\fP, above:
 .fi
 .sp
 The above wildcard will match "bzImage", "bzImage\-2.6.18", and "bzImage\-2.6.24".
+.sp
+Remember that wildcards are optional. If you don\(aqt want to deal with them, you
+can just provide the name of a kernel image.
 .SS initrd/initramfs
 .sp
-The \fIinitrd\fP variable specifies one or more initrds or initramfs images.  Since Linux
-supports multiple initramfs images, you can specify more than one initrd.
-Multiple initrd or initramfs images won\(aqt result in extra boot entries like
-with the \fIkernel\fP option; instead, both images will be loaded in succession at
-boot time.
+The \fIinitrd\fP variable specifies one or more initrds or initramfs images, like
+this:
+.sp
+.nf
+.ft C
+"Funtoo Linux" {
+        kernel bzImage
+        initrd initramfs.igz
+}
+.ft P
+.fi
 .sp
 \fIinitrd\fP also allows the use of the \fI[\-v]\fP wildcard to allow you to create
-matching pairs of kernels and initrds. Here\(aqs how it works \-\- assume you have
+matching pairs of kernels and initrds on disk that boot\-update will associate
+with one another automatically by suffix. Here\(aqs how it works \-\- assume you have
 the following boot entry:
 .sp
 .nf
@@ -186,45 +196,107 @@ the following boot entry:
 The \fI/etc/boot.conf\fP entry above will look for all kernels matching \fIbzImage\fP
 and \fIbzImage\-*\fP and generate a boot entry for each one. For the boot entry for
 \fIbzImage\fP, the \fIinitramfs[\-v]\fP wildcard will pull in the initramfs \fIinitramfs\fP
-if it exists \-\- otherwise the initramfs will be silently excluded. For the boot
-entry for \fIbzImage\-2.6.24\fP, the initramfs \fIinitramfs\-2.6.24\fP will be used if it
-exists.
+if it exists \-\- if not, it will be skipped. For the boot entry for
+\fIbzImage\-2.6.24\fP, the initramfs \fIinitramfs\-2.6.24\fP will be used if it exists.
 .sp
 If you are using the enhanced glob wildcard functionality in your \fIkernel\fP
 option (such as \fIbzImage[\-2.6\fP]*, above), then remember that you should still
 use \fI[\-v]\fP in your \fIinitrd\fP option. \fI[\-v]\fP is the only pattern that is supported
 for initrds.
+.SS Multiple initrds
+.sp
+Since Linux allows multiple initramfs images to be loaded at boot time, you can
+specify more than one initrd in a boot entry, and the specified initrds will be
+loaded in succession abt boot time. Note that this is different from the
+\fIkernel\fP option \- where multiple matches will generate multiple boot entries,
+since you can only load one kernel at boot. Here\(aqs an example:
+.sp
+.nf
+.ft C
+"Funtoo Linux" {
+        kernel bzImage
+        initrd initramfs\-1.igz initramfs\-2.igz
+}
+.ft P
+.fi
+.sp
+In the above example, a single boot entry will be generated, which will load
+\fIinitramfs\-1.igz\fP and \fIinitramfs\-2.igz\fP as the primary and secondary initramfs
+respectively, and then boot the kernel \fIbzImage\fP.
+.sp
+Note that the \fI+=\fP operator can be used to either extend the default initramfs
+setting or to specify multiple initramfs images over multiple lines. Here\(aqs
+a boot entry that is equivalent to the previous example:
+.sp
+.nf
+.ft C
+"Funtoo Linux" {
+        kernel bzImage
+        # load initramfs\-1.igz:
+        initrd initramfs\-1.igz
+        # also load initramfs\-2.igz:
+        initrd += initramfs\-2.igz
+}
+.ft P
+.fi
+.sp
+And in the following example, the initial \fI+=\fP tells coreboot to append
+\fIinitramfs\-1.igz\fP to the default initramfs list:
+.sp
+.nf
+.ft C
+"Funtoo Linux" {
+        kernel bzImage
+        # load our default initramfs image(s), plus this one:
+        initrd += initramfs\-1.igz
+}
+.ft P
+.fi
 .SS Parameters
 .sp
 The \fIparams\fP variable specifies kernel parameters used to boot the kernel. Typical
 kernel parameters, such as \fIinit=/bin/bash\fP, \fIroot=/dev/sda3\fP or others can
-be specified as necessary.
+be specified as necessary. Here\(aqs a sophisticated example from Andreas Matuschek
+that was posted on the funtoo\-dev mailing list:
 .sp
-If a setting is not defined in the boot entry section but \fIis\fP defined
-in the \fIdefaults\fP section, then the boot entry section inherits
-the setting from the \fIdefault\fP section. A boot entry setting can also
-\fIextend\fP a default setting by using the \fI+=\fP operator as the first parameter.
+.nf
+.ft C
+"Funtoo Linux On Ice" {
+        params root=/dev/sda2
+        params += rootfstype=jfs
+        params += usbcore.autosuspend=1
+        params += acpi_sleep=s3_bios,s3_mode
+        params += hpet=force
+        params += video=radeonfb:ywrap,mtrr:1,1024x768\-32@60
+        params += quiet
+        params += splash=silent,kdgraphics,theme:natural_gentoo
+        params += CONSOLE=/dev/tty1
+        kernel vmlinuz[\-v]
+        initrd ramfs
+}
+.ft P
+.fi
 .sp
-If not specified, the default \fIparams\fP setting of \fIroot=auto rootfstype=auto\fP
-is used \-\- these are special parameters that will be explained in the following
-section.
-.sp
-When \fI+=\fP is used as the first argument for \fIparams\fP, the default setting can
-be \fIextended\fP with additional parameters.  For example, the \fIparams\fP setting
-for \fI"Funtoo Linux uvesafb"\fP above is \fIroot=auto rootfstype=auto
-video=uvesafb:1024x768\-8,mtrr:2,ypan\fP.
+As you can see, when  \fI+=\fP is used as the first argument for \fIparams\fP, the
+default setting can be \fIextended\fP with additional parameters. If the first
+\fIparams root=/dev/sda2\fP line was instead written as \fIparams += root=/dev/sda2\fP,
+then all the parameters specified in this boot entry would \fIextend\fP the default
+params settings. But in this case, Andreas specified the first \fIparams\fP
+parameter in this boot entry without a \fI+=\fP, so his settings replace the
+default settings.
 .SS Special Parameters
 .sp
 \fB+=\fP
 .INDENT 0.0
 .INDENT 3.5
 .sp
-When \fI+=\fP is specified at the beginning of the first \fIparams\fP definition in a
-section, then the params after the \fI+=\fP will be added to the default
-parameters defined in \fIdefault/params\fP (type \fIboot\-update \-\-showdefaults\fP to
-see default settings.)  In addition, multiple \fIparams\fP lines can appear in a
-section, as long as successive \fIparams\fP lines begin with \fI+=\fP. This allows
-the \fIparams\fP value to be defined over multiple lines.
+When \fI+=\fP is specified at the beginning of the first \fIparams\fP or \fIinitrd\fP
+definition in a section, then the arguments after the \fI+=\fP will be added to
+the default parameters defined in \fIdefault/params\fP or \fIdefault/initrd\fP (type
+\fIboot\-update \-\-showdefaults\fP to see default settings.)  In addition, multiple
+\fIparams\fP or \fIinitrd\fP lines can appear in a section, as long as the successive
+lines begin with \fI+=\fP. This allows the \fIparams\fP and \fIinitrd\fP values to be
+defined over multiple lines.
 .UNINDENT
 .UNINDENT
 .sp
@@ -381,7 +453,8 @@ Note that double\-quotes are optional both in section names and in the
 Specifies the boot entry type; defaults to \fIlinux\fP. Currently, DOS/Windows boot
 entries are also supported. Set to one of: \fIlinux\fP, \fIdos\fP, \fImsdos\fP, \fIWindows
 2000\fP, \fIwin2000\fP, \fIWindows XP\fP, \fIwinxp\fP, \fIWindows Vista\fP, \fIvista\fP, \fIWindows 7\fP,
-\fIwin7\fP. Here\(aqs how to specify a Windows 7 boot entry:
+\fIwin7\fP. Here\(aqs how to specify a Windows 7 boot entry, which will automatically
+use the proper chainloader +4 parameter to load Microsoft Windows 7:
 .sp
 .nf
 .ft C
@@ -402,7 +475,7 @@ generate boot menu entries for. The path specified in the \fIscan\fP setting is
 searched. Glob patterns are supported. The special pattern \fI[\-v]\fP is used to
 match a kernel base name (such as \fIbzImage\fP) plus all kernels with an
 optional version suffix beginning with a \fI\-\fP, such as \fIbzImage\-2.6.24\fP. In
-addition, arbitrary globs can be specified, such as \fIbzImage[\-2.6.\fP].* If
+addition, arbitrary globs can be specified, such as \fIbzImage[\-2.6.*]\fP If
 more than one kernel image matches a pattern, or more than one kernel image is
 specified, then more than one boot entry will be created using the settings
 in this section.
@@ -441,9 +514,13 @@ Currently, the color options are only supported for \fIgrub\fP.
 .SS \fIcolor :: normal\fP
 .sp
 Specifies the regular display colors in \fIfg/bg\fP format. Defaults to \fIcyan/blue\fP.
+\fBHINT\fP: a \fIblack\fP background will be transparent when a background image is
+specified.
 .SS \fIcolor :: highlight\fP
 .sp
 Specifies the menu highlight colors in \fIfg/bg\fP format. Defaults to \fIblue/cyan\fP.
+\fBHINT\fP: a \fIblack\fP background will be transparent when a background image is
+specified.
 .SH COPYRIGHT
 .sp
 Copyright 2009\-2010 Funtoo Technologies, LLC.
