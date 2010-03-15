@@ -106,14 +106,17 @@ within brackets, which work similarly to *[-v]*, above::
 
 The above wildcard will match "bzImage", "bzImage-2.6.18", and "bzImage-2.6.24".
 
+Remember that wildcards are optional. If you don't want to deal with them, you
+can just provide the name of a kernel image.
+
 initrd/initramfs
 ~~~~~~~~~~~~~~~~
 
 The *initrd* variable specifies one or more initrds or initramfs images.  Since Linux
-supports multiple initramfs images, you can specify more than one initrd.
-Multiple initrd or initramfs images won't result in extra boot entries like
-with the *kernel* option; instead, both images will be loaded in succession at
-boot time.
+allows multiple initramfs images to be loaded at boot time, you can specify more than one initrd in
+a boot entry, and the specified initrds will be loaded in succession abt boot time. Note
+that this is different from the *kernel* option - where multiple matches will generate
+multiple boot entries, since you can only load one kernel at boot.
 
 *initrd* also allows the use of the *[-v]* wildcard to allow you to create
 matching pairs of kernels and initrds. Here's how it works -- assume you have
@@ -286,7 +289,8 @@ Note that double-quotes are optional both in section names and in the
 Specifies the boot entry type; defaults to *linux*. Currently, DOS/Windows boot
 entries are also supported. Set to one of: *linux*, *dos*, *msdos*, *Windows
 2000*, *win2000*, *Windows XP*, *winxp*, *Windows Vista*, *vista*, *Windows 7*,
-*win7*. Here's how to specify a Windows 7 boot entry::
+*win7*. Here's how to specify a Windows 7 boot entry, which will automatically
+use the proper chainloader +4 parameter to load Microsoft Windows 7::
 
         "My Windows 7" {
                 type win7
@@ -307,7 +311,7 @@ generate boot menu entries for. The path specified in the *scan* setting is
 searched. Glob patterns are supported. The special pattern `[-v]` is used to
 match a kernel base name (such as *bzImage*) plus all kernels with an
 optional version suffix beginning with a *-*, such as *bzImage-2.6.24*. In
-addition, arbitrary globs can be specified, such as *bzImage[-2.6.*].* If
+addition, arbitrary globs can be specified, such as *bzImage[-2.6.\*]* If
 more than one kernel image matches a pattern, or more than one kernel image is
 specified, then more than one boot entry will be created using the settings
 in this section.
@@ -358,12 +362,15 @@ Currently, the color options are only supported for *grub*.
 ~~~~~~~~~~~~~~~~~~~
 
 Specifies the regular display colors in *fg/bg* format. Defaults to *cyan/blue*.
+**HINT**: a *black* background will be transparent when a background image is
+specified.
 
 *color :: highlight*
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Specifies the menu highlight colors in *fg/bg* format. Defaults to *blue/cyan*.
-
+**HINT**: a *black* background will be transparent when a background image is
+specified.
 
 .. include:: ../LICENSE
 

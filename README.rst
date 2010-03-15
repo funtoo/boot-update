@@ -52,12 +52,14 @@ If using sys-boot/grub-1.97+, perform the following steps:
         emerge sys-apps/coreboot
         grub-install --no-floppy /dev/sda
 
-Ensure that ``/etc/fstab`` is updated, and edit ``/etc/boot.conf`` to reflect
+Ensure that ``/etc/fstab`` is correct, and edit ``/etc/boot.conf`` to reflect
 your installation. Then run::
 
         boot-update
 
 This will auto-generate the complex ``/boot/grub/grub.cfg`` required for booting.
+Re-run ``boot-update`` every time your available kernels/initrds or ``/etc/boot.conf``
+configuration changes.
 
 GRUB 0.97 (grub-legacy) Quick Start
 ===================================
@@ -82,6 +84,10 @@ section. Then run::
 This will auto-generate the ``/boot/grub-legacy/grub.conf`` required for booting.
 Note that grub-legacy-0.97-r11 and later stores ``grub.conf`` in the ``/boot/grub-legacy``
 directory.
+
+Re-run ``boot-update`` every time your available kernels/initrds or ``/etc/boot.conf``
+configuration changes.
+
 
 .. include:: ./LICENSE
 
