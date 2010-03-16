@@ -1,6 +1,6 @@
 .\" Man page generated from reStructeredText.
 .
-.TH BOOT.CONF 5 "" "1.4.1" "Funtoo Linux Core System"
+.TH BOOT.CONF 5 "" "1.4.2" "Funtoo Linux Core System"
 .SH NAME
 boot.conf \- Funtoo global boot loader configuration file
 .
@@ -290,13 +290,13 @@ default settings.
 .INDENT 0.0
 .INDENT 3.5
 .sp
-When \fI+=\fP is specified at the beginning of the first \fIparams\fP or \fIinitrd\fP
-definition in a section, then the arguments after the \fI+=\fP will be added to
-the default parameters defined in \fIdefault/params\fP or \fIdefault/initrd\fP (type
-\fIboot\-update \-\-showdefaults\fP to see default settings.)  In addition, multiple
-\fIparams\fP or \fIinitrd\fP lines can appear in a section, as long as the successive
-lines begin with \fI+=\fP. This allows the \fIparams\fP and \fIinitrd\fP values to be
-defined over multiple lines.
+When \fI+=\fP is specified at the beginning of the first \fIparams\fP, \fIinitrd\fP or
+\fIkernel\fP definition in a section, then the arguments after the \fI+=\fP will be
+added to the default settings defined in \fIdefault\fP (type \fIboot\-update
+\-\-showdefaults\fP to see default settings.)  In addition, multiple \fIparams\fP,
+\fIinitrd\fP or \fIkernel\fP lines can appear in a section, as long as the successive
+lines begin with \fI+=\fP. This allows these values to be defined over multiple
+lines.
 .UNINDENT
 .UNINDENT
 .sp
