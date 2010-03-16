@@ -215,13 +215,13 @@ Special Parameters
 
 **+=**
 
-  When *+=* is specified at the beginning of the first *params* or *initrd*
-  definition in a section, then the arguments after the *+=* will be added to
-  the default parameters defined in *default/params* or *default/initrd* (type
-  *boot-update --showdefaults* to see default settings.)  In addition, multiple
-  *params* or *initrd* lines can appear in a section, as long as the successive
-  lines begin with *+=*. This allows the *params* and *initrd* values to be
-  defined over multiple lines.
+  When *+=* is specified at the beginning of the first *params*, *initrd* or
+  *kernel* definition in a section, then the arguments after the *+=* will be
+  added to the default settings defined in *default* (type *boot-update
+  --showdefaults* to see default settings.)  In addition, multiple *params*,
+  *initrd* or *kernel* lines can appear in a section, as long as the successive
+  lines begin with *+=*. This allows these values to be defined over multiple
+  lines.
 
 **root=auto**
 

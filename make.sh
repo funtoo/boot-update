@@ -23,7 +23,7 @@ commit() {
 
 web() {
 	cp dist/coreboot-$VERSION.tar.bz2 /root/git/website/archive/coreboot
-	cd /root/git/website && git add archive/coreboot/* && git commit -a -m "new coreboot"
+	cd /root/git/website && git add archive/coreboot/* && git commit -a -m "new coreboot $VERSION"
 	./install.sh
 }
 
