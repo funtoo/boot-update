@@ -404,6 +404,24 @@ also inherited and used as the video mode for the kernel when a graphical boot
 (*uvesafb*, *vesafb-tng*) is used. This option is only supported for
 *grub*.
 
+*display :: background*
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Specifies the graphical image to display at boot. The specified file should
+exist within ``/boot``, and the path to the file should be specified relative
+to ``/boot``. A file with a "jpg", "jpeg", "png", or "tga" extension
+(capitalized or lowercase) will be recognized and used. This option is only
+supported for *grub*, and defaults to being unset.
+
+*display :: font*
+~~~~~~~~~~~~~~~~~
+
+Specifies a font used to display text in graphical mode (ie. when
+``display::gfxmode`` is enabled) at boot. Defaults to
+``/boot/grub/unifont.pf2``, which is included with Funtoo's `grub` ebuild. This
+option is only supported for *grub*, and will only be enabled when a
+``gfxmode`` has been specified.
+
 *color* Section
 -----------------
 

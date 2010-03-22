@@ -17,7 +17,7 @@ def getExtension(config):
 class GRUBExtension(Extension):
 
 	def __init__(self,config):
-		self.fn = "/boot/grub/grub.cfg"
+		self.fn = "%s/grub/grub.cfg" % self.config["boot/path"]
 		self.config = config
 		self.bootitems = []
 		self.GuppyMap()
@@ -76,8 +76,8 @@ class GRUBExtension(Extension):
 		# self.bootitems records all our boot items
 		self.bootitems.append(label)
 	
-		self.PrepareGRUBForFilesystem("/boot",l)
-		kpath=r.RelativePathTo(kname,"/boot")
+		self.PrepareGRUBForFilesystem(self.config["%s/scan" % sect],l)
+		kpath=r.RelativePathTo(kname,self.config["%s/scan" % sect])
 		params=self.config["%s/params" % sect].split()
 
 		ok, allmsgs, myroot = r.DoRootAuto(params,ok,allmsgs)
@@ -91,7 +91,7 @@ class GRUBExtension(Extension):
 		initrds=self.config.item(sect,"initrd")
 		initrds=r.FindInitrds(initrds, kname, kext)
 		for initrd in initrds:
-			l.append("	initrd %s" % r.RelativePathTo(initrd,"/boot"))
+			l.append("	initrd %s" % r.RelativePathTo(initrd,self.config["%s/scan" % sect]))
 		if self.config.hasItem("%s/gfxmode" % sect):
 			l.append("	set gfxpayload=%s" % self.config.item(sect,"gfxmode"))
 		else:
@@ -110,7 +110,7 @@ class GRUBExtension(Extension):
 
 		if c.hasItem("display/gfxmode"):
 			l.append("")
-			self.PrepareGRUBForFilesystem("/boot",l)
+			self.PrepareGRUBForFilesystem(c["boot/path"],l)
 			font = None
 			if c.hasItem("display/font"):
 				font = c["display/font"]
@@ -118,8 +118,8 @@ class GRUBExtension(Extension):
 					allmsgs.append(["warn","specified font \"%s\" does not exist, using default." % font] )
 					font = None
 			if font == None:
-				font = "/boot/grub/unifont.pf2"
-			l += [ "if loadfont %s; then" % r.RelativePathTo(font,"/boot"),
+				font = "%s/grub/unifont.pf2" % c["boot/path"]
+			l += [ "if loadfont %s; then" % r.RelativePathTo(font,c["boot/path"]),
 				"	set gfxmode=%s" % c["display/gfxmode"],
 				"	insmod gfxterm",
 				"	insmod vbe",
@@ -137,7 +137,12 @@ class GRUBExtension(Extension):
 					if os.path.exists(bgimg):
 						l += [ 
 							" insmod %s" % bgext,
-							" background_image %s" % r.RelativePathTo(bgimg,"/boot")
+							" background_image %s" % r.RelativePathTo(bgimg,c["path/boot"])
+						]
+					elif os.path.exists("%s/%s" % ( c["path/boot"], bgimg)):
+						l += [
+							" insmod %s" % bgext,
+							" background_image %s" % r.RelativePathTo("%s/%s" % ( c["path/boot"], bgimg ))
 						]
 					else:
 						allmsgs.append(["warn","background image \"%s\" does not exist - skipping." % bgimg])

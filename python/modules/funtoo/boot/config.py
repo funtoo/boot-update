@@ -12,6 +12,7 @@ class DefaultBootConfigFile(config.ConfigFile):
 		config.ConfigFile.__init__(self,fn,existing)
 		self.readFromLines("""
 boot {
+	path /boot
 	generate grub
 	timeout 5
 	default bzImage
@@ -47,7 +48,7 @@ class BootConfigFile(config.ConfigFile):
 	def validate(self):
 		invalid=[]
 		validmap={ 
-				"boot" : [ "generate", "timeout", "default" ],
+				"boot" : [ "path", "generate", "timeout", "default" ],
 				"display" : [ "gfxmode", "background" ],
 				"color" : [ "normal", "highlight" ],
 				"default" : [ "scan", "kernel", "initrd", "params", "type" ]
