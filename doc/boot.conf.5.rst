@@ -239,10 +239,10 @@ Special Parameters
 **real_root=auto** 
 
   This special parameter is useful when using *genkernel* initrds that expect a
-  *real_root* parameter. Any *root=* options already specified (including
-  *root=auto*) will be removed from *params*, and *real_root* will be set to
-  the root filesystem based on */etc/fstab*, so you'll end up with a setting
-  such as *real_root=/dev/sda3*.
+  *real_root* parameter. When specified, any *root=* options already specified
+  (including *root=auto*) will be removed from *params*, and *real_root* will
+  be set to the root filesystem based on */etc/fstab*, so you'll end up with a
+  setting such as *real_root=/dev/sda3*.
 
 Alternate OS Loading
 --------------------
