@@ -49,7 +49,7 @@ class GRUBLegacyExtension(Extension):
 		l.append("title %s" % myname )
 		#self.PrepareGRUBForDevice(myroot,l)
 		self.bootitems.append(myname)
-		retval, mygrubroot = self.DeviceGRUB(myroot)
+		mygrubroot = self.DeviceGRUB(myroot)
 		l.append("root %s" % mygrubroot )
 		if mytype == "win7":
 			l.append("chainloader +4")
@@ -58,24 +58,25 @@ class GRUBLegacyExtension(Extension):
 		l.append("")
 		return [ ok, msgs ]
 
+	def DeviceOfFilesystem(self,fs):
+		return self.Guppy(" --target=device %s" % fs)
+
 	def Guppy(self,argstring,fatal=True):
 		# grub-probe is from grub-1.97+ -- we use it here as well
-		out=commands.getstatusoutput("/sbin/grub-probe "+argstring)
-		if fatal and out[0] != 0:
-			print "grub-probe "+argstring
-			print out[1]
-			sys.exit(1)
+		retval,out=commands.getstatusoutput("/sbin/grub-probe "+argstring)
+		if retval:
+			print "ERROR calling /sbin/grub-probe"
+			return None
 		else:
 			return out
 
 	def DeviceGRUB(self,dev):
-		retval,out=self.Guppy(" --device %s --target=drive" % dev) 
-		if retval == 0:
-			# Convert GRUB "count from 1" (hdx,y) format to legacy "count from 0" format
-			mys = out[1:-1].split(",")
-			mys = ( mys[0], repr(int(mys[1]) - 1) )
-			out = "(%s,%s)" % mys
-		return retval,out
+		out=self.Guppy(" --device %s --target=drive" % dev) 
+		# Convert GRUB "count from 1" (hdx,y) format to legacy "count from 0" format
+		mys = out[1:-1].split(",")
+		mys = ( mys[0], repr(int(mys[1]) - 1) )
+		out = "(%s,%s)" % mys
+		return out
 
 	def generateBootEntry(self,l,sect,kname,kext):
 		global r
@@ -107,7 +108,7 @@ class GRUBLegacyExtension(Extension):
 			rootfs = "/"
 			rootdev = r.GetParam(params,"root=")
 
-		retval, mygrubroot = self.DeviceGRUB(rootdev)	
+		mygrubroot = self.DeviceGRUB(self.DeviceOfFilesystem(self.config["boot/path"]))	
 		# print out our grub-ified root setting
 		l.append("root %s" % mygrubroot )
 		l.append("kernel %s %s" % ( kpath," ".join(params) ))
@@ -125,7 +126,6 @@ class GRUBLegacyExtension(Extension):
 		ok=True
 		allmsgs=[]
 		global r
-		l.append(c.condSubItem("boot/timeout", "timeout %s"))
 		# pass our boot entry generator function to GenerateSections, and everything is taken care of for our boot entries
 
 		ok, msgs, self.defpos, self.defname = r.GenerateSections(l,self.generateBootEntry, self.generateOtherBootEntry)
@@ -134,6 +134,7 @@ class GRUBLegacyExtension(Extension):
 			return [ ok, allmsgs, l ]
 		
 		l = [ 
+			c.condSubItem("boot/timeout", "timeout %s"),
 			"default %s" % self.defpos,
 			""
 		] + l
