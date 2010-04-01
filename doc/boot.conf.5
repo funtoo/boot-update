@@ -1,6 +1,6 @@
 .\" Man page generated from reStructeredText.
 .
-.TH BOOT.CONF 5 "" "1.4.2" "Funtoo Linux Core System"
+.TH BOOT.CONF 5 "" "1.4.3" "Funtoo Linux Core System"
 .SH NAME
 boot.conf \- Funtoo global boot loader configuration file
 .
@@ -326,10 +326,10 @@ determined by the setting in \fI/etc/fstab\fP.
 .INDENT 3.5
 .sp
 This special parameter is useful when using \fIgenkernel\fP initrds that expect a
-\fIreal_root\fP parameter. Any \fIroot=\fP options already specified (including
-\fIroot=auto\fP) will be removed from \fIparams\fP, and \fIreal_root\fP will be set to
-the root filesystem based on \fI/etc/fstab\fP, so you\(aqll end up with a setting
-such as \fIreal_root=/dev/sda3\fP.
+\fIreal_root\fP parameter. When specified, any \fIroot=\fP options already specified
+(including \fIroot=auto\fP) will be removed from \fIparams\fP, and \fIreal_root\fP will
+be set to the root filesystem based on \fI/etc/fstab\fP, so you\(aqll end up with a
+setting such as \fIreal_root=/dev/sda3\fP.
 .UNINDENT
 .UNINDENT
 .SH Alternate OS Loading
@@ -508,6 +508,20 @@ Specifies the video mode to be used by the boot loader\(aqs menus. This value is
 also inherited and used as the video mode for the kernel when a graphical boot
 (\fIuvesafb\fP, \fIvesafb\-tng\fP) is used. This option is only supported for
 \fIgrub\fP.
+.SS \fIdisplay :: background\fP
+.sp
+Specifies the graphical image to display at boot. The specified file should
+exist within \fC/boot\fP, and the path to the file should be specified relative
+to \fC/boot\fP. A file with a "jpg", "jpeg", "png", or "tga" extension
+(capitalized or lowercase) will be recognized and used. This option is only
+supported for \fIgrub\fP, and defaults to being unset.
+.SS \fIdisplay :: font\fP
+.sp
+Specifies a font used to display text in graphical mode (ie. when
+\fCdisplay::gfxmode\fP is enabled) at boot. Defaults to
+\fC/boot/grub/unifont.pf2\fP, which is included with Funtoo\(aqs \fIgrub\fP ebuild. This
+option is only supported for \fIgrub\fP, and will only be enabled when a
+\fCgfxmode\fP has been specified.
 .SH \fIcolor\fP Section
 .sp
 Currently, the color options are only supported for \fIgrub\fP.
