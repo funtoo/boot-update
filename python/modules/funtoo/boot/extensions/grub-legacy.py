@@ -133,10 +133,10 @@ class GRUBLegacyExtension(Extension):
 		if not ok:
 			return [ ok, allmsgs, l ]
 		
-		l += [ 
+		l = [ 
+			"default %s" % self.defpos,
 			""
-			"default %s" % self.defpos
-		]
+		] + l
 	
 		return [ok, allmsgs, l ]
 			
