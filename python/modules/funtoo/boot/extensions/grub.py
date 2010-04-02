@@ -17,8 +17,8 @@ def getExtension(config):
 class GRUBExtension(Extension):
 
 	def __init__(self,config):
-		self.fn = "%s/grub/grub.cfg" % self.config["boot/path"]
 		self.config = config
+		self.fn = "%s/grub/grub.cfg" % self.config["boot/path"]
 		self.bootitems = []
 		self.GuppyMap()
 
