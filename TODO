@@ -1,0 +1,1 @@
+real_root=sda2 vs. real_root=/dev/sda2 - will it throw an error?
