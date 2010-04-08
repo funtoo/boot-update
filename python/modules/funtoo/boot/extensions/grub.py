@@ -168,7 +168,7 @@ class GRUBExtension(Extension):
 		return [ok, allmsgs, l]
 			
 	def GuppyMap(self):
-		out=commands.getstatusoutput("/sbin/grub-mkdevicemap")
+		out=commands.getstatusoutput("/sbin/grub-mkdevicemap --no-floppy")
 		if out[0] != 0:
 			print "grub-mkdevicemap"
 			print out[1]
