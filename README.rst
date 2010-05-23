@@ -1,11 +1,11 @@
-==========================
-Funtoo Core Boot Framework
-==========================
+==================
+Funtoo boot-update 
+==================
 
 :keywords: boot, grub, funtoo, gentoo
 :description: 
 
-        This page contains information about the Funtoo Core Boot Framework software.
+        This page contains information about the Funtoo boot-update software.
 
 :author: Daniel Robbins
 :contact: drobbins@funtoo.org
@@ -15,15 +15,14 @@ Funtoo Core Boot Framework
 Introduction
 ============
 
-The Funtoo Core Boot Framework provides a unified mechanism for configuring the
+Funtoo boot-update provides a unified mechanism for configuring the
 GRUB 1.9x (sys-boot/grub) and GRUB 0.97 (sys-boot/grub-legacy) boot loaders. It
 is the recommended, official way to configure Funtoo Linux systems for booting.
 
 Current Versions
 ================
 
-- sys-apps/coreboot-1.4.1 (~funtoo)
-- sys-apps/coreboot-1.4 (funtoo)
+- sys-boot/boot-update-1.4.5 
 
 Man Pages
 =========
@@ -49,7 +48,7 @@ If using sys-boot/grub-1.97+, perform the following steps:
 
 ::
 
-        emerge sys-apps/coreboot
+        emerge sys-boot/boot-update
         grub-install --no-floppy /dev/sda
 
 Ensure that ``/etc/fstab`` is correct, and edit ``/etc/boot.conf`` to reflect
@@ -71,7 +70,7 @@ If using sys-boot/grub-legacy-0.97, perform the following steps:
 
 ::
 
-        emerge sys-apps/coreboot
+        emerge sys-boot/boot-update
         emerge sys-boot/grub-legacy #(0.97-r11 or greater)
         grub-install-legacy /dev/sda
 
