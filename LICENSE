@@ -6,8 +6,8 @@ Copyright 2009-2010 Funtoo Technologies, LLC.
 LICENSE
 -------
 
-The Funtoo Core Boot Framework consists of independently-developed source code
-that is released under its own distinct licensing terms:
+Funtoo boot-update consists of independently-developed source code that is
+released under its own distinct licensing terms:
 
 This program is free software; you can redistribute and/or modify it under the
 terms of the GNU General Public License version 3 as published by the Free
