@@ -36,7 +36,7 @@ OPTIONS
 DESCRIPTION
 -----------
 
-*boot-update* is a system tool, part of the Funtoo Core Boot Framework, that
+*boot-update* is a system tool developed by Daniel Robbins of Funtoo that
 will generate a boot loader configuration file based on settings stored in
 */etc/boot.conf*. *boot-update* was originally created as an enhanced
 replacement of the upstream GRUB-1.97+ configuration system. GRUB-1.97+'s boot
