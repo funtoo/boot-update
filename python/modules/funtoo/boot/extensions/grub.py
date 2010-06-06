@@ -134,15 +134,10 @@ class GRUBExtension(Extension):
 				if bgext == "jpg":
 					bgext = "jpeg"
 				if bgext in [ "jpeg", "png", "tga" ]:
-					if os.path.exists(bgimg):
-						l += [ 
-							" insmod %s" % bgext,
-							" background_image %s" % r.RelativePathTo(bgimg,c["path/boot"])
-						]
-					elif os.path.exists("%s/%s" % ( c["path/boot"], bgimg)):
+					if os.path.exists("%s/%s" % ( c["boot/path"], bgimg)):
 						l += [
 							" insmod %s" % bgext,
-							" background_image %s" % r.RelativePathTo("%s/%s" % ( c["path/boot"], bgimg ))
+							" background_image %s" % r.RelativePathTo("%s/%s" % (c["boot/path"], bgimg), c["boot/path"] )
 						]
 					else:
 						allmsgs.append(["warn","background image \"%s\" does not exist - skipping." % bgimg])
@@ -153,7 +148,9 @@ class GRUBExtension(Extension):
 				c.condSubItem("color/normal", "set menu_color_normal=%s"),
 				c.condSubItem("color/highlight", "set menu_color_highlight=%s"),
 			]
-
+		else:
+			if c.hasItem("display/background"):
+				allmsgs.append(["warn","display/gfxmode not provided - display/background \"%s\" will not be displayed." % c["display/background"]] )
 
 		ok, msgs, self.defpos, self.defname = r.GenerateSections(l,self.generateBootEntry,self.generateOtherBootEntry)
 		allmsgs += msgs

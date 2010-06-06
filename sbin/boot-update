@@ -26,9 +26,10 @@ from funtoo.core.config import ConfigFileError
 def banner(extra=True):
 	print
 	print " "+PURP+"boot-update "+OFF+CYANN+version+OFF+" /",
-	print "Copyright 2010 Funtoo Technologies",
+	print "Copyright 2010 Funtoo Technologies"
 	if extra:
-		print "(\"-l\" for license info, \"-h\" for help)"
+		print
+		print " [use option \"-l\" for license info, \"-h\" for help]"
 	print
 
 def versinfo():
