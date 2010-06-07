@@ -9,7 +9,7 @@ GREEN="[32;01m"
 RED="[31;01m"
 PURP="[35;01m"
 OFF="[0m"
-version="1.4.5"
+version="1.4.6"
 verbose=False
 
 # This is needed for testing from the root of the git repo - must come before funtoo imports

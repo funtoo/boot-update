@@ -1,6 +1,6 @@
 .\" Man page generated from reStructeredText.
 .
-.TH BOOT.CONF 5 "" "1.4.5" "Funtoo Linux Core System"
+.TH BOOT.CONF 5 "" "1.4.6" "Funtoo Linux Core System"
 .SH NAME
 boot.conf \- Funtoo global boot loader configuration file
 .
@@ -332,7 +332,7 @@ be set to the root filesystem based on \fI/etc/fstab\fP, so you\(aqll end up wit
 setting such as \fIreal_root=/dev/sda3\fP.
 .UNINDENT
 .UNINDENT
-.SH Alternate OS Loading
+.SH ALTERNATE OS LOADING
 .sp
 Boot entries can be created for alternate operating systems using the following
 approach:
@@ -347,7 +347,7 @@ approach:
 .fi
 .sp
 The \fItype\fP variable should be set to one of the operating system names that
-\fIboot\-update\fP recognizes, which are:
+\fIboot\-update\fP recognizes (case\-insensitive,) which are:
 .INDENT 0.0
 .IP \(bu 2
 .
@@ -382,12 +382,24 @@ Windows 7
 .IP \(bu 2
 .
 win7
+.IP \(bu 2
+.
+BeOS
+.IP \(bu 2
+.
+Be OS
+.IP \(bu 2
+.
+Haiku
+.IP \(bu 2
+.
+Haiku OS
 .UNINDENT
 .sp
 For non\-Linux operating systems, the \fIparams\fP variable is used to specify the
 root partition for chain loading. For consistency with Linux boot entries, the
 syntax used is \fIroot=device\fP.
-.SH \fIboot\fP Section
+.SH BOOT SECTION
 .SS \fIboot :: generate\fP
 .sp
 Specifies the boot loader that \fIboot\-update\fP should generate a configuration
@@ -447,7 +459,7 @@ recently created kernel (by file mtime) will be booted by default.
 .sp
 Note that double\-quotes are optional both in section names and in the
 \fIboot/default\fP value.
-.SH \fIdefault\fP and Boot Entry Sections
+.SH DEFAULT AND BOOT ENTRY SECTIONS
 .SS \fIdefault :: type\fP
 .sp
 Specifies the boot entry type; defaults to \fIlinux\fP. Currently, DOS/Windows boot
@@ -501,7 +513,7 @@ by using the \fI+=\fP operator. The special parameters \fIroot=auto\fP,
 replaced with similar settings with the \fIauto\fP string replaced with the
 respective setting from \fI/etc/fstab\fP. Defaults to \fIroot=auto
 rootfstype=auto\fP.
-.SH \fIdisplay\fP Section
+.SH DISPLAY SECTION
 .SS \fIdisplay :: gfxmode\fP
 .sp
 Specifies the video mode to be used by the boot loader\(aqs menus. This value is
@@ -511,18 +523,18 @@ also inherited and used as the video mode for the kernel when a graphical boot
 .SS \fIdisplay :: background\fP
 .sp
 Specifies the graphical image to display at boot. The specified file should
-exist within \fC/boot\fP, and the path to the file should be specified relative
-to \fC/boot\fP. A file with a "jpg", "jpeg", "png", or "tga" extension
+exist within \fB/boot\fP, and the path to the file should be specified relative
+to \fB/boot\fP. A file with a "jpg", "jpeg", "png", or "tga" extension
 (capitalized or lowercase) will be recognized and used. This option is only
 supported for \fIgrub\fP, and defaults to being unset.
 .SS \fIdisplay :: font\fP
 .sp
 Specifies a font used to display text in graphical mode (ie. when
-\fCdisplay::gfxmode\fP is enabled) at boot. Defaults to
-\fC/boot/grub/unifont.pf2\fP, which is included with Funtoo\(aqs \fIgrub\fP ebuild. This
+\fBdisplay::gfxmode\fP is enabled) at boot. Defaults to
+\fB/boot/grub/unifont.pf2\fP, which is included with Funtoo\(aqs \fIgrub\fP ebuild. This
 option is only supported for \fIgrub\fP, and will only be enabled when a
-\fCgfxmode\fP has been specified.
-.SH \fIcolor\fP Section
+\fBgfxmode\fP has been specified.
+.SH COLOR SECTION
 .sp
 Currently, the color options are only supported for \fIgrub\fP.
 .SS \fIcolor :: normal\fP
@@ -540,8 +552,8 @@ specified.
 Copyright 2009\-2010 Funtoo Technologies, LLC.
 .SH LICENSE
 .sp
-The Funtoo Core Boot Framework consists of independently\-developed source code
-that is released under its own distinct licensing terms:
+Funtoo boot\-update consists of independently\-developed source code that is
+released under its own distinct licensing terms:
 .sp
 This program is free software; you can redistribute and/or modify it under the
 terms of the GNU General Public License version 3 as published by the Free
