@@ -257,7 +257,7 @@ approach::
 
 
 The *type* variable should be set to one of the operating system names that 
-*boot-update* recognizes, which are:
+*boot-update* recognizes (case-insensitive,) which are:
 
 - linux (default)
 - dos
@@ -270,6 +270,10 @@ The *type* variable should be set to one of the operating system names that
 - vista
 - Windows 7
 - win7
+- BeOS
+- Be OS
+- Haiku
+- Haiku OS
 
 For non-Linux operating systems, the *params* variable is used to specify the
 root partition for chain loading. For consistency with Linux boot entries, the
