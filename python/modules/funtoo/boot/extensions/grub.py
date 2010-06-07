@@ -134,19 +134,23 @@ class GRUBExtension(Extension):
 				if bgext == "jpg":
 					bgext = "jpeg"
 				if bgext in [ "jpeg", "png", "tga" ]:
+					
 					rel_cfgpath = "%s/%s" % ( c["boot/path"], bgimg)
+					
+					# first, look for absolute path, because our relative path can eval to "/boot/boot/foo.png" which
+					# due to the /boot/boot symlink will "exist".
 
-					if os.path.exists(rel_cfgpath):
-						# user specified path relative to /boot:
-						l += [
-							" insmod %s" % bgext,
-							" background_image %s" % r.RelativePathTo(rel_cfgpath , c["boot/path"] )
-						]
-					elif bgimg[0] == "/" and os.path.exists(bgimg):
+					if bgimg[0] == "/" and os.path.exists(bgimg):
 						# user specified absolute path to file on disk:
 						l += [
-							" insmod %s" % bgext,
-							" background_image %s" % r.RelativePathTo(bgimg, c["boot/path"] )
+							"	insmod %s" % bgext,
+							"	background_image %s" % r.RelativePathTo(bgimg, c["boot/path"] )
+						]
+					elif os.path.exists(rel_cfgpath):
+						# user specified path relative to /boot:
+						l += [
+							"	insmod %s" % bgext,
+							"	background_image %s" % r.RelativePathTo(rel_cfgpath , c["boot/path"] )
 						]
 					else:
 						allmsgs.append(["warn","background image \"%s\" does not exist - skipping." % bgimg])
