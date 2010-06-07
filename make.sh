@@ -4,7 +4,7 @@ VERSION=`cat VERSION`
 
 prep() {
 	install -d dist
-	rm -f dist/coreboot-$VERSION*
+	rm -f dist/boot-update-$VERSION*
 	cd doc
 	cat boot-update.8.rst | sed -e "s/##VERSION##/$VERSION/g" | rst2man.py > boot-update.8
 	cat boot.conf.5.rst | sed -e "s/##VERSION##/$VERSION/g" | rst2man.py > boot.conf.5
@@ -17,13 +17,14 @@ commit() {
 	git add boot-update.8 boot.conf.5
 	cd ..
 	git commit -a -m "$VERSION distribution release"
-	git archive --format=tar --prefix=coreboot-${VERSION}/ HEAD > dist/coreboot-${VERSION}.tar
-	bzip2 dist/coreboot-$VERSION.tar
+	git archive --format=tar --prefix=boot-update-${VERSION}/ HEAD > dist/boot-update-${VERSION}.tar
+	bzip2 dist/boot-update-$VERSION.tar
 }
 
 web() {
-	cp dist/coreboot-$VERSION.tar.bz2 /root/git/website/archive/coreboot
-	cd /root/git/website && git add archive/coreboot/* && git commit -a -m "new coreboot $VERSION"
+	install -d /root/git/website/archive/boot-update
+	cp dist/boot-update-$VERSION.tar.bz2 /root/git/website/archive/boot-update
+	cd /root/git/website && git add archive/boot-update/* && git commit -a -m "new boot-update $VERSION"
 	./install.sh
 }
 
