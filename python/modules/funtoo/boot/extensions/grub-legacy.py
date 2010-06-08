@@ -50,6 +50,9 @@ class GRUBLegacyExtension(Extension):
 		#self.PrepareGRUBForDevice(myroot,l)
 		self.bootitems.append(myname)
 		mygrubroot = self.DeviceGRUB(myroot)
+		if mygrubroot == None:
+			msgs.append(["fatal","Couldn't determine root device using grub-probe"])
+			return [ False, msgs ]
 		l.append("root %s" % mygrubroot )
 		if mytype == "win7":
 			l.append("chainloader +4")
@@ -65,9 +68,9 @@ class GRUBLegacyExtension(Extension):
 		# grub-probe is from grub-1.97+ -- we use it here as well
 		if not os.path.exists("/boot/grub/device.map"):
 			out = commands.getstatusoutput("/sbin/grub-mkdevicemap --no-floppy")
-		if out[0] != 0:
-			print "ERROR calling /sbin/grub-mkdevicemap"
-			return None
+			if out[0] != 0:
+				print "ERROR calling /sbin/grub-mkdevicemap"
+				return None
 		retval,out=commands.getstatusoutput("/sbin/grub-probe "+argstring)
 		if retval:
 			print "ERROR calling /sbin/grub-probe"
@@ -78,6 +81,8 @@ class GRUBLegacyExtension(Extension):
 	def DeviceGRUB(self,dev):
 		out=self.Guppy(" --device %s --target=drive" % dev) 
 		# Convert GRUB "count from 1" (hdx,y) format to legacy "count from 0" format
+		if out == None:
+			return None
 		mys = out[1:-1].split(",")
 		mys = ( mys[0], repr(int(mys[1]) - 1) )
 		out = "(%s,%s)" % mys
@@ -114,6 +119,9 @@ class GRUBLegacyExtension(Extension):
 			rootdev = r.GetParam(params,"root=")
 
 		mygrubroot = self.DeviceGRUB(self.DeviceOfFilesystem(self.config["boot/path"]))	
+		if mygrubroot == None:
+			allmsgs.append(["fatal","Could not determine device of filesystem using grub-probe"])
+			return [ False, allmsgs ]
 		# print out our grub-ified root setting
 		l.append("root %s" % mygrubroot )
 		l.append("kernel %s %s" % ( kpath," ".join(params) ))
