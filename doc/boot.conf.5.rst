@@ -87,9 +87,9 @@ bzImage" and "Funtoo Linux - bzImage-new"::
                 kernel bzImage bzImage-new
         }
 
-The *[-v]* wildcard can be used at the end of a kernel image name to match the
-base name, or any combination of the base name, plus a hypen and any additional
-text::
+The *[-v]* wildcard, which can only appear once per filename, can be used at
+the end of a kernel image name to match the base name, or any combination of
+the base name, plus a hypen and any additional text::
 
         "Funtoo Linux" {
                 kernel bzImage[-v]
@@ -363,13 +363,13 @@ initrds. Defaults to */boot*.
 
 This setting specifies kernel image name, names or patterns, to find kernels to
 generate boot menu entries for. The path specified in the *scan* setting is
-searched. Glob patterns are supported. The special pattern `[-v]` is used to
-match a kernel base name (such as *bzImage*) plus all kernels with an
-optional version suffix beginning with a *-*, such as *bzImage-2.6.24*. In
-addition, arbitrary globs can be specified, such as *bzImage[-2.6.\*]* If
-more than one kernel image matches a pattern, or more than one kernel image is
-specified, then more than one boot entry will be created using the settings
-in this section.
+searched. Glob patterns are supported, but only one glob pattern may appear per
+filename. The special pattern `[-v]` is used to match a kernel base name (such
+as *bzImage*) plus all kernels with an optional version suffix beginning with a
+*-*, such as *bzImage-2.6.24*. In addition, arbitrary globs can be specified,
+such as *bzImage[-2.6.\*]* If more than one kernel image matches a pattern, or
+more than one kernel image is specified, then more than one boot entry will be
+created using the settings in this section.
 
 *default :: initrd*
 ~~~~~~~~~~~~~~~~~~~~~
