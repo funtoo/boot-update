@@ -282,19 +282,6 @@ syntax used is *root=device*.
 *boot* Section
 ----------------
 
-*boot :: generate*
-~~~~~~~~~~~~~~~~~~~~
-
-Specifies the boot loader that *boot-update* should generate a configuration
-files for. This setting should be a single string, set to one of *grub*,
-*grub-legacy* or *lilo*. Note that *lilo* support is currently *alpha*
-quality. Defaults to *grub*.
-
-*boot :: timeout*
-~~~~~~~~~~~~~~~~~~~
-
-Specifies the boot loader timeout, in seconds. Defaults to *5*.
-
 *boot :: default*
 ~~~~~~~~~~~~~~~~~~~
 
@@ -334,6 +321,28 @@ recently created kernel (by file mtime) will be booted by default.
 
 Note that double-quotes are optional both in section names and in the
 *boot/default* value.
+
+*boot :: generate*
+~~~~~~~~~~~~~~~~~~~~
+
+Specifies the boot loader that *boot-update* should generate a configuration
+files for. This setting should be a single string, set to one of *grub*,
+*grub-legacy* or *lilo*. Note that *lilo* support is currently *alpha*
+quality. Defaults to *grub*.
+
+*boot :: path*
+~~~~~~~~~~~~~~~
+
+Specifies the path to the filesystem (possibly not yet mounted) that contains
+boot loader configuration data such as the ``grub`` and ``grub-legacy``
+directories, as well as where desktop backgrounds and bitmap fonts can be
+found. This setting defaults to ``/boot`` and normally doesn't need to be
+changed on Gentoo and Funtoo Linux systems.
+
+*boot :: timeout*
+~~~~~~~~~~~~~~~~~~~
+
+Specifies the boot loader timeout, in seconds. Defaults to *5*.
 
 *default* and Boot Entry Sections
 ---------------------------------
