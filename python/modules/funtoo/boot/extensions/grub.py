@@ -195,7 +195,7 @@ class GRUBExtension(Extension):
 
 	def RequiredGRUBModules(self,dev):
 		mods=[]
-		for targ in [ "abstraction", "fs" ]:
+		for targ in [ "abstraction", "partmap", "fs" ]:
 			for mod in self.DeviceProbe(dev,targ):
 				mods.append(mod)
 		return mods
