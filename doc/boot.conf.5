@@ -1,6 +1,6 @@
 .\" Man page generated from reStructeredText.
 .
-.TH BOOT.CONF 5 "" "1.4.8" "Funtoo Linux Core System"
+.TH BOOT.CONF 5 "" "1.4.9" "Funtoo Linux Core System"
 .SH NAME
 boot.conf \- Funtoo global boot loader configuration file
 .
@@ -136,9 +136,9 @@ bzImage" and "Funtoo Linux \- bzImage\-new":
 .ft P
 .fi
 .sp
-The \fI[\-v]\fP wildcard can be used at the end of a kernel image name to match the
-base name, or any combination of the base name, plus a hypen and any additional
-text:
+The \fI[\-v]\fP wildcard, which can only appear once per filename, can be used at
+the end of a kernel image name to match the base name, or any combination of
+the base name, plus a hypen and any additional text:
 .sp
 .nf
 .ft C
@@ -484,13 +484,13 @@ initrds. Defaults to \fI/boot\fP.
 .sp
 This setting specifies kernel image name, names or patterns, to find kernels to
 generate boot menu entries for. The path specified in the \fIscan\fP setting is
-searched. Glob patterns are supported. The special pattern \fI[\-v]\fP is used to
-match a kernel base name (such as \fIbzImage\fP) plus all kernels with an
-optional version suffix beginning with a \fI\-\fP, such as \fIbzImage\-2.6.24\fP. In
-addition, arbitrary globs can be specified, such as \fIbzImage[\-2.6.*]\fP If
-more than one kernel image matches a pattern, or more than one kernel image is
-specified, then more than one boot entry will be created using the settings
-in this section.
+searched. Glob patterns are supported, but only one glob pattern may appear per
+filename. The special pattern \fI[\-v]\fP is used to match a kernel base name (such
+as \fIbzImage\fP) plus all kernels with an optional version suffix beginning with a
+\fI\-\fP, such as \fIbzImage\-2.6.24\fP. In addition, arbitrary globs can be specified,
+such as \fIbzImage[\-2.6.*]\fP If more than one kernel image matches a pattern, or
+more than one kernel image is specified, then more than one boot entry will be
+created using the settings in this section.
 .SS \fIdefault :: initrd\fP
 .sp
 This setting specifies initrd/initramfs image(s) to load with the menu entry.

@@ -9,7 +9,7 @@ GREEN="[32;01m"
 RED="[31;01m"
 PURP="[35;01m"
 OFF="[0m"
-version="1.4.8"
+version="1.4.9"
 verbose=False
 
 # This is needed for testing from the root of the git repo - must come before funtoo imports
@@ -51,6 +51,7 @@ def help():
  Options:
    --showdefaults		Show hard-coded (user-overrideable) settings
    --show [sect/var]		Display variable "var" defined in section "sect"
+   -C, --check                  Validate configuration file, but do nothing else
    -V, --verbose		Verbose mode
    -h, --help			Display this information
    -l, --license		Display license information
@@ -115,6 +116,10 @@ def update(c,ok,allmsgs):
 	if generate not in funtoo.boot.extensions.__all__:
 		ok=False
 		allmsgs.append(["fatal","extension for boot loader \"%s\" (specified in boot/generate) not found." % generate ])
+
+	if ("-C" in sys.argv) or ("--check" in sys.argv):
+		allmsgs.append(["norm","Configuration file %s checked." % cfile])
+		cleanup(ok,allmsgs)
 
 	mesg("norm","Generating config for %s..." % generate)
 	print

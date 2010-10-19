@@ -1,6 +1,6 @@
 .\" Man page generated from reStructeredText.
 .
-.TH BOOT-UPDATE 8 "" "1.4.8" "Funtoo Linux Core System"
+.TH BOOT-UPDATE 8 "" "1.4.9" "Funtoo Linux Core System"
 .SH NAME
 boot-update \- Automatically create a boot loader configuration file
 .
@@ -47,26 +47,27 @@ were changed by the user, or additional kernels were installed. This would allow
 the boot loader menu to reflect these changes.
 .SH OPTIONS
 .INDENT 0.0
+.INDENT 3.5
+.INDENT 0.0
 .TP
-.BI \-\-show \ VARIABLE
-.
-Print the value of VARIABLE from \fI/etc/boot.conf\fP to stdout and exit.
+.B Options:
+.INDENT 7.0
 .TP
 .B \-\-showdefaults
 .
-Print hard\-coded default config file values to stdout and exit.
-.TP
-.B \-\-verbose,  \-V
+Show hard\-coded (user\-overrideable) settings
+.UNINDENT
+.IP "System Message: WARNING/2 (<stdin>:, line 32)"
 .
-Run in verbose mode; show additional output.
-.TP
-.B \-\-help,  \-h
-.
-Show help summary and exit.
-.TP
-.B \-\-license,  \-l
-.
-Show licensing information and exit.
+Option list ends without a blank line; unexpected unindent.
+.sp
+\-\-show [sect/var]            Display variable "var" defined in section "sect" in \fI/etc/boot.conf\fP
+\-C, \-\-check                  Validate configuration file, but do nothing else
+\-V, \-\-verbose                Verbose mode
+\-h, \-\-help                   Display this information
+\-l, \-\-license                Display license information
+.UNINDENT
+.UNINDENT
 .UNINDENT
 .SH DESCRIPTION
 .sp

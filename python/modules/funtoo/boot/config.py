@@ -49,7 +49,7 @@ class BootConfigFile(config.ConfigFile):
 		invalid=[]
 		validmap={ 
 				"boot" : [ "path", "generate", "timeout", "default" ],
-				"display" : [ "gfxmode", "background" ],
+				"display" : [ "gfxmode", "background", "font" ],
 				"color" : [ "normal", "highlight" ],
 				"default" : [ "scan", "kernel", "initrd", "params", "type" ]
 		}

@@ -27,11 +27,13 @@ the boot loader menu to reflect these changes.
 OPTIONS
 -------
 
---show VARIABLE         Print the value of VARIABLE from */etc/boot.conf* to stdout and exit.
---showdefaults          Print hard-coded default config file values to stdout and exit.
---verbose, -V           Run in verbose mode; show additional output.
---help, -h              Show help summary and exit.
---license, -l           Show licensing information and exit.
+ Options:
+   --showdefaults               Show hard-coded (user-overrideable) settings
+   --show [sect/var]            Display variable "var" defined in section "sect" in */etc/boot.conf*
+   -C, --check                  Validate configuration file, but do nothing else
+   -V, --verbose                Verbose mode
+   -h, --help                   Display this information
+   -l, --license                Display license information
 
 DESCRIPTION
 -----------
