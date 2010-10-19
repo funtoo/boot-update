@@ -1,9 +1,7 @@
 #!/usr/bin/python2.6
 
-import sys
 import commands
 import fnmatch
-import string
 
 modlist = []
 buckets = { "driver" : "kernel/drivers/*", "fs" : "kernel/fs/*", "sound" : "kernel/sound/*" }
@@ -55,7 +53,7 @@ def has_deps(key):
 		return False
 	elif num == 0 and deplist != []:
 		#shouldn't happen
-		raise foo
+		assert (False)
 	elif num !=0 and deplist != []:
 		# need to figure this out.
 		if len(deplist) < num:
@@ -63,7 +61,7 @@ def has_deps(key):
 			return True
 		elif len(deplist) > num:
 			# should not happen
-			raise bar
+			assert (False)
 		elif len(deplist) == num:
 			childdeps = map(has_deps,deplist)
 			if True in childdeps:

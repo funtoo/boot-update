@@ -1,10 +1,9 @@
 #!/usr/bin/python2
 
-import os, sys, commands
+import os, commands
 
 from ..extension import Extension
 from ..resolver import Resolver
-from ..helper import *
 
 r=None
 
@@ -109,15 +108,6 @@ class GRUBLegacyExtension(Extension):
 		if not ok:
 			return [ ok, allmsgs ]
 	
-		if fstabHasEntry("/boot"):
-			# If /boot exists, then this is our grub "root" (where we look for boot loader stages and kernels)
-			rootfs="/boot"
-			rootdev=myroot
-		else:
-			# If /boot doesn't exist, the root filesystem is treated as grub's "root"
-			rootfs = "/"
-			rootdev = r.GetParam(params,"root=")
-
 		mygrubroot = self.DeviceGRUB(self.DeviceOfFilesystem(self.config["boot/path"]))	
 		if mygrubroot == None:
 			allmsgs.append(["fatal","Could not determine device of filesystem using grub-probe"])
