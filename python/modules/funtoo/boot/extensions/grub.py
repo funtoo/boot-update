@@ -4,7 +4,6 @@ import os, sys, commands
 
 from ..extension import Extension
 from ..resolver import Resolver
-from ..helper import *
 
 r=None
 

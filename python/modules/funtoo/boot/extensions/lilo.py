@@ -1,10 +1,9 @@
 #!/usr/bin/python2
 
-import os, sys, commands
+import os
 
 from ..extension import Extension
 from ..resolver import Resolver
-from ..helper import *
 
 r=None
 

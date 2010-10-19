@@ -1,3 +1,6 @@
+import os
+import sys
+
 def pytext(myfile, globals):
 	"interprets a text file with embedded elements"
 

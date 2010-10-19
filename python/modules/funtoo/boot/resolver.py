@@ -1,5 +1,5 @@
 import os, glob
-from helper import *
+from helper import fstabGetRootDevice, fstabGetFilesystemOfDevice
 
 def bracketzap(str,wild=True):
 	wstart = str.find("[")
