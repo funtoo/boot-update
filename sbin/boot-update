@@ -14,7 +14,7 @@ verbose=False
 
 # This is needed for testing from the root of the git repo - must come before funtoo imports
 if os.path.isdir(".git") and os.path.basename(os.getcwd()) == "coreboot":
-	sys.path = [ "python/modules" ] + sys.path 
+    sys.path = [ "python/modules" ] + sys.path 
 
 # Import Funtoo extensions that we use:
 
@@ -24,18 +24,18 @@ import funtoo.boot.extensions
 from funtoo.core.config import ConfigFileError
 
 def banner(extra=True):
-	print
-	print " "+PURP+"boot-update "+OFF+CYANN+version+OFF+" /",
-	print "Copyright 2010 Funtoo Technologies"
-	if extra:
-		print
-		print " [use option \"-l\" for license info, \"-h\" for help]"
-	print
+    print
+    print " "+PURP+"boot-update "+OFF+CYANN+version+OFF+" /",
+    print "Copyright 2010 Funtoo Technologies"
+    if extra:
+        print
+        print " [use option \"-l\" for license info, \"-h\" for help]"
+    print
 
 def versinfo():
-	banner(extra=False)
-	print
-	print """ This program is free software; you can redistribute and/or modify it under
+    banner(extra=False)
+    print
+    print """ This program is free software; you can redistribute and/or modify it under
  the terms of the GNU General Public License version 3 as published by the
  Free Software Foundation. Alternatively you may (at your option) use any
  other license that has been publicly approved for use with this program by
@@ -43,169 +43,169 @@ def versinfo():
  """
 
 def help():
-	banner(extra=False)
-	print
-	print """ Usage: boot-update [options] 
+    banner(extra=False)
+    print
+    print """ Usage: boot-update [options] 
  Uses settings in /etc/boot.conf to generate new grub, grub-legacy or lilo (alpha) config file.
 
  Options:
-   --showdefaults		Show hard-coded (user-overrideable) settings
-   --show [sect/var]		Display variable "var" defined in section "sect"
+   --showdefaults       Show hard-coded (user-overrideable) settings
+   --show [sect/var]        Display variable "var" defined in section "sect"
    -C, --check                  Validate configuration file, but do nothing else
-   -V, --verbose		Verbose mode
-   -h, --help			Display this information
-   -l, --license		Display license information
+   -V, --verbose        Verbose mode
+   -h, --help           Display this information
+   -l, --license        Display license information
 """
 
 
 def mesg(type,line):
-	global verbose
-	if verbose and type == "info":
-		print GREEN+" *"+OFF+" "+line
-	elif type == "norm":
-		print GREEN+" *"+OFF+" "+line
-	elif type == "boot":
-		print "           "+line
-	elif type == "defboot":
-		print CYAN+" DEFAULT > "+GREEN+line+OFF
-	elif type == "warn":
-		print RED+" *"+OFF+" "+line
+    global verbose
+    if verbose and type == "info":
+        print GREEN+" *"+OFF+" "+line
+    elif type == "norm":
+        print GREEN+" *"+OFF+" "+line
+    elif type == "boot":
+        print "           "+line
+    elif type == "defboot":
+        print CYAN+" DEFAULT > "+GREEN+line+OFF
+    elif type == "warn":
+        print RED+" *"+OFF+" "+line
 
 def cleanup(ok,allmsgs):
-	global verbose
-	warnings = False
+    global verbose
+    warnings = False
 
-	# This is the function that prints all accumulated errors and/or warnings and exits with
-	# the proper return code.
+    # This is the function that prints all accumulated errors and/or warnings and exits with
+    # the proper return code.
 
-	for type, msg in allmsgs:
-		if type == "warn":
-			print RED+" * WARN :"+OFF+" %s" % msg
-			warnings=True
-		elif type == "fatal":
-			print RED+" * ERROR:"+OFF+" %s" % msg
-		elif (verbose and type == "info") or type == "norm":
-			print GREEN+" * "+OFF+msg
-	if not ok:
-		print RED+" * Did not complete successfully."+OFF
-		print
-		sys.exit(1)
-	else:
-		out=GREEN+" * "+OFF+"Completed successfully"
-		if warnings:
-			print out+" with warnings."
-		else:
-			print out+"."
-		print
-		sys.exit(0)
+    for type, msg in allmsgs:
+        if type == "warn":
+            print RED+" * WARN :"+OFF+" %s" % msg
+            warnings=True
+        elif type == "fatal":
+            print RED+" * ERROR:"+OFF+" %s" % msg
+        elif (verbose and type == "info") or type == "norm":
+            print GREEN+" * "+OFF+msg
+    if not ok:
+        print RED+" * Did not complete successfully."+OFF
+        print
+        sys.exit(1)
+    else:
+        out=GREEN+" * "+OFF+"Completed successfully"
+        if warnings:
+            print out+" with warnings."
+        else:
+            print out+"."
+        print
+        sys.exit(0)
 
 def update(c,ok,allmsgs):
 
-	# Generate warnings for any invalid config file entries...
-	for invalid in c.validate():
-		allmsgs.append(["warn","invalid config setting \"%s\"; ignored." % invalid])
+    # Generate warnings for any invalid config file entries...
+    for invalid in c.validate():
+        allmsgs.append(["warn","invalid config setting \"%s\"; ignored." % invalid])
 
-	# Figure out what extension we should be loading...
-	
-	generate=c["boot/generate"]
+    # Figure out what extension we should be loading...
+    
+    generate=c["boot/generate"]
 
-	if generate=="":
-		ok=False
-		allmsgs.append(["fatal","boot/generate does not specify a valid boot loader to generate a config for."])
+    if generate=="":
+        ok=False
+        allmsgs.append(["fatal","boot/generate does not specify a valid boot loader to generate a config for."])
 
-	if generate not in funtoo.boot.extensions.__all__:
-		ok=False
-		allmsgs.append(["fatal","extension for boot loader \"%s\" (specified in boot/generate) not found." % generate ])
+    if generate not in funtoo.boot.extensions.__all__:
+        ok=False
+        allmsgs.append(["fatal","extension for boot loader \"%s\" (specified in boot/generate) not found." % generate ])
 
-	if ("-C" in sys.argv) or ("--check" in sys.argv):
-		allmsgs.append(["norm","Configuration file %s checked." % cfile])
-		cleanup(ok,allmsgs)
+    if ("-C" in sys.argv) or ("--check" in sys.argv):
+        allmsgs.append(["norm","Configuration file %s checked." % cfile])
+        cleanup(ok,allmsgs)
 
-	mesg("norm","Generating config for %s..." % generate)
-	print
+    mesg("norm","Generating config for %s..." % generate)
+    print
 
-	if not ok:
-		cleanup(ok,allmsgs)
+    if not ok:
+        cleanup(ok,allmsgs)
 
-	# Before loading extension, we want to auto-mount boot if it isn't already mounted:
-	
-	imountedit = False
+    # Before loading extension, we want to auto-mount boot if it isn't already mounted:
+    
+    imountedit = False
 
-	if funtoo.boot.helper.fstabHasEntry("/boot"):
-		if not os.path.ismount("/boot"):
-			mesg("info","Mounting filesystem /boot...")
-			os.system("mount /boot")
-			imountedit=True
-	else:
-		mesg("info","No /etc/fstab entry for /boot; not mounting.")
+    if funtoo.boot.helper.fstabHasEntry("/boot"):
+        if not os.path.ismount("/boot"):
+            mesg("info","Mounting filesystem /boot...")
+            os.system("mount /boot")
+            imountedit=True
+    else:
+        mesg("info","No /etc/fstab entry for /boot; not mounting.")
 
-	# Dynamically import the proper extension module (ie. grub.py, grub-legacy.py, lilo.py):
+    # Dynamically import the proper extension module (ie. grub.py, grub-legacy.py, lilo.py):
 
-	extname="funtoo.boot.extensions.%s" % generate
-	__import__(extname)
-	extmodule=sys.modules[extname]
+    extname="funtoo.boot.extensions.%s" % generate
+    __import__(extname)
+    extmodule=sys.modules[extname]
 
-	# Create Boot Loader Extension object:
-	ext=extmodule.getExtension(c)
-	ext.mesg=mesg
+    # Create Boot Loader Extension object:
+    ext=extmodule.getExtension(c)
+    ext.mesg=mesg
 
 
-	# Regenerate Config File:
+    # Regenerate Config File:
 
-	step, ok, msgs = ext.regenerate()
-	allmsgs += msgs
-	if ok:
-		pos = 0
-		while pos < len(ext.bootitems):
-			if pos == ext.defpos:
-				mesg("defboot",ext.bootitems[pos])
-			else:
-				mesg("boot",ext.bootitems[pos])
-			pos += 1
-		print
+    step, ok, msgs = ext.regenerate()
+    allmsgs += msgs
+    if ok:
+        pos = 0
+        while pos < len(ext.bootitems):
+            if pos == ext.defpos:
+                mesg("defboot",ext.bootitems[pos])
+            else:
+                mesg("boot",ext.bootitems[pos])
+            pos += 1
+        print
 
-	# If we mounted /boot, we should unmount it:
-	if imountedit:
-		mesg("info","Unmounting /boot")
-		os.system("umount /boot")
+    # If we mounted /boot, we should unmount it:
+    if imountedit:
+        mesg("info","Unmounting /boot")
+        os.system("umount /boot")
 
-	cleanup(ok,allmsgs)
+    cleanup(ok,allmsgs)
 
 
 if len(sys.argv)>=2 and (( "-l" in sys.argv ) or ( "--license" in sys.argv )):
-	versinfo()
-	sys.exit(0)
+    versinfo()
+    sys.exit(0)
 
 if "-V" in sys.argv or ("--verbose" in sys.argv):
-	verbose=True
+    verbose=True
 
 ok=True
 allmsgs=[]
 cfile="/etc/boot.conf"
 # Load /etc/boot.conf master configuration file:
 try:
-	c=funtoo.boot.config.BootConfigFile(cfile)
-	if not c.fileExists():
-		ok=False
-		allmsgs.append(["fatal","Master configuration file \"%s\" does not exist." % cfile])
+    c=funtoo.boot.config.BootConfigFile(cfile)
+    if not c.fileExists():
+        ok=False
+        allmsgs.append(["fatal","Master configuration file \"%s\" does not exist." % cfile])
 except ConfigFileError, e:
-	ok = False
-	banner()
-	allmsgs.append(["fatal","Parse Error: %s" % e])
+    ok = False
+    banner()
+    allmsgs.append(["fatal","Parse Error: %s" % e])
 if not ok:
-	cleanup(ok,allmsgs)
+    cleanup(ok,allmsgs)
 
 if len(sys.argv)>=3 and sys.argv[1] == "--show":
-	print c[sys.argv[2]]
+    print c[sys.argv[2]]
 elif len(sys.argv)>=2 and sys.argv[1] == "--showdefaults":
-	print "# These are default, hard-coded settings that can be overridden by the"
-	print "# /etc/boot.conf file."
-	print
-	for line in c.parent.dump():
-		sys.stdout.write(line)
+    print "# These are default, hard-coded settings that can be overridden by the"
+    print "# /etc/boot.conf file."
+    print
+    for line in c.parent.dump():
+        sys.stdout.write(line)
 elif len(sys.argv)>=2 and (sys.argv[1] in [ "-h", "--help"]):
-	help()
+    help()
 else:
-	banner()
-	update(c,ok,allmsgs)
+    banner()
+    update(c,ok,allmsgs)
 
