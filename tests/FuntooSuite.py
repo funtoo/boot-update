@@ -18,4 +18,5 @@ class FuntooSuite(unittest.TestSuite):
                     self.addTest(newsuite)
 
 if "__main__" == __name__:
-    unittest.TextTestRunner().run(FuntooSuite())
+    result = unittest.TextTestRunner().run(FuntooSuite())
+    sys.exit(not result.wasSuccessful())
