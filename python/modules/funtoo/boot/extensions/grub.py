@@ -1,5 +1,6 @@
 #!/usr/bin/python2
 # -*- coding: ascii -*-
+""" extension for handling grub """
 import os, sys, commands
 
 from ..extension import Extension
@@ -12,7 +13,8 @@ def getExtension(config):
     r=Resolver(config)
     return GRUBExtension(config)
 
-# Add exception definition here to be used by a Guppy failure. -- ExtensionError?
+# Add exception definition here to be used by a Guppy failure.
+# -- ExtensionError?
 class GRUBExtension(Extension):
 
     def __init__(self,config):
@@ -25,7 +27,8 @@ class GRUBExtension(Extension):
         msgs=[]
         ok=True
         if not os.path.exists("/sbin/grub-probe"):
-            msgs.append(["fatal","/sbin/grub-probe, required for boot/generate = grub,  does not exist"])
+            msgs.append(["fatal",("/sbin/grub-probe, required for "
+                                  "boot/generate = grub,  does not exist")])
             ok=False
         return [ok, msgs]
     
@@ -36,7 +39,8 @@ class GRUBExtension(Extension):
         mytype = self.config["%s/type" % sect ].lower()
         if mytype in [ "dos", "msdos", ]:
             mytype = "dos"
-        elif mytype in [ "windows", "windows 2000", "win2000", "windows xp", "winxp" ]:
+        elif mytype in [ "windows", "windows 2000", "win2000", "windows xp",
+                         "winxp" ]:
             mytype = "winxp"
         elif mytype in [ "windows vista", "vista" ]:
             mytype = "vista"
@@ -44,7 +48,8 @@ class GRUBExtension(Extension):
             mytype = "win7"
         else:
             ok = False
-            msgs.append(["fatal","Unrecognized boot entry type \"%s\"" % mytype])
+            msgs.append(["fatal","Unrecognized boot entry type \"%s\""
+                         % mytype])
             return [ ok, msgs ]
         params=self.config["%s/params" % sect].split()
         myroot = r.GetParam(params,"root=")
@@ -90,7 +95,8 @@ class GRUBExtension(Extension):
         initrds=self.config.item(sect,"initrd")
         initrds=r.FindInitrds(initrds, kname, kext)
         for initrd in initrds:
-            l.append("  initrd %s" % r.RelativePathTo(initrd,self.config["%s/scan" % sect]))
+            l.append("  initrd %s" %
+                     r.RelativePathTo(initrd,self.config["%s/scan" % sect]))
         if self.config.hasItem("%s/gfxmode" % sect):
             l.append("  set gfxpayload=%s" % self.config.item(sect,"gfxmode"))
         else:
@@ -105,7 +111,8 @@ class GRUBExtension(Extension):
         allmsgs=[]
         global r
         l.append(c.condSubItem("boot/timeout", "set timeout=%s"))
-        # pass our boot entry generator function to GenerateSections, and everything is taken care of for our boot entries
+        # pass our boot entry generator function to GenerateSections,
+        # and everything is taken care of for our boot entries
 
         if c.hasItem("display/gfxmode"):
             l.append("")
@@ -114,11 +121,13 @@ class GRUBExtension(Extension):
             if c.hasItem("display/font"):
                 font = c["display/font"]
                 if not os.path.exists(font):
-                    allmsgs.append(["warn","specified font \"%s\" does not exist, using default." % font] )
+                    allmsgs.append(["warn","specified font \"%s\" does not "
+                                           "exist, using default." % font] )
                     font = None
             if font == None:
                 font = "%s/grub/unifont.pf2" % c["boot/path"]
-            l += [ "if loadfont %s; then" % r.RelativePathTo(font,c["boot/path"]),
+            l += [ "if loadfont %s; then" %
+                   r.RelativePathTo(font,c["boot/path"]),
                 "   set gfxmode=%s" % c["display/gfxmode"],
                 "   insmod gfxterm",
                 "   insmod vbe",
@@ -136,35 +145,46 @@ class GRUBExtension(Extension):
                     
                     rel_cfgpath = "%s/%s" % ( c["boot/path"], bgimg)
                     
-                    # first, look for absolute path, because our relative path can eval to "/boot/boot/foo.png" which
+                    # first, look for absolute path, because our relative path
+                    # can eval to "/boot/boot/foo.png" which
                     # due to the /boot/boot symlink will "exist".
 
                     if bgimg[0] == "/" and os.path.exists(bgimg):
                         # user specified absolute path to file on disk:
                         l += [
                             "   insmod %s" % bgext,
-                            "   background_image %s" % r.RelativePathTo(bgimg, c["boot/path"] )
+                            "   background_image %s" %
+                            r.RelativePathTo(bgimg, c["boot/path"] )
                         ]
                     elif os.path.exists(rel_cfgpath):
                         # user specified path relative to /boot:
                         l += [
                             "   insmod %s" % bgext,
-                            "   background_image %s" % r.RelativePathTo(rel_cfgpath , c["boot/path"] )
+                            "   background_image %s" %
+                            r.RelativePathTo(rel_cfgpath , c["boot/path"] )
                         ]
                     else:
-                        allmsgs.append(["warn","background image \"%s\" does not exist - skipping." % bgimg])
+                        allmsgs.append(["warn","background image \"%s\" "
+                                        "does not exist - skipping." % bgimg])
                 else:
-                    allmsgs.append(["warn","background image \"%s\" (format \"%s\") not recognized - skipping." % (bgimg, bgext)])
+                    allmsgs.append(["warn","background image \"%s\""
+                                           " (format \"%s\") not recognized - "
+                                           "skipping." % (bgimg, bgext)])
             l += [ "fi",
                 "",
                 c.condSubItem("color/normal", "set menu_color_normal=%s"),
-                c.condSubItem("color/highlight", "set menu_color_highlight=%s"),
+                c.condSubItem("color/highlight",
+                              "set menu_color_highlight=%s"),
             ]
         else:
             if c.hasItem("display/background"):
-                allmsgs.append(["warn","display/gfxmode not provided - display/background \"%s\" will not be displayed." % c["display/background"]] )
+                allmsgs.append(["warn","display/gfxmode not provided - "
+                                       "display/background \"%s\" will not be "
+                                       "displayed."
+                                % c["display/background"]] )
 
-        ok, msgs, self.defpos, self.defname = r.GenerateSections(l,self.generateBootEntry,self.generateOtherBootEntry)
+        ok, msgs, self.defpos, self.defname = r.GenerateSections(l,
+                          self.generateBootEntry,self.generateOtherBootEntry)
         allmsgs += msgs
         if not ok:
             return [ ok, allmsgs, l]
@@ -211,7 +231,8 @@ class GRUBExtension(Extension):
         return retval,out
 
     def DeviceUUID(self,dev):
-        retval,out=self.Guppy(" --device %s --target=fs_uuid 2> /dev/null" % dev)
+        retval,out=self.Guppy(" --device %s --target=fs_uuid 2> /dev/null"
+                              % dev)
         return retval,out
 
     def DeviceGRUB(self,dev):
