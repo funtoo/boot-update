@@ -1,5 +1,5 @@
 #!/usr/bin/python2
-
+# -*- coding: ascii -*-
 import os, sys
 
 BLUE="[34;01m"

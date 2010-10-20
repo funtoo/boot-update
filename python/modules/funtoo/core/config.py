@@ -1,5 +1,5 @@
 #!/usr/bin/python2
-
+# -*- coding: ascii -*-
 # STATE OF THE CODE: 
 #
 # 1. Templates need testing.

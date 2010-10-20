@@ -1,5 +1,5 @@
 #!/usr/bin/python2
-
+# -*- coding: ascii -*-
 def fstabHasEntry(fs):
 	fn=open("/etc/fstab","r")
 	for line in fn.readlines():

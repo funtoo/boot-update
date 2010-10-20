@@ -1,5 +1,5 @@
 #!/usr/bin/python2.6
-
+# -*- coding: ascii -*-
 import commands
 import fnmatch
 

@@ -1,5 +1,5 @@
 #!/usr/bin/python2
-
+# -*- coding: ascii -*-
 import os, commands
 
 from ..extension import Extension

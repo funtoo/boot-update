@@ -1,3 +1,4 @@
+# -*- coding: ascii -*-
 import os
 import sys
 

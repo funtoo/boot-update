@@ -1,3 +1,4 @@
+# -*- coding: ascii -*-
 import os
 
 class Extension:

@@ -1,3 +1,4 @@
+# -*- coding: ascii -*-
 from ..core import config
 
 class DefaultBootConfigFile(config.ConfigFile):

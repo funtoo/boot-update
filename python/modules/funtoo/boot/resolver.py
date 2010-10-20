@@ -1,3 +1,4 @@
+# -*- coding: ascii -*-
 import os, glob
 from helper import fstabGetRootDevice, fstabGetFilesystemOfDevice
 
