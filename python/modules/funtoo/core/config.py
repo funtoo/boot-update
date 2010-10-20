@@ -1,5 +1,5 @@
 #!/usr/bin/python2
-# -*- coding: ascii -*-
+# -*- coding: ascii; tab-width: 4; indent-tabs-mode: nil -*-
 # STATE OF THE CODE: 
 #
 # 1. Templates need testing.
