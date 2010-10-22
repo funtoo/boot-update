@@ -1,4 +1,4 @@
-# -*- coding: ascii -*-
+# -*- coding: ascii; tab-width: 4; indent-tabs-mode: nil -*-
 import sys
 import os
 import unittest
