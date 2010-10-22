@@ -17,3 +17,10 @@ class ErrorTests(unittest.TestCase):
         error = config.ConfigFileError('test1', 'test2')
         expected = "(no message)"
         self.assertEqual(expected, str(error))
+
+class ConfigFileConstructionTests(unittest.TestCase):
+    def test_empty(self):
+        cf = config.ConfigFile()
+        self.assertEqual(False, cf.fileExists())
+        expectedDump = []
+        self.assertEqual(expectedDump, cf.dump())

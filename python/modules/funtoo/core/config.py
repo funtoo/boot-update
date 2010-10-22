@@ -96,21 +96,26 @@ class ConfigFile:
 
     def setParent(self,parent):
 
-        # The "parent" is currently a static setting that you would override in __init__() in
-        # the subclass. It specifies a ConfigFile object that is the logical "parent" of the
-        # current config file. The way this works in variable resolution is as follows. If
-        # we are looking for variable "foo/bar" in the current config file, and it is not defined,
-        # we will first call self.inherit() to see if a default value should be inherited from
-        # another section in *this* ConfigFile object (see self.inherit, below.) If self.inherit()
-        # returns None, or it returns a category name that has not been defined in this ConfigFile
-        # object (like let's say it returns "oni" but there is no "oni/bar" defined), then we
-        # take a look at self.parent to determine if there is a logical parent to this ConfigFile
-        # object. If so, and the requested original variable exists in that ConfigFile object,
-        # then we return the value from the parent ConfigFile object.
+        # The "parent" is currently a static setting that you would override
+        # in __init__() in the subclass. It specifies a ConfigFile object that
+        # is the logical "parent" of the current config file. The way this
+        # works in variable resolution is as follows. If we are looking for
+        # variable "foo/bar" in the current config file, and it is not defined,
+        # we will first call self.inherit() to see if a default value should be
+        # inherited from another section in *this* ConfigFile object (see
+        # self.inherit, below.) If self.inherit() returns None, or it returns a
+        # category name that has not been defined in this ConfigFile object
+        # (like let's say it returns "oni" but there is no "oni/bar" defined),
+        # then we take a look at self.parent to determine if there is a logical
+        # parent to this ConfigFile object. If so, and the requested original
+        # variable exists in that ConfigFile object, then we return the value
+        # from the parent ConfigFile object.
 
-        # Note that ConfigFile objects can be chained using the self.parent setting.
-        # Also note that self.dump() will only dump the contents of the current ConfigFile object,
-        # and will not accumulate any data that is stored in any parents.
+        # Note that ConfigFile objects can be chained using the self.parent
+        # setting.
+        # Also note that self.dump() will only dump the contents of the current
+        # ConfigFile object, and will not accumulate any data that is stored in
+        # any parents.
 
         self.parent=parent
 
@@ -128,7 +133,7 @@ class ConfigFile:
                     lines.append(line)
             elif obj == "comment":
                 lines.append(name)
-        if lines[-1] == "\n":
+        if len(lines) > 0 and lines[-1] == "\n":
             # remove extra trailing newline
             del lines[-1]
         return lines
