@@ -24,3 +24,4 @@ class ConfigFileConstructionTests(unittest.TestCase):
         self.assertEqual(False, cf.fileExists())
         expectedDump = []
         self.assertEqual(expectedDump, cf.dump())
+        cf.write()
