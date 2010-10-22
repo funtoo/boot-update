@@ -1,6 +1,6 @@
-pushd "`dirname $0`"
+pushd "`dirname $0`" > /dev/null
 cd tests
-python FuntooSuite.py
+PYTHONPATH="`pwd`/../python/modules" python FuntooSuite.py
 exitcode=$?
-popd
+popd > /dev/null
 exit $exitcode
