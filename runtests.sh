@@ -1,6 +1,8 @@
 pushd "`dirname $0`" > /dev/null
 cd tests
-PYTHONPATH="`pwd`/../python/modules" python FuntooSuite.py
+PYTHONPATH="`pwd`/../python/modules" coverage run --source ../python/modules,../sbin FuntooSuite.py
+coverage report -m
+coverage html
 exitcode=$?
 popd > /dev/null
 exit $exitcode
