@@ -85,3 +85,37 @@ class ConfigFileConstructionTests(unittest.TestCase):
     def test_nonconfigparent(file):
         cf = config.ConfigFile()
         cf.setParent(None)
+
+    def test_template(self):
+        cf = config.ConfigFile()
+        cf.template('foo')
+
+    def test_inherit(self):
+        cf = config.ConfigFile()
+        self.assertEqual(None, cf.inherit('foo'))
+
+    def test_setter_getter(self):
+        cf = config.ConfigFile()
+        cf['foo'] = 'foo'
+        self.assertEqual('foo', cf['foo'])
+
+    def test_local_item(self):
+        cf = config.ConfigFile()
+        cf['foo'] = 'foo'
+        self.assertEqual(True, cf.hasLocalItem('foo'))
+        self.assertEqual(False, cf.hasLocalItem('bar'))
+
+    def test_subitem(self):
+        cf = config.ConfigFile()
+        cf['foo/bar'] = 'foobar'
+        self.assertEqual('blah foobar blah', cf.subItem('foo/bar', 'blah %s blah'))
+        self.assertEqual('', cf.subItem('notthere', 'blah %s blah', True))
+
+    def test_sections(self):
+        cf = config.ConfigFile()
+        self.assertEqual([], cf.getSections())
+
+    def test_condsubitem(self):
+        cf = config.ConfigFile()
+        cf['foo'] = 'foo'
+        self.assertEqual('foo', cf.condSubItem('foo', '%s'))
