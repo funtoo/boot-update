@@ -143,16 +143,17 @@ class ConfigFile:
             sys.stdout.write(line)
 
     def write(self):
-        base=os.path.dirname(self.fname)
-        if not os.path.exists(base):
-            os.makedirs(base)
-        newf=open("%s.new" % self.fname,"w")
-        for line in self.dump():
-            newf.write(line)
-        newf.close()
-        if os.path.exists(self.fname):
-            os.unlink(self.fname)
-        os.rename("%s.new" % self.fname, self.fname)
+        if self.fname:
+            base=os.path.dirname(self.fname)
+            if not os.path.exists(base):
+                os.makedirs(base)
+            newf=open("%s.new" % self.fname,"w")
+            for line in self.dump():
+                newf.write(line)
+            newf.close()
+            if os.path.exists(self.fname):
+                os.unlink(self.fname)
+            os.rename("%s.new" % self.fname, self.fname)
 
     def readFromLines(self,lines):
         self.read(lines.split("\n"))
@@ -363,7 +364,10 @@ class ConfigFile:
 
     def template(self,section):
         # TODO: IMPLEMENT ME WITH INHERITANCE JUST LIKE self.item()
-        return self.templates[section]
+        if self.hasTemplate(section):
+            return self.templates[section]
+        else:
+            return None
 
     def item(self,section,varname=None,bool=False,parents=True,defaults=True):
 

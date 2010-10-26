@@ -1,4 +1,6 @@
 # -*- coding: ascii; tab-width: 4; indent-tabs-mode: nil -*-
+import sys
+import StringIO
 import random
 import unittest
 from funtoo.core import config
@@ -119,3 +121,25 @@ class ConfigFileConstructionTests(unittest.TestCase):
         cf = config.ConfigFile()
         cf['foo'] = 'foo'
         self.assertEqual('foo', cf.condSubItem('foo', '%s'))
+
+    def test_printdump(self):
+        cf = config.ConfigFile()
+        oldstdout = sys.stdout
+        sys.stdout = StringIO.StringIO()
+        cf.printDump()
+        output = sys.stdout.getvalue()
+        sys.stdout.close()        
+        self.assertEqual('', output)
+        sys.stdout = StringIO.StringIO()
+        cf['foo'] = 'foo'
+        cf['foo/bar'] = 'foobar1'
+        cf['foo\\bar'] = 'foobar2'
+        cf.printDump()
+        output = sys.stdout.getvalue()
+        sys.stdout.close()
+        sys.stdout = oldstdout
+        self.assertEqual('section  {\n}\n\nsection foo {\n}\n', output)
+
+    def test_read(self):
+        cf = config.ConfigFile()
+        cf.readFromLines('section  {\n}\n\nsection foo {\n}\n')
