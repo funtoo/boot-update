@@ -1,5 +1,5 @@
-# -*- coding: ascii -*-
-import os, glob
+# -*- coding: ascii; tab-width: 4; indent-tabs-mode: nil -*-
+import os, glob, commands
 from helper import fstabGetRootDevice, fstabGetFilesystemOfDevice
 
 def bracketzap(str,wild=True):
@@ -22,6 +22,13 @@ def bracketzap(str,wild=True):
 class Resolver:
     def __init__(self,config):
         self.config=config
+
+    def resolvedev(self, dev):
+   		if ((dev[0:5] == "UUID=") or (dev[0:6] == "LABEL=")):
+	    	out = commands.getstatusoutput("/sbin/findfs " + dev)
+			return out[1]
+		else:
+			return dev
 
     def GetMatchingKernels(self, scanpath, globlist, skip=[]):
         # find kernels in scanpath that match globs in globlist, and return them
