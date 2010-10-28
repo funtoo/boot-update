@@ -18,11 +18,12 @@ def getExtension(config):
 # -- ExtensionError?
 class GRUBExtension(Extension):
     """ implements an extension for the grub bootloader """
-    def __init__(self, config):
+    def __init__(self, config, testing = False):
         Extension.__init__(self)
         self.config = config
         self.fn = "%s/grub/grub.cfg" % self.config["boot/path"]
         self.bootitems = []
+        self.testing = testing
         self.GuppyMap()
         self.defpos = 0
         self.defname = "undefined"
@@ -206,7 +207,11 @@ class GRUBExtension(Extension):
             
     def GuppyMap(self):
         """ creates the device map """
-        out = commands.getstatusoutput("/sbin/grub-mkdevicemap --no-floppy")
+        out = None
+        if self.testing:
+            out = commands.getstatusoutput("/sbin/grub-mkdevicemap --no-floppy -m /dev/null")
+        else:
+            out = commands.getstatusoutput("/sbin/grub-mkdevicemap --no-floppy")
         if out[0] != 0:
             print "grub-mkdevicemap"
             print out[1]
