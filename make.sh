@@ -17,6 +17,7 @@ commit() {
 	git add boot-update.8 boot.conf.5
 	cd ..
 	git commit -a -m "$VERSION distribution release"
+	git tag "$VERSION"
 	git archive --format=tar --prefix=boot-update-${VERSION}/ HEAD > dist/boot-update-${VERSION}.tar
 	bzip2 dist/boot-update-$VERSION.tar
 }
