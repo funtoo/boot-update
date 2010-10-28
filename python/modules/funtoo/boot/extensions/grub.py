@@ -24,6 +24,8 @@ class GRUBExtension(Extension):
         self.fn = "%s/grub/grub.cfg" % self.config["boot/path"]
         self.bootitems = []
         self.GuppyMap()
+        self.defpos = 0
+        self.defname = "undefined"
 
     def isAvailable(self):
         msgs = []
@@ -189,7 +191,7 @@ class GRUBExtension(Extension):
                                        "displayed."
                                 % c["display/background"]] )
 
-        ok, msgs, defpos, defname = r.GenerateSections(l,
+        ok, msgs, self.defpos, self.defname = r.GenerateSections(l,
                           self.generateBootEntry, self.generateOtherBootEntry)
         allmsgs += msgs
         if not ok:
@@ -197,7 +199,7 @@ class GRUBExtension(Extension):
         
         l += [ 
             ""
-            "set default=%s" % defpos
+            "set default=%s" % self.defpos
         ]
     
         return [ok, allmsgs, l]
