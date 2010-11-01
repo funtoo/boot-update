@@ -24,11 +24,11 @@ class Resolver:
         self.config=config
 
     def resolvedev(self, dev):
-   		if ((dev[0:5] == "UUID=") or (dev[0:6] == "LABEL=")):
-	    	out = commands.getstatusoutput("/sbin/findfs " + dev)
-			return out[1]
-		else:
-			return dev
+        if ((dev[0:5] == "UUID=") or (dev[0:6] == "LABEL=")):
+            out = commands.getstatusoutput("/sbin/findfs " + dev)
+            return out[1]
+        else:
+            return dev
 
     def GetMatchingKernels(self, scanpath, globlist, skip=[]):
         # find kernels in scanpath that match globs in globlist, and return them
