@@ -34,18 +34,24 @@ class Resolver:
         # find kernels in scanpath that match globs in globlist, and return them
         found=[]
         for pattern in globlist:
-            #base_glob = os.path.normpath(scanpath+"/"+pattern.replace("[-v]",""))
-            base_glob = os.path.normpath(scanpath+"/"+bracketzap(pattern,wild=False))
-            #wild_glob = os.path.normpath(scanpath+"/"+pattern.replace("[-v]","-*"))    
-            wild_glob = os.path.normpath(scanpath+"/"+bracketzap(pattern,wild=True))
+            #base_glob = os.path.normpath(scanpath+"/"+
+            #    pattern.replace("[-v]",""))
+            base_glob = os.path.normpath(scanpath+"/"+
+                bracketzap(pattern,wild=False))
+            #wild_glob = os.path.normpath(scanpath+"/"+
+            #    pattern.replace("[-v]","-*"))    
+            wild_glob = os.path.normpath(scanpath+"/"+
+                bracketzap(pattern,wild=True))
             for match in glob.glob(base_glob):
                 if match not in skip and match not in found:
-                    # append the matching kernel, and "" representing that no [-v] extension was used
+                    # append the matching kernel, and "" representing that no
+                    # [-v] extension was used
                     found.append([match,""])
             if base_glob != wild_glob:
                 for match in glob.glob(wild_glob):
                     if match not in skip and match not in found:
-                        # append the matching kernel, and the literal [-v] extension that was found on this kernel
+                        # append the matching kernel, and the literal [-v]
+                        # extension that was found on this kernel
                         found.append([match,match[len(wild_glob)-2:]])
         return found
 
@@ -74,21 +80,25 @@ class Resolver:
             doauto=True
         if doauto:
             rootdev = fstabGetRootDevice()
-            if (rootdev[0:5] != "/dev/") and (rootdev[0:5] != "UUID=") and (rootdev[0:6] != "LABEL="):
+            if ((rootdev[0:5] != "/dev/") and (rootdev[0:5] != "UUID=")
+                    and (rootdev[0:6] != "LABEL=")):
                 ok = False
-                allmsgs.append(["fatal","(root=auto) - / entry in /etc/fstab not recognized (%s)." % rootdev])
+                allmsgs.append(["fatal",("(root=auto) - / entry in /etc/fstab"
+                                        " not recognized (%s).") % rootdev])
             else:
                 params.append("%s=%s" % ( rootarg, rootdev ))
             return [ ok, allmsgs, rootdev ]
         else:
-            # nothing to do - but we'll generate a warning if there is no root or real_root specified in params, and return the root dev.
+            # nothing to do - but we'll generate a warning if there is no root
+            # or real_root specified in params, and return the root dev.
             for param in params:
                 if (param[0:5] == "root="):
                     return [ ok, allmsgs, param[5:] ]
                 elif (param[0:10] == "real_root="):
                     return [ ok, allmsgs, param[10:] ]
             # if we got here, we didn't find a root or real_root
-            allmsgs.append(["warn","(root=auto) - cannot find a root= or real_root= setting in params."])
+            allmsgs.append(["warn",("(root=auto) - cannot find a root= or"
+                                    " real_root= setting in params.")])
             return [ ok, allmsgs, None ]
 
     def ZapParam(self,params,param):
@@ -116,7 +126,9 @@ class Resolver:
                     fstype = fstabGetFilesystemOfDevice(myroot)
                     if fstype == "":
                         ok = False
-                        allmsgs.append(["fatal","(rootfstype=auto) - cannot find a valid / entry in /etc/fstab."])
+                        allmsgs.append(["fatal",("(rootfstype=auto) - cannot"
+                                                " find a valid / entry in"
+                                                " /etc/fstab.")])
                         return [ ok, allmsgs, None ]
                     params.append("rootfstype=%s" % fstype)
                     break
@@ -146,11 +158,13 @@ class Resolver:
             timeout = int(c["boot/timeout"])
         except ValueError:
             ok = False
-            allmsgs.append(["fatal","Invalid value \"%s\" for boot/timeout." % timeout])
+            allmsgs.append(["fatal","Invalid value \"%s\" for boot/timeout."
+                            % timeout])
             return [ ok, allmsgs, None, None ]
 
         if timeout == 0:
-            allmsgs.append(["warn","boot/timeout value is zero - boot menu will not appear!"])
+            allmsgs.append(["warn",("boot/timeout value is zero - boot menu"
+                                    " will not appear!")])
         elif timeout < 3:
             allmsgs.append(["norm","boot/timeout value is below 3 seconds."])
 
@@ -161,22 +175,27 @@ class Resolver:
                 else:
                     othersections.append(sect)
         
-        # if we have no linux boot entries, throw an error - force user to be explicit.
+        # if we have no linux boot entries, throw an error - force user to be
+        # explicit.
         if len(linuxsections) + len(othersections) == 0:
-            allmsgs.append(["fatal","No boot entries are defined in /etc/boot.conf."])
+            allmsgs.append(["fatal",("No boot entries are defined in"
+                                    " /etc/boot.conf.")])
             ok=False
             return[ ok, allmsgs, None, None ] 
         if len(linuxsections) == 0:
-            allmsgs.append(["warn","No Linux boot entries are defined. You may not be able to re-enter Linux."])
+            allmsgs.append(["warn",("No Linux boot entries are defined. You"
+                                    " may not be able to re-enter Linux.")])
 
         for sect in linuxsections:  
-            # Process boot entry section (which can generate multiple boot entries if multiple kernel matches are found)
+            # Process boot entry section (which can generate multiple boot
+            # entries if multiple kernel matches are found)
             findlist, skiplist = c.flagItemList("%s/%s" % ( sect, "kernel" ))
             findmatch=[]
 
             for scanpath in c.item(sect,"scan").split():
                 skipmatch = self.GetMatchingKernels(scanpath, skiplist)
-                findmatch += self.GetMatchingKernels(scanpath, findlist, skipmatch)
+                findmatch += self.GetMatchingKernels(scanpath, findlist,
+                                                    skipmatch)
 
             # Generate individual boot entry using extension-supplied function
 
@@ -203,7 +222,8 @@ class Resolver:
                 pos += 1
                         
             if found_multi:         
-                allmsgs.append(["warn","multiple matches found for default \"%s\" - most recent used." % default])
+                allmsgs.append(["warn",("multiple matches found for default"
+                                    " \"%s\" - most recent used.") % default])
 
         if ofunc:
             for sect in othersections:
@@ -212,7 +232,9 @@ class Resolver:
                 defnames.append(sect)
                 if default == sect:
                     if defpos != None:
-                        allmsgs.append(["warn","multiple matches found for default boot entry \"%s\" - first match used." % default])
+                        allmsgs.append(["warn",("multiple matches found for"
+                                    " default boot entry \"%s\" - first match"
+                                    " used.") % default])
                     else:
                         defpos = pos
                 pos += 1
@@ -222,11 +244,13 @@ class Resolver:
             
         if pos == 0:
             ok = False
-            allmsgs.append(["fatal","No matching kernels or boot entries found in /etc/boot.conf."])
+            allmsgs.append(["fatal",("No matching kernels or boot entries"
+                                    " found in /etc/boot.conf.")])
             defpos = None
             return [ ok, allmsgs, defpos, None ]
         elif defpos == None:
-            allmsgs.append(["warn","No boot/default match found - using first boot entry by default."])
+            allmsgs.append(["warn",("No boot/default match found - using first"
+                                    " boot entry by default.")])
             # If we didn't find a specified default, use the first one
             defpos = 0
         return [ ok, allmsgs, defpos, defnames[defpos] ]
