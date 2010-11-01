@@ -97,8 +97,9 @@ class GRUBExtension(Extension):
         ok, allmsgs, fstype = r.DoRootfstypeAuto(params, ok, allmsgs)
         if not ok:
             return [ ok, allmsgs ]
-        params.remove('root=' + myroot)
-        params.append('root=' + r.resolvedev(myroot))
+        if myroot:
+            params.remove('root=' + myroot)
+            params.append('root=' + r.resolvedev(myroot))
 
         l.append("  linux %s %s" % ( kpath, " ".join(params) ))
         initrds = self.config.item(sect, "initrd")
