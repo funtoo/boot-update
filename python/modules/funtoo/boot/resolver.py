@@ -1,27 +1,33 @@
 # -*- coding: ascii; tab-width: 4; indent-tabs-mode: nil -*-
+""" The resolver provides various mechanisms for doing things automatically
+that might be found in the configuration file. For example, it handles matching
+the [-v] in a file path to the various files it can match. """
 import os, glob, commands
 from helper import fstabGetRootDevice, fstabGetFilesystemOfDevice
 
-def bracketzap(str,wild=True):
-    wstart = str.find("[")
+def bracketzap(instr, wild=True):
+    """ Removes various bracket types from the input string. """
+    wstart = instr.find("[")
     if wstart == -1:
-        return str
-    wstop = str.rfind("]")
+        return instr
+    wstop = instr.rfind("]")
     if wstop == -1:
-        return str
+        return instr
     if wstart > wstop:
-        return str
+        return instr
     if wild:
-        if str[wstart:wstop+1] == "[-v]":
-            return str[0:wstart]+"-*"+str[wstop+1:]
+        if instr[wstart:wstop+1] == "[-v]":
+            return instr[0:wstart]+"-*"+instr[wstop+1:]
         else:
-            return str[0:wstart]+str[wstart+1:wstop]+str[wstop+1:]
+            return instr[0:wstart]+instr[wstart+1:wstop]+instr[wstop+1:]
     else:
-        return str[0:wstart]+str[wstop+1:]
+        return instr[0:wstart]+instr[wstop+1:]
 
 class Resolver:
-    def __init__(self,config):
-        self.config=config
+    """ A resolver actually does the various resolutions based on the
+     configuration. """
+    def __init__(self, config):
+        self.config = config
 
     def resolvedev(self, dev):
         if ((dev[0:5] == "UUID=") or (dev[0:6] == "LABEL=")):
