@@ -100,7 +100,7 @@ class GRUBExtension(Extension):
 
         initrds = self.config.item(sect, "initrd")
         initrds = r.FindInitrds(initrds, kname, kext)
-        if myroot and 0 == len(initrds):
+        if myroot and ('root=' + myroot) in params and 0 == len(initrds):
             params.remove('root=' + myroot)
             params.append('root=' + r.resolvedev(myroot))
         l.append("  linux %s %s" % ( kpath, " ".join(params) ))
