@@ -4,7 +4,7 @@ from funtoo.boot.extensions import grub
 from funtoo.boot import config
 
 class GrubTests(unittest.TestCase):
-    def test_missing_defname(self):
-        ext = grub.GRUBExtension(config.DefaultBootConfigFile(), True)
-        ext.defname
-        ext.defpos
+	def test_missing_defname(self):
+		ext = grub.GRUBExtension(config.DefaultBootConfigFile(), True)
+		ext.defname
+		ext.defpos

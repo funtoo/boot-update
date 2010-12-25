@@ -10,13 +10,13 @@ GREEN = "\x1b[32;01m"
 RED = "\x1b[31;01m"
 PURP = "\x1b[35;01m"
 OFF = "\x1b[0m"
-version = "1.4.9"
+version = "1.4.12"
 verbose = False
 
 # This is needed for testing from the root of the git repo - must come before
 # funtoo imports
 if os.path.isdir(".git") and os.path.basename(os.getcwd()) == "coreboot":
-    sys.path = [ "python/modules" ] + sys.path 
+	sys.path = [ "python/modules" ] + sys.path 
 
 # Import Funtoo extensions that we use:
 
@@ -26,20 +26,20 @@ import funtoo.boot.extensions
 from funtoo.core.config import ConfigFileError
 
 def banner(extra=True):
-    """ prints the banner message """
-    print
-    print " " + PURP + "boot-update " + OFF + CYANN + version + OFF + " /",
-    print "Copyright 2010 Funtoo Technologies"
-    if extra:
-        print
-        print " [use option \"-l\" for license info, \"-h\" for help]"
-    print
+	""" prints the banner message """
+	print
+	print " " + PURP + "boot-update " + OFF + CYANN + version + OFF + " /",
+	print "Copyright 2010 Funtoo Technologies"
+	if extra:
+		print
+		print " [use option \"-l\" for license info, \"-h\" for help]"
+	print
 
 def versinfo():
-    """ prints version information """
-    banner(extra=False)
-    print
-    print """ This program is free software; you can redistribute and/or modify
+	""" prints version information """
+	banner(extra=False)
+	print
+	print """ This program is free software; you can redistribute and/or modify
  it under the terms of the GNU General Public License version 3 as published by
  the Free Software Foundation. Alternatively you may (at your option) use any
  other license that has been publicly approved for use with this program by
@@ -47,10 +47,10 @@ def versinfo():
  """
 
 def printhelp():
-    """ prints the help message """
-    banner(extra=False)
-    print
-    print """ Usage: boot-update [options] 
+	""" prints the help message """
+	banner(extra=False)
+	print
+	print """ Usage: boot-update [options] 
  Uses settings in /etc/boot.conf to generate new grub, grub-legacy or
  lilo (alpha) config file.
 
@@ -65,158 +65,153 @@ def printhelp():
 
 
 def mesg(msgtype, msg):
-    """ prints different types of messages to the console """
-    if verbose and msgtype == "info":
-        print GREEN + " *" + OFF + " " + msg
-    elif msgtype == "norm":
-        print GREEN + " *" + OFF + " " + msg
-    elif msgtype == "boot":
-        print "           " + msg
-    elif msgtype == "defboot":
-        print CYAN + " DEFAULT > " + GREEN + msg + OFF
-    elif msgtype == "warn":
-        print RED + " *" + OFF + " " + msg
+	""" prints different types of messages to the console """
+	if verbose and msgtype == "info":
+		print GREEN + " *" + OFF + " " + msg
+	elif msgtype == "norm":
+		print GREEN + " *" + OFF + " " + msg
+	elif msgtype == "boot":
+		print "           " + msg
+	elif msgtype == "defboot":
+		print CYAN + " DEFAULT > " + GREEN + msg + OFF
+	elif msgtype == "warn":
+		print RED + " *" + OFF + " " + msg
 
 def cleanup(success, messages):
-    """ prints accumulated errors and warnings and exits appropriately """
-    warnings = False
+	""" prints accumulated errors and warnings and exits appropriately """
+	warnings = False
 
-    for msgtype, msg in messages:
-        if msgtype == "warn":
-            print RED + " * WARN :" + OFF + " %s" % msg
-            warnings = True
-        elif msgtype == "fatal":
-            print RED + " * ERROR:" + OFF + " %s" % msg
-        elif (verbose and msgtype == "info") or msgtype == "norm":
-            print GREEN + " * " + OFF + msg
-    if not success:
-        print RED + " * Did not complete successfully." + OFF
-        print
-        sys.exit(1)
-    else:
-        out = GREEN + " * " + OFF + "Completed successfully"
-        if warnings:
-            print out + " with warnings."
-        else:
-            print out + "."
-        print
-        sys.exit(0)
+	for msgtype, msg in messages:
+		if msgtype == "warn":
+			print RED + " * WARN :" + OFF + " %s" % msg
+			warnings = True
+		elif msgtype == "fatal":
+			print RED + " * ERROR:" + OFF + " %s" % msg
+		elif (verbose and msgtype == "info") or msgtype == "norm":
+			print GREEN + " * " + OFF + msg
+	if not success:
+		print RED + " * Did not complete successfully." + OFF
+		print
+		sys.exit(1)
+	else:
+		out = GREEN + " * " + OFF + "Completed successfully"
+		if warnings:
+			print out + " with warnings."
+		else:
+			print out + "."
+		print
+		sys.exit(0)
 
 def update(config, success, messages):
-    """ update configuration """
-    # Generate warnings for any invalid config file entries...
-    for invalid in config.validate():
-        messages.append(["warn", "invalid config setting \"%s\"; ignored."
-                        % invalid])
+	""" update configuration """
+	# Generate warnings for any invalid config file entries...
+	for invalid in config.validate():
+		messages.append(["warn", "invalid config setting \"%s\"; ignored."
+						% invalid])
 
-    # Figure out what extension we should be loading...
-    
-    generate = config["boot/generate"]
+	# Figure out what extension we should be loading...
+	
+	generate = config["boot/generate"]
 
-    if generate == "":
-        success = False
-        messages.append(["fatal", ("boot/generate does not specify a valid "
-                                    "boot loader to generate a config for.")])
+	if generate == "":
+		success = False
+		messages.append(["fatal", "boot/generate does not specify a valid boot loader to generate a config for."])
 
-    if generate not in funtoo.boot.extensions.__all__:
-        success = False
-        messages.append(["fatal",
-                        ("extension for boot loader \"%s\" (specified "
-                        "in boot/generate) not found.") % generate ])
+	if generate not in funtoo.boot.extensions.__all__:
+		success = False
+		messages.append(["fatal", "extension for boot loader \"%s\" (specified in boot/generate) not found." % generate ])
 
-    if ("-C" in sys.argv) or ("--check" in sys.argv):
-        messages.append(["norm","Configuration file %s checked." % cfile])
-        cleanup(success, messages)
+	if ("-C" in sys.argv) or ("--check" in sys.argv):
+		messages.append(["norm","Configuration file %s checked." % cfile])
+		cleanup(success, messages)
 
-    mesg("norm","Generating config for %s..." % generate)
-    print
+	mesg("norm","Generating config for %s..." % generate)
+	print
 
-    if not success:
-        cleanup(success, messages)
+	if not success:
+		cleanup(success, messages)
 
-    # Before loading extension, we want to auto-mount boot if it isn't
-    # already mounted:
-    
-    imountedit = False
+	# Before loading extension, we want to auto-mount boot if it isn't
+	# already mounted:
+	
+	imountedit = False
 
-    if funtoo.boot.helper.fstabHasEntry("/boot"):
-        if not os.path.ismount("/boot"):
-            mesg("info","Mounting filesystem /boot...")
-            os.system("mount /boot")
-            imountedit = True
-    else:
-        mesg("info", "No /etc/fstab entry for /boot; not mounting.")
+	if funtoo.boot.helper.fstabHasEntry("/boot"):
+		if not os.path.ismount("/boot"):
+			mesg("info","Mounting filesystem /boot...")
+			os.system("mount /boot")
+			imountedit = True
+	else:
+		mesg("info", "No /etc/fstab entry for /boot; not mounting.")
 
-    # Dynamically import the proper extension module (ie. grub.py,
-    # grub-legacy.py, lilo.py):
+	# Dynamically import the proper extension module (ie. grub.py,
+	# grub-legacy.py, lilo.py):
 
-    extname = "funtoo.boot.extensions.%s" % generate
-    __import__(extname)
-    extmodule = sys.modules[extname]
+	extname = "funtoo.boot.extensions.%s" % generate
+	__import__(extname)
+	extmodule = sys.modules[extname]
 
-    # Create Boot Loader Extension object:
-    ext = extmodule.getExtension(config)
-    ext.mesg = mesg
+	# Create Boot Loader Extension object:
+	ext = extmodule.getExtension(config)
+	ext.mesg = mesg
 
 
-    # Regenerate Config File:
+	# Regenerate Config File:
 
-    success, msgs = ext.regenerate()[1:]
-    messages += msgs
-    if success:
-        pos = 0
-        while pos < len(ext.bootitems):
-            if pos == ext.defpos:
-                mesg("defboot", ext.bootitems[pos])
-            else:
-                mesg("boot", ext.bootitems[pos])
-            pos += 1
-        print
+	success, msgs = ext.regenerate()[1:]
+	messages += msgs
+	if success:
+		pos = 0
+		while pos < len(ext.bootitems):
+			if pos == ext.defpos:
+				mesg("defboot", ext.bootitems[pos])
+			else:
+				mesg("boot", ext.bootitems[pos])
+			pos += 1
+		print
 
-    # If we mounted /boot, we should unmount it:
-    if imountedit:
-        mesg("info","Unmounting /boot")
-        os.system("umount /boot")
+	# If we mounted /boot, we should unmount it:
+	if imountedit:
+		mesg("info","Unmounting /boot")
+		os.system("umount /boot")
 
-    cleanup(success, allmsgs)
+	cleanup(success, allmsgs)
 
 
 if len(sys.argv)>=2 and (( "-l" in sys.argv ) or ( "--license" in sys.argv )):
-    versinfo()
-    sys.exit(0)
+	versinfo()
+	sys.exit(0)
 
 if "-V" in sys.argv or ("--verbose" in sys.argv):
-    verbose = True
+	verbose = True
 
 ok = True
 allmsgs = []
 cfile = "/etc/boot.conf"
 # Load /etc/boot.conf master configuration file:
 try:
-    c = funtoo.boot.config.BootConfigFile(cfile)
-    if not c.fileExists():
-        ok = False
-        allmsgs.append(["fatal",
-                        "Master configuration file \"%s\" does not exist."
-                        % cfile])
+	c = funtoo.boot.config.BootConfigFile(cfile)
+	if not c.fileExists():
+		ok = False
+		allmsgs.append(["fatal", "Master configuration file \"%s\" does not exist." % cfile])
 except ConfigFileError, e:
-    ok = False
-    banner()
-    allmsgs.append(["fatal", "Parse Error: %s" % e])
+	ok = False
+	banner()
+	allmsgs.append(["fatal", "Parse Error: %s" % e])
 if not ok:
-    cleanup(ok, allmsgs)
+	cleanup(ok, allmsgs)
 
 if len(sys.argv)>=3 and sys.argv[1] == "--show":
-    print c[sys.argv[2]]
+	print c[sys.argv[2]]
 elif len(sys.argv)>=2 and sys.argv[1] == "--showdefaults":
-    print "# These are default, hard-coded settings that can be overridden by"
-    print "# the /etc/boot.conf file."
-    print
-    for line in c.parent.dump():
-        sys.stdout.write(line)
+	print "# These are default, hard-coded settings that can be overridden by"
+	print "# the /etc/boot.conf file."
+	print
+	for line in c.parent.dump():
+		sys.stdout.write(line)
 elif len(sys.argv)>=2 and (sys.argv[1] in [ "-h", "--help"]):
-    printhelp()
+	printhelp()
 else:
-    banner()
-    update(c, ok, allmsgs)
+	banner()
+	update(c, ok, allmsgs)
 
