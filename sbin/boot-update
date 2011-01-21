@@ -77,8 +77,16 @@ def mesg(msgtype, msg):
 	elif msgtype == "warn":
 		print RED + " *" + OFF + " " + msg
 
+ext = None
+
 def cleanup(success, messages):
 	""" prints accumulated errors and warnings and exits appropriately """
+
+	if ext != None:
+		# unmounts any non-/boot filesystems we may have mounted for scanning.
+		# /boot unmounting is handled via another process.
+		ext.r.UnmountIfNecessary()
+
 	warnings = False
 
 	for msgtype, msg in messages:

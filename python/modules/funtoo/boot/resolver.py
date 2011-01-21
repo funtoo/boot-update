@@ -4,7 +4,7 @@ that might be found in the configuration file. For example, it handles matching
 the [-v] in a file path to the various files it can match. """
 
 import os, glob, commands
-from helper import fstabGetRootDevice, fstabGetFilesystemOfDevice
+from helper import fstabGetRootDevice, fstabGetFilesystemOfDevice, fstabHasEntry
 
 def bracketzap(instr, wild=True):
 	""" Removes various bracket types from the input string. """
@@ -32,6 +32,7 @@ class Resolver:
 	
 	def __init__(self, config):
 		self.config = config
+		self.mounted = {}
 
 	def resolvedev(self, dev):
 		if ((dev[0:5] == "UUID=") or (dev[0:6] == "LABEL=")):
@@ -143,6 +144,32 @@ class Resolver:
 					return [ ok, allmsgs, param[11:] ]
 		return [ ok, allmsgs, None ]
 
+
+	def MountIfNecessary(self,scanpath):
+		if scanpath in self.mounted:
+			# already mounted, return
+			return
+		elif os.path.normpath(scanpath) == "/boot":
+			# /boot mounting is handled via another process, so skip:
+			return
+		# we record things to a self.mount list, which is used later to track when we personally mounted
+		# something, so we can unmount it. If it's already mounted, we leave it mounted:
+		if os.path.ismount(scanpath):
+			# mounted, but not in our list yet, so add, but don't unmount later:
+			self.mount[scanpath] = {"unmount" : False}
+		elif fstabHasEntry(scanpath):
+			# not mounted, and mountable, so we should mount it.
+			os.system("mount %s" % scanpath)
+			self.mount[scanpath] = {"mount" : True}
+		# if we get here, it's not a mountpoint, just a regular filesystem location, so we don't add it to our
+		# mount list.
+
+	def UnmountIfNecessary(self):
+		for mountpoint, unmount in self.mounted.iteritems():
+			if unmount == False:
+				continue
+			os.system("umount %s" % mountpoint)
+
 	def GenerateSections(self,l,sfunc,ofunc=None):
 		c=self.config
 
@@ -194,7 +221,11 @@ class Resolver:
 			findlist, skiplist = c.flagItemList("%s/%s" % ( sect, "kernel" ))
 			findmatch=[]
 
-			for scanpath in c.item(sect,"scan").split():
+			scanpaths = c.item(sect,"scan").split()
+
+			self.MountIfNecessary(scanpaths)
+
+			for scanpath in scanpaths:
 				skipmatch = self.GetMatchingKernels(scanpath, skiplist)
 				findmatch += self.GetMatchingKernels(scanpath, findlist, skipmatch)
 
