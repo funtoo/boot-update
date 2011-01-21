@@ -3,18 +3,14 @@
 import os, commands
 
 from ..extension import Extension
-from ..resolver import Resolver
-
-r=None
 
 def getExtension(config):
-	global r
-	r=Resolver(config)
 	return GRUBLegacyExtension(config)
 
 class GRUBLegacyExtension(Extension):
 
 	def __init__(self,config):
+		Extension.__init__(self)
 		self.fn = "/boot/grub-legacy/grub.conf"
 		self.config = config
 		self.bootitems = []
@@ -25,7 +21,6 @@ class GRUBLegacyExtension(Extension):
 		return [ok, msgs]
 	
 	def generateOtherBootEntry(self,l,sect):
-		global r
 		ok=True
 		msgs=[]
 		mytype = self.config["%s/type" % sect ].lower()
@@ -42,7 +37,7 @@ class GRUBLegacyExtension(Extension):
 			msgs.append(["fatal","Unrecognized boot entry type \"%s\"" % mytype])
 			return [ ok, msgs ]
 		params=self.config["%s/params" % sect].split()
-		myroot = r.GetParam(params,"root=")
+		myroot = self.r.GetParam(params,"root=")
 		myname = sect
 		# TODO check for valid root entry
 		l.append("title %s" % myname )
@@ -88,23 +83,22 @@ class GRUBLegacyExtension(Extension):
 		return out
 
 	def generateBootEntry(self,l,sect,kname,kext):
-		global r
-
+		
 		ok=True
 		allmsgs=[]
 
-		label = r.GetBootEntryString( sect, kname )
+		label = self.r.GetBootEntryString( sect, kname )
 		
 		l.append("title %s" % label)
 		self.bootitems.append(label)
 
-		kpath=r.RelativePathTo(kname,"/boot")
+		kpath=self.r.RelativePathTo(kname,"/boot")
 		params=self.config.item(sect,"params").split()
 
-		ok, allmsgs, myroot = r.DoRootAuto(params,ok,allmsgs)
+		ok, allmsgs, myroot = self.r.DoRootAuto(params,ok,allmsgs)
 		if not ok:
 			return [ ok, allmsgs ]
-		ok, allmsgs, fstype = r.DoRootfstypeAuto(params,ok,allmsgs)
+		ok, allmsgs, fstype = self.r.DoRootfstypeAuto(params,ok,allmsgs)
 		if not ok:
 			return [ ok, allmsgs ]
 	
@@ -116,9 +110,9 @@ class GRUBLegacyExtension(Extension):
 		l.append("root %s" % mygrubroot )
 		l.append("kernel %s %s" % ( kpath," ".join(params) ))
 		initrds=self.config.item(sect,"initrd")
-		initrds=r.FindInitrds(initrds, kname, kext)
+		initrds=self.r.FindInitrds(initrds, kname, kext)
 		for initrd in initrds:
-			l.append("initrd %s" % r.RelativePathTo(initrd,"/boot"))
+			l.append("initrd %s" % self.r.RelativePathTo(initrd,"/boot"))
 		l.append("")
 
 		return [ ok, allmsgs ]
@@ -128,10 +122,9 @@ class GRUBLegacyExtension(Extension):
 		c=self.config
 		ok=True
 		allmsgs=[]
-		global r
 		# pass our boot entry generator function to GenerateSections, and everything is taken care of for our boot entries
 
-		ok, msgs, self.defpos, self.defname = r.GenerateSections(l,self.generateBootEntry, self.generateOtherBootEntry)
+		ok, msgs, self.defpos, self.defname = self.r.GenerateSections(l,self.generateBootEntry, self.generateOtherBootEntry)
 		allmsgs += msgs
 		if not ok:
 			return [ ok, allmsgs, l ]

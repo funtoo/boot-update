@@ -2,6 +2,7 @@
 """ The resolver provides various mechanisms for doing things automatically
 that might be found in the configuration file. For example, it handles matching
 the [-v] in a file path to the various files it can match. """
+
 import os, glob, commands
 from helper import fstabGetRootDevice, fstabGetFilesystemOfDevice
 
@@ -24,8 +25,11 @@ def bracketzap(instr, wild=True):
 		return instr[0:wstart]+instr[wstop+1:]
 
 class Resolver:
-	""" A resolver actually does the various resolutions based on the
-	 configuration. """
+	
+	# The resolver goes out and finds kernels and initrds. Then it is the job of the
+	# extension to generate the proper boot-loader-specific configuration file based
+	# on what the resolver found.
+	
 	def __init__(self, config):
 		self.config = config
 
@@ -70,6 +74,9 @@ class Resolver:
 		return "%s - %s" % ( sect, os.path.basename(kname) )
 
 	def DoRootAuto(self,params,ok,allmsgs):
+
+		# properly handle the root=auto and real_root=auto parameters in the boot.conf config file:
+
 		rootarg=None
 		doauto=False
 		if "root=auto" in params:

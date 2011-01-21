@@ -4,14 +4,9 @@
 import os, sys, commands
 
 from ..extension import Extension
-from ..resolver import Resolver
-
-r = None
 
 def getExtension(config):
 	""" gets the extension based on the configuration """
-	global r
-	r = Resolver(config)
 	return GRUBExtension(config)
 
 # Add exception definition here to be used by a Guppy failure.
@@ -38,7 +33,6 @@ class GRUBExtension(Extension):
 	
 	def generateOtherBootEntry(self, l, sect):
 		""" generates the boot entry for other systems """
-		global r
 		ok = True
 		msgs = []
 		mytype = self.config["%s/type" % sect ].lower()
@@ -55,7 +49,7 @@ class GRUBExtension(Extension):
 			msgs.append(["fatal", "Unrecognized boot entry type \"%s\"" % mytype])
 			return [ ok, msgs ]
 		params = self.config["%s/params" % sect].split()
-		myroot = r.GetParam(params, "root=")
+		myroot = self.r.GetParam(params, "root=")
 		myname = sect
 		# TODO check for valid root entry
 		l.append("")
@@ -72,37 +66,35 @@ class GRUBExtension(Extension):
 
 	def generateBootEntry(self, l, sect, kname, kext):
 		""" generates the boot entry """
-		global r
-
 		ok = True
 		allmsgs = []
 
 		l.append("")
-		label = r.GetBootEntryString( sect, kname ) 
+		label = self.r.GetBootEntryString( sect, kname ) 
 
 		l.append("menuentry \"%s\" {" % label )
 		# self.bootitems records all our boot items
 		self.bootitems.append(label)
 	
 		self.PrepareGRUBForFilesystem(self.config["%s/scan" % sect], l)
-		kpath = r.RelativePathTo(kname, self.config["%s/scan" % sect])
+		kpath = self.r.RelativePathTo(kname, self.config["%s/scan" % sect])
 		params = self.config["%s/params" % sect].split()
 
-		ok, allmsgs, myroot = r.DoRootAuto(params, ok, allmsgs)
+		ok, allmsgs, myroot = self.r.DoRootAuto(params, ok, allmsgs)
 		if not ok:
 			return [ ok, allmsgs ]
-		ok, allmsgs, fstype = r.DoRootfstypeAuto(params, ok, allmsgs)
+		ok, allmsgs, fstype = self.r.DoRootfstypeAuto(params, ok, allmsgs)
 		if not ok:
 			return [ ok, allmsgs ]
 
 		initrds = self.config.item(sect, "initrd")
-		initrds = r.FindInitrds(initrds, kname, kext)
+		initrds = self.r.FindInitrds(initrds, kname, kext)
 		if myroot and ('root=' + myroot) in params and 0 == len(initrds):
 			params.remove('root=' + myroot)
-			params.append('root=' + r.resolvedev(myroot))
+			params.append('root=' + self.r.resolvedev(myroot))
 		l.append("  linux %s %s" % ( kpath, " ".join(params) ))
 		for initrd in initrds:
-			l.append("  initrd %s" % r.RelativePathTo(initrd, self.config["%s/scan" % sect]))
+			l.append("  initrd %s" % self.r.RelativePathTo(initrd, self.config["%s/scan" % sect]))
 		if self.config.hasItem("%s/gfxmode" % sect):
 			l.append("  set gfxpayload=%s" % self.config.item(sect, "gfxmode"))
 		else:
@@ -115,7 +107,6 @@ class GRUBExtension(Extension):
 		c = self.config
 		ok = True
 		allmsgs = []
-		global r
 		l.append(c.condSubItem("boot/timeout", "set timeout=%s"))
 		# pass our boot entry generator function to GenerateSections,
 		# and everything is taken care of for our boot entries
@@ -132,7 +123,7 @@ class GRUBExtension(Extension):
 			if font == None:
 				font = "%s/grub/unifont.pf2" % c["boot/path"]
 			l += [ "if loadfont %s; then" %
-				   r.RelativePathTo(font,c["boot/path"]),
+				   self.r.RelativePathTo(font,c["boot/path"]),
 				"   set gfxmode=%s" % c["display/gfxmode"],
 				"   insmod gfxterm",
 				"   insmod vbe",
@@ -159,14 +150,14 @@ class GRUBExtension(Extension):
 						l += [
 							"   insmod %s" % bgext,
 							"   background_image %s" %
-							r.RelativePathTo(bgimg, c["boot/path"] )
+							self.r.RelativePathTo(bgimg, c["boot/path"] )
 						]
 					elif os.path.exists(rel_cfgpath):
 						# user specified path relative to /boot:
 						l += [
 							"   insmod %s" % bgext,
 							"   background_image %s" %
-							r.RelativePathTo(rel_cfgpath , c["boot/path"] )
+							self.r.RelativePathTo(rel_cfgpath , c["boot/path"] )
 						]
 					else:
 						allmsgs.append(["warn","background image \"%s\" does not exist - skipping." % bgimg])
@@ -181,7 +172,7 @@ class GRUBExtension(Extension):
 			if c.hasItem("display/background"):
 				allmsgs.append(["warn","display/gfxmode not provided - display/background \"%s\" will not be displayed." % c["display/background"]] )
 
-		ok, msgs, self.defpos, self.defname = r.GenerateSections(l, self.generateBootEntry, self.generateOtherBootEntry)
+		ok, msgs, self.defpos, self.defname = self.r.GenerateSections(l, self.generateBootEntry, self.generateOtherBootEntry)
 		allmsgs += msgs
 		if not ok:
 			return [ ok, allmsgs, l]

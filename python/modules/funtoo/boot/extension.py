@@ -1,12 +1,12 @@
 # -*- coding: ascii -*-
 import os
+from resolver import Resolver
 
 class Extension:
 	def __init__(self):
 		# initialization should always succeed.
-		# set self.fn to the filename of the config file
-		pass
-	
+		self.r = Resolver(config)
+
 	def APIVersion(self):
 		# return API version, a monotonically increasing integer
 		return 1
