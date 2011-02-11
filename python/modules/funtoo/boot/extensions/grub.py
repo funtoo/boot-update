@@ -125,6 +125,7 @@ class GRUBExtension(Extension):
 			if not os.path.exists(src_font):
 				if os.path.exists(dst_font):
 					# copy from /usr/share location to /boot/grub:
+					import shutil
 					shutil.copy(src_font,dst_font)
 				else:
 					allmsgs.append(["fatal", "specified font \"%s\" not found at %s; aborting." % ( font, dst_font)] )
