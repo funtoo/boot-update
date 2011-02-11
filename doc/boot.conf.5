@@ -1,6 +1,6 @@
 .\" Man page generated from reStructeredText.
 .
-.TH BOOT.CONF 5 "" "1.4.12" "Funtoo Linux Core System"
+.TH BOOT.CONF 5 "" "1.5" "Funtoo Linux Core System"
 .SH NAME
 boot.conf \- Funtoo global boot loader configuration file
 .
@@ -531,7 +531,9 @@ supported for \fIgrub\fP, and defaults to being unset.
 .sp
 Specifies a font used to display text in graphical mode (ie. when
 \fBdisplay::gfxmode\fP is enabled) at boot. Defaults to
-\fB/boot/grub/unifont.pf2\fP, which is included with Funtoo\(aqs \fIgrub\fP ebuild. This
+\fBunifont.pf2\fP, which is included with Funtoo\(aqs \fIgrub\fP ebuild.
+If the font does not exist in \fB/boot/grub\fP, it will be copied from
+\fB/usr/share/grub/fonts\fP if it exists. This
 option is only supported for \fIgrub\fP, and will only be enabled when a
 \fBgfxmode\fP has been specified.
 .SH COLOR SECTION
