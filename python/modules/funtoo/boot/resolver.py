@@ -223,9 +223,9 @@ class Resolver:
 
 			scanpaths = c.item(sect,"scan").split()
 
-			self.MountIfNecessary(scanpaths)
 
 			for scanpath in scanpaths:
+				self.MountIfNecessary(scanpath)
 				skipmatch = self.GetMatchingKernels(scanpath, skiplist)
 				findmatch += self.GetMatchingKernels(scanpath, findlist, skipmatch)
 

@@ -14,8 +14,7 @@ def getExtension(config):
 class GRUBExtension(Extension):
 	""" implements an extension for the grub bootloader """
 	def __init__(self, config, testing = False):
-		Extension.__init__(self)
-		self.config = config
+		Extension.__init__(self,config)
 		self.fn = "%s/grub/grub.cfg" % self.config["boot/path"]
 		self.bootitems = []
 		self.testing = testing
@@ -112,18 +111,27 @@ class GRUBExtension(Extension):
 		# and everything is taken care of for our boot entries
 
 		if c.hasItem("display/gfxmode"):
+
 			l.append("")
 			self.PrepareGRUBForFilesystem(c["boot/path"], l)
-			font = None
 			if c.hasItem("display/font"):
 				font = c["display/font"]
-				if not os.path.exists(font):
-					allmsgs.append(["warn", "specified font \"%s\" does not exist, using default." % font] )
-					font = None
-			if font == None:
-				font = "%s/grub/unifont.pf2" % c["boot/path"]
+			else:
+				font = "unifont.pf2"
+
+			src_font = "/usr/share/grub/fonts/%s" % font
+			dst_font = "%s/grub/%s" % (c["boot/path"], font)
+
+			if not os.path.exists(src_font):
+				if os.path.exists(dst_font):
+					# copy from /usr/share location to /boot/grub:
+					shutil.copy(src_font,dst_font)
+				else:
+					allmsgs.append(["fatal", "specified font \"%s\" not found at %s; aborting." % ( font, dst_font)] )
+					return (False, allmsgs)
+
 			l += [ "if loadfont %s; then" %
-				   self.r.RelativePathTo(font,c["boot/path"]),
+				   self.r.RelativePathTo(dst_font,c["boot/path"]),
 				"   set gfxmode=%s" % c["display/gfxmode"],
 				"   insmod gfxterm",
 				"   insmod vbe",

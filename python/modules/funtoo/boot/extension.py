@@ -3,8 +3,9 @@ import os
 from resolver import Resolver
 
 class Extension:
-	def __init__(self):
+	def __init__(self,config):
 		# initialization should always succeed.
+		self.config = config
 		self.r = Resolver(config)
 
 	def APIVersion(self):

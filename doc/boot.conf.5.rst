@@ -422,7 +422,9 @@ supported for *grub*, and defaults to being unset.
 
 Specifies a font used to display text in graphical mode (ie. when
 ``display::gfxmode`` is enabled) at boot. Defaults to
-``/boot/grub/unifont.pf2``, which is included with Funtoo's `grub` ebuild. This
+``unifont.pf2``, which is included with Funtoo's `grub` ebuild. 
+If the font does not exist in ``/boot/grub``, it will be copied from
+``/usr/share/grub/fonts`` if it exists. This
 option is only supported for *grub*, and will only be enabled when a
 ``gfxmode`` has been specified.
 

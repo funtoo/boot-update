@@ -10,9 +10,8 @@ def getExtension(config):
 class GRUBLegacyExtension(Extension):
 
 	def __init__(self,config):
-		Extension.__init__(self)
+		Extension.__init__(self,config)
 		self.fn = "/boot/grub-legacy/grub.conf"
-		self.config = config
 		self.bootitems = []
 
 	def isAvailable(self):
