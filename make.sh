@@ -9,7 +9,7 @@ prep() {
 	cat boot-update.8.rst | sed -e "s/##VERSION##/$VERSION/g" | rst2man.py > boot-update.8
 	cat boot.conf.5.rst | sed -e "s/##VERSION##/$VERSION/g" | rst2man.py > boot.conf.5
 	cd ..
-	sed -i -e '/^version=/s/^.*$/version="'$VERSION'"/g' sbin/boot-update 
+	sed -i -e '/^version =/s/^.*$/version = "'$VERSION'"/g' sbin/boot-update 
 }
 
 commit() {
