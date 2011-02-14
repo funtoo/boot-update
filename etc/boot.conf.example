@@ -1,22 +1,36 @@
 boot {
 	generate grub
-	default "Funtoo Linux" 
-	timeout 3 
+	# "generate grub-legacy" if you are using grub-legacy-0.97
+
+	# Below, you can specify the kernel image to boot by default,
+	# or the default boot entry name
+
+	default bzImage
+	# default Windows 7
 }
 
-"Funtoo Linux" {
-	kernel bzImage[-v]
+display {
+	# gfxmode 1440x900 
+	# background /boot/background.jpg
 }
 
-"Funtoo Linux genkernel" {
-	kernel kernel-genkernel[-v]
-	initrd initramfs-genkernel[-v]
-	params += real_root=auto 
-} 
+"All my kernels" {
+	#
+	# This entry use reasonable defaults to find all matching kernels.  An
+	# "All my kernels - <kernel name>" boot entry will be generated for
+	# *each* kernel found.
+	#
+	# type "boot-update --showdefaults" to see default settings.
+}
 
-"Funtoo Linux uvesafb" { 
-	kernel bzImage-uvesafb[-v]
-	params += video=uvesafb:1440x900-8,mtrr=2
+"Funtoo Linux console" {
+	kernel bzImage
+}
+
+"Funtoo Linux with uvesafb" { 
+	kernel bzImage-RHEL5-uvesafb[-v]
+	params += video=uvesafb:1440x900-8,mtrr:2
+	gfxmode 1440x900
 }
 
 "Windows 7" {
@@ -25,6 +39,6 @@ boot {
 }
 
 "Windows XP" {
-	type winxp
+	type winxp 
 	params root=/dev/sda4
 }
