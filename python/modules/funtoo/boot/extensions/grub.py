@@ -121,9 +121,9 @@ class GRUBExtension(Extension):
 
 			src_font = "/usr/share/grub/fonts/%s" % font
 			dst_font = "%s/grub/%s" % (c["boot/path"], font)
-
-			if not os.path.exists(src_font):
-				if os.path.exists(dst_font):
+	
+			if not os.path.exists(dst_font):
+				if os.path.exists(src_font):
 					# copy from /usr/share location to /boot/grub:
 					import shutil
 					shutil.copy(src_font,dst_font)
