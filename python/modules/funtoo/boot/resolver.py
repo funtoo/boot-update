@@ -152,15 +152,15 @@ class Resolver:
 		elif os.path.normpath(scanpath) == "/boot":
 			# /boot mounting is handled via another process, so skip:
 			return
-		# we record things to a self.mount list, which is used later to track when we personally mounted
+		# we record things to a self.mounted list, which is used later to track when we personally mounted
 		# something, so we can unmount it. If it's already mounted, we leave it mounted:
 		if os.path.ismount(scanpath):
 			# mounted, but not in our list yet, so add, but don't unmount later:
-			self.mount[scanpath] = {"unmount" : False}
+			self.mounted[scanpath] = {"unmount" : False}
 		elif fstabHasEntry(scanpath):
 			# not mounted, and mountable, so we should mount it.
 			os.system("mount %s" % scanpath)
-			self.mount[scanpath] = {"mount" : True}
+			self.mounted[scanpath] = {"mount" : True}
 		# if we get here, it's not a mountpoint, just a regular filesystem location, so we don't add it to our
 		# mount list.
 
