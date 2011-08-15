@@ -24,9 +24,9 @@ commit() {
 }
 
 web() {
-	install -d /root/git/website/archive/boot-update
-	cp dist/boot-update-$VERSION.tar.bz2 /root/git/website/archive/boot-update
-	cd /root/git/website && git add archive/boot-update/* && git commit -a -m "new boot-update $VERSION" && git push
+	install -d /home/mirror/linux/distfiles/boot-update
+	cp dist/boot-update-$VERSION.tar.bz2 /home/mirror/linux/distfiles/boot-update
+	/root/git/website/scripts/mirrorsync.sh
 }
 
 if [ "$1" = "prep" ]

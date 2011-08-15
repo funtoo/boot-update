@@ -10,7 +10,7 @@ GREEN = "\x1b[32;01m"
 RED = "\x1b[31;01m"
 PURP = "\x1b[35;01m"
 OFF = "\x1b[0m"
-version = "1.5.2"
+version = "1.5.3"
 verbose = False
 
 # This is needed for testing from the root of the git repo - must come before
