@@ -220,7 +220,10 @@ class GRUBExtension(Extension):
 		mods = []
 		for targ in [ "abstraction", "partmap", "fs" ]:
 			for mod in self.DeviceProbe(dev, targ):
-				mods.append(mod)
+				if targ == "partmap":
+					mods.append("part_%s" % mod)
+				else:
+					mods.append(mod)
 		return mods
 
 	def DeviceProbe(self, dev, targ):
