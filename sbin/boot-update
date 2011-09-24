@@ -185,41 +185,45 @@ def update(config, success, messages):
 
 	cleanup(success, allmsgs)
 
-
-if len(sys.argv)>=2 and (( "-l" in sys.argv ) or ( "--license" in sys.argv )):
-	versinfo()
-	sys.exit(0)
-
-if "-V" in sys.argv or ("--verbose" in sys.argv):
-	verbose = True
-
-ok = True
-allmsgs = []
-cfile = "/etc/boot.conf"
-# Load /etc/boot.conf master configuration file:
-try:
-	c = funtoo.boot.config.BootConfigFile(cfile)
-	if not c.fileExists():
-		ok = False
-		allmsgs.append(["fatal", "Master configuration file \"%s\" does not exist." % cfile])
-except ConfigFileError, e:
-	ok = False
-	banner()
-	allmsgs.append(["fatal", "Parse Error: %s" % e])
-if not ok:
-	cleanup(ok, allmsgs)
-
-if len(sys.argv)>=3 and sys.argv[1] == "--show":
-	print c[sys.argv[2]]
-elif len(sys.argv)>=2 and sys.argv[1] == "--showdefaults":
-	print "# These are default, hard-coded settings that can be overridden by"
-	print "# the /etc/boot.conf file."
+if os.geteuid() != 0:
 	print
-	for line in c.parent.dump():
-		sys.stdout.write(line)
-elif len(sys.argv)>=2 and (sys.argv[1] in [ "-h", "--help"]):
-	printhelp()
+	print RED + "boot-update requires root privileges"
+	print
 else:
-	banner()
-	update(c, ok, allmsgs)
+	if len(sys.argv)>=2 and (( "-l" in sys.argv ) or ( "--license" in sys.argv )):
+		versinfo()
+		sys.exit(0)
+
+	if "-V" in sys.argv or ("--verbose" in sys.argv):
+		verbose = True
+
+	ok = True
+	allmsgs = []
+	cfile = "/etc/boot.conf"
+	# Load /etc/boot.conf master configuration file:
+	try:
+		c = funtoo.boot.config.BootConfigFile(cfile)
+		if not c.fileExists():
+			ok = False
+			allmsgs.append(["fatal", "Master configuration file \"%s\" does not exist." % cfile])
+	except ConfigFileError, e:
+		ok = False
+		banner()
+		allmsgs.append(["fatal", "Parse Error: %s" % e])
+	if not ok:
+		cleanup(ok, allmsgs)
+
+	if len(sys.argv)>=3 and sys.argv[1] == "--show":
+		print c[sys.argv[2]]
+	elif len(sys.argv)>=2 and sys.argv[1] == "--showdefaults":
+		print "# These are default, hard-coded settings that can be overridden by"
+		print "# the /etc/boot.conf file."
+		print
+		for line in c.parent.dump():
+			sys.stdout.write(line)
+	elif len(sys.argv)>=2 and (sys.argv[1] in [ "-h", "--help"]):
+		printhelp()
+	else:
+		banner()
+		update(c, ok, allmsgs)
 
