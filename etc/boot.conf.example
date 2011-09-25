@@ -30,7 +30,6 @@ display {
 "Funtoo Linux with uvesafb" { 
 	kernel bzImage-RHEL5-uvesafb[-v]
 	params += video=uvesafb:1440x900-8,mtrr:2
-	gfxmode 1440x900
 }
 
 "Windows 7" {
