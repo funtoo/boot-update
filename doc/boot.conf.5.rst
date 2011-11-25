@@ -7,7 +7,7 @@ Funtoo global boot loader configuration file
 ---------------------------------------------
 
 :Author: Daniel Robbins <drobbins@funtoo.org>
-:Version: ##VERSION## 
+:Version: ##VERSION##
 :Manual section: 5
 :Manual group: Funtoo Linux Core System
 
@@ -42,7 +42,7 @@ A section ends when a single *}* appears on a line.
 
 There are special *built-in* sections that are expected to be found by the
 framework and used for configuation settings, such as *boot*, *display* and
-*color*. 
+*color*.
 
 In addition, other sections can be created. Any sections with non-builtin names
 are recognized as boot entry definitions. For example, the sections *"Funtoo
@@ -77,7 +77,7 @@ The *kernel* variable specifies one or more kernels, using exact kernel file
 names or wildcards. Again, note that it is possible for one boot entry in
 */etc/boot.conf* to generate *multiple* boot entries for your boot loader if
 wildcards are used or multiple kernels are listed -- one boot entry will be
-generated for each matching kernel found. 
+generated for each matching kernel found.
 
 So, for example, the following
 */etc/boot.conf* could generate two boot entries named "Funtoo Linux -
@@ -166,12 +166,12 @@ a boot entry that is equivalent to the previous example::
         "Funtoo Linux" {
                 kernel bzImage
                 # load initramfs-1.igz:
-                initrd initramfs-1.igz 
+                initrd initramfs-1.igz
                 # also load initramfs-2.igz:
                 initrd += initramfs-2.igz
         }
 
-And in the following example, the initial *+=* tells coreboot to append 
+And in the following example, the initial *+=* tells coreboot to append
 *initramfs-1.igz* to the default initramfs list::
 
         "Funtoo Linux" {
@@ -183,10 +183,10 @@ And in the following example, the initial *+=* tells coreboot to append
 Parameters
 ~~~~~~~~~~
 
-The *params* variable specifies kernel parameters used to boot the kernel. Typical
-kernel parameters, such as *init=/bin/bash*, *root=/dev/sda3* or others can
-be specified as necessary. Here's a sophisticated example from Andreas Matuschek
-that was posted on the funtoo-dev mailing list::
+The *params* variable specifies kernel parameters used to boot the kernel.
+Typical kernel parameters, such as *init=/bin/bash*, *root=/dev/sda3* or others
+can be specified as necessary. Here's a sophisticated example from Andreas
+Matuschek that was posted on the funtoo-dev mailing list::
 
         "Funtoo Linux On Ice" {
                 params root=/dev/sda2
@@ -214,7 +214,6 @@ Special Parameters
 ~~~~~~~~~~~~~~~~~~
 
 **+=**
-
   When *+=* is specified at the beginning of the first *params*, *initrd* or
   *kernel* definition in a section, then the arguments after the *+=* will be
   added to the default settings defined in *default* (type *boot-update
@@ -224,20 +223,17 @@ Special Parameters
   lines.
 
 **root=auto**
-
   When *root=auto* is evaluated, the framework will look at */etc/fstab* to
   determine the root filesystem device. Then *root=auto* will changed to
   reflect this, so the actual parameter passed to the kernel will be something
   like *root=/dev/sda3* .
-  
-**rootfstype=auto**
 
+**rootfstype=auto**
   In a similar fashion to *root=auto*, *rootfstype=auto* will be
   replaced with something like *rootfstype=ext4*, with the filesystem type
   determined by the setting in */etc/fstab*.
 
-**real_root=auto** 
-
+**real_root=auto**
   This special parameter is useful when using *genkernel* initrds that expect a
   *real_root* parameter. When specified, any *root=* options already specified
   (including *root=auto*) will be removed from *params*, and *real_root* will
@@ -249,14 +245,14 @@ Alternate OS Loading
 
 Boot entries can be created for alternate operating systems using the following
 approach::
-        
+
         "Windows 7" {
                 type win7
                 params root=/dev/sda6
         }
 
 
-The *type* variable should be set to one of the operating system names that 
+The *type* variable should be set to one of the operating system names that
 *boot-update* recognizes (case-insensitive,) which are:
 
 - linux (default)
@@ -338,7 +334,7 @@ Note that double-quotes are optional both in section names and in the
 *default* and Boot Entry Sections
 ---------------------------------
 
-*default :: type* 
+*default :: type*
 ~~~~~~~~~~~~~~~~~~~
 
 Specifies the boot entry type; defaults to *linux*. Currently, DOS/Windows boot
@@ -355,7 +351,7 @@ use the proper chainloader +4 parameter to load Microsoft Windows 7::
 *default :: scan*
 ~~~~~~~~~~~~~~~~~~~
 
-This setting specifies one or more directories to scan for kernels and 
+This setting specifies one or more directories to scan for kernels and
 initrds. Defaults to */boot*.
 
 *default :: kernel*
@@ -422,7 +418,7 @@ supported for *grub*, and defaults to being unset.
 
 Specifies a font used to display text in graphical mode (ie. when
 ``display::gfxmode`` is enabled) at boot. Defaults to
-``unifont.pf2``, which is included with Funtoo's `grub` ebuild. 
+``unifont.pf2``, which is included with Funtoo's `grub` ebuild.
 If the font does not exist in ``/boot/grub``, it will be copied from
 ``/usr/share/grub/fonts`` if it exists. This
 option is only supported for *grub*, and will only be enabled when a
@@ -453,5 +449,3 @@ SEE ALSO
 --------
 
 boot-update(8), genkernel(8)
-
-

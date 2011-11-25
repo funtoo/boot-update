@@ -56,7 +56,7 @@ def printhelp():
 
  Options:
    --showdefaults       Show hard-coded (user-overrideable) settings
-   --show [sect/var]    Display variable "var" defined in section "sect"
+   --show <sect/var>    Display variable "var" defined in section "sect"
    -C, --check          Validate configuration file, but do nothing else
    -V, --verbose        Verbose mode
    -h, --help           Display this information
