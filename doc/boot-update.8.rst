@@ -7,7 +7,7 @@ Automatically create a boot loader configuration file
 -----------------------------------------------------
 
 :Author: Daniel Robbins <drobbins@funtoo.org>
-:Version: ##VERSION## 
+:Version: ##VERSION##
 :Manual section: 8
 :Manual group: Funtoo Linux Core System
 
@@ -15,8 +15,8 @@ SYNOPSIS
 --------
 
 The standard invocation of the command is as follows with no options or
-arguments, which causes a boot loader configuration file to be (re)generated based
-on settings in */etc/boot.conf*:
+arguments, which causes a boot loader configuration file to be (re)generated
+based on settings in */etc/boot.conf*:
 
   **boot-update**
 
@@ -27,13 +27,13 @@ the boot loader menu to reflect these changes.
 OPTIONS
 -------
 
- Options:
-   --showdefaults               Show hard-coded (user-overrideable) settings
-   --show [sect/var]            Display variable "var" defined in section "sect" in */etc/boot.conf*
-   -C, --check                  Validate configuration file, but do nothing else
-   -V, --verbose                Verbose mode
-   -h, --help                   Display this information
-   -l, --license                Display license information
+--showdefaults               Show hard-coded (user-overrideable) settings
+--show <sect/var>            Display variable "var" defined in section "sect"
+                             in */etc/boot.conf*
+-C, --check                  Validate configuration file, but do nothing else
+-V, --verbose                Verbose mode
+-h, --help                   Display this information
+-l, --license                Display license information
 
 DESCRIPTION
 -----------
@@ -62,5 +62,3 @@ SEE ALSO
 --------
 
 boot.conf(5)
-
-
