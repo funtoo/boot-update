@@ -1,4 +1,4 @@
-#!/usr/bin/python2.6
+#!/usr/bin/python2
 # -*- coding: ascii -*-
 import commands
 import fnmatch
@@ -27,6 +27,8 @@ revdeps={}
 
 for line in a[1].split("\n"):
 	ls = line.split()
+	if len(ls) < 3:
+		continue
 	key = ls[0].replace("_","-")
 	if len(ls)==4:
 		mydeps = ls[3].replace("_","-").split(",")
