@@ -1,0 +1,14 @@
+module auto-detection
+
+autofunk.py can be run after booting a kernel and attempts to discover what
+modules are actually used, versus the modules that were actually loaded. It can
+be run after boot and its output used to figure out what modules an initrd does
+not need to load or include "next time".
+
+reqmod-gregkh.sh is a script that will use sysfs to list the modules required
+to boot. You may need to be already running the kernel you want to boot, making
+it similar to the above method. It does not include filesystems or other
+important things like ipv6, etc.
+
+It would be worthwhile to also check out 
+http://user-contributions.org/projects/hwd/hwd.html
