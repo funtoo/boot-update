@@ -29,7 +29,7 @@ def banner(extra=True):
 	""" prints the banner message """
 	print
 	print " " + PURP + "boot-update " + OFF + CYANN + version + OFF + " /",
-	print "Copyright 2009-2011 Funtoo Technologies"
+	print "Copyright 2009-2012 Funtoo Technologies"
 	if extra:
 		print
 		print " [use option \"-l\" for license info, \"-h\" for help]"
