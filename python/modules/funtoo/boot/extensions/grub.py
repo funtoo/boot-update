@@ -4,13 +4,12 @@
 import os, sys, commands
 
 from ..extension import Extension
+from funtoo.boot.extension import ExtensionError
 
 def getExtension(config):
 	""" gets the extension based on the configuration """
 	return GRUBExtension(config)
 
-# Add exception definition here to be used by a Guppy failure.
-# -- ExtensionError?
 class GRUBExtension(Extension):
 	""" implements an extension for the grub bootloader """
 	def __init__(self, config, testing = False):
@@ -29,7 +28,7 @@ class GRUBExtension(Extension):
 			msgs.append(["fatal", "/sbin/grub-probe, required for boot/generate = grub,  does not exist"])
 			ok = False
 		return [ok, msgs]
-	
+
 	def generateOtherBootEntry(self, l, sect):
 		""" generates the boot entry for other systems """
 		ok = True
@@ -69,12 +68,12 @@ class GRUBExtension(Extension):
 		allmsgs = []
 
 		l.append("")
-		label = self.r.GetBootEntryString( sect, kname ) 
+		label = self.r.GetBootEntryString( sect, kname )
 
 		l.append("menuentry \"%s\" {" % label )
 		# self.bootitems records all our boot items
 		self.bootitems.append(label)
-	
+
 		self.PrepareGRUBForFilesystem(self.config["%s/scan" % sect], l)
 		kpath = self.r.RelativePathTo(kname, self.config["%s/scan" % sect])
 		params = self.config["%s/params" % sect].split()
@@ -121,7 +120,7 @@ class GRUBExtension(Extension):
 
 			src_font = "/usr/share/grub/fonts/%s" % font
 			dst_font = "%s/grub/%s" % (c["boot/path"], font)
-	
+
 			if not os.path.exists(dst_font):
 				if os.path.exists(src_font):
 					# copy from /usr/share location to /boot/grub:
@@ -147,9 +146,9 @@ class GRUBExtension(Extension):
 				if bgext == "jpg":
 					bgext = "jpeg"
 				if bgext in [ "jpeg", "png", "tga" ]:
-					
+
 					rel_cfgpath = "%s/%s" % ( c["boot/path"], bgimg)
-					
+
 					# first, look for absolute path, because our relative path
 					# can eval to "/boot/boot/foo.png" which
 					# due to the /boot/boot symlink will "exist".
@@ -185,14 +184,14 @@ class GRUBExtension(Extension):
 		allmsgs += msgs
 		if not ok:
 			return [ ok, allmsgs, l]
-		
-		l += [ 
+
+		l += [
 			""
 			"set default=%s" % self.defpos
 		]
-	
+
 		return [ok, allmsgs, l]
-			
+
 	def GuppyMap(self):
 		""" creates the device map """
 		out = None
@@ -201,17 +200,13 @@ class GRUBExtension(Extension):
 		else:
 			out = commands.getstatusoutput("/sbin/grub-mkdevicemap --no-floppy")
 		if out[0] != 0:
-			print "grub-mkdevicemap"
-			print out[1]
-			sys.exit(1)
+			raise ExtensionError,  "grub-mkdevicemap\n{output}".format(output = out[1])
 
 	def Guppy(self, argstring, fatal=True):
 		""" probes a device """
 		out = commands.getstatusoutput("/sbin/grub-probe " + argstring)
 		if fatal and out[0] != 0:
-			print "grub-probe " + argstring
-			print out[1]
-			sys.exit(1)
+			raise ExtensionError, "grub-probe {args}\n{output}".format(args = argstring, output = out[1])
 		else:
 			return out
 
@@ -246,7 +241,7 @@ class GRUBExtension(Extension):
 
 	def DeviceGRUB(self, dev):
 		""" determines the Grub device for a Linux device """
-		retval, out = self.Guppy(" --device %s --target=drive" % dev) 
+		retval, out = self.Guppy(" --device %s --target=drive" % dev)
 		return retval, out
 
 	def PrepareGRUBForFilesystem(self, fs, l):
@@ -263,4 +258,4 @@ class GRUBExtension(Extension):
 		retval, uuid = self.DeviceUUID(dev)
 		if retval == 0:
 			l.append("  search --no-floppy --fs-uuid --set %s" % uuid )
-		# TODO: add error handling for retvals  
+		# TODO: add error handling for retvals

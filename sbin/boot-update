@@ -16,13 +16,14 @@ verbose = False
 # This is needed for testing from the root of the git repo - must come before
 # funtoo imports
 if os.path.isdir(".git") and os.path.basename(os.getcwd()) == "coreboot":
-	sys.path = [ "python/modules" ] + sys.path 
+	sys.path = [ "python/modules" ] + sys.path
 
 # Import Funtoo extensions that we use:
 
 import funtoo.boot.config
 import funtoo.boot.helper
 import funtoo.boot.extensions
+from funtoo.boot.extension import ExtensionError
 from funtoo.core.config import ConfigFileError
 
 def banner(extra=True):
@@ -50,7 +51,7 @@ def printhelp():
 	""" prints the help message """
 	banner(extra=False)
 	print
-	print """ Usage: boot-update [options] 
+	print """ Usage: boot-update [options]
  Uses settings in /etc/boot.conf to generate new grub, grub-legacy or
  lilo (alpha) config file.
 
@@ -118,7 +119,7 @@ def update(config, success, messages):
 						% invalid])
 
 	# Figure out what extension we should be loading...
-	
+
 	generate = config["boot/generate"]
 
 	if generate == "":
@@ -141,7 +142,7 @@ def update(config, success, messages):
 
 	# Before loading extension, we want to auto-mount boot if it isn't
 	# already mounted:
-	
+
 	imountedit = False
 
 	if funtoo.boot.helper.fstabHasEntry("/boot"):
@@ -165,9 +166,14 @@ def update(config, success, messages):
 
 
 	# Regenerate Config File:
+	try:
+		success, msgs = ext.regenerate()[1:]
+	except ExtensionError,  e:
+		success = False
+		messages.append(["fatal",  e])
+	else:
+		messages += msgs
 
-	success, msgs = ext.regenerate()[1:]
-	messages += msgs
 	if success:
 		pos = 0
 		while pos < len(ext.bootitems):
