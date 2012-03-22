@@ -1,9 +1,9 @@
 #!/usr/bin/python2
 # -*- coding: ascii; tab-width: 4; indent-tabs-mode: nil -*-
 """ extension for handling grub """
-import os, sys, commands
+import os, commands
 
-from ..extension import Extension
+from funtoo.boot.extension import Extension
 from funtoo.boot.extension import ExtensionError
 
 def getExtension(config):

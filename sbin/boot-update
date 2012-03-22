@@ -78,15 +78,16 @@ def mesg(msgtype, msg):
 	elif msgtype == "warn":
 		print RED + " *" + OFF + " " + msg
 
-ext = None
 
-def cleanup(success, messages):
+
+def cleanup(success, messages, ext = None):
 	""" prints accumulated errors and warnings and exits appropriately """
 
 	if ext != None:
 		# unmounts any non-/boot filesystems we may have mounted for scanning.
 		# /boot unmounting is handled via another process.
-		ext.r.UnmountIfNecessary()
+		mesgs = ext.r.UnmountIfNecessary()
+		messages += mesgs
 
 	warnings = False
 
@@ -160,15 +161,13 @@ def update(config, success, messages):
 	__import__(extname)
 	extmodule = sys.modules[extname]
 
-	# Create Boot Loader Extension object:
-	ext = extmodule.getExtension(config)
-	ext.mesg = mesg
-
-
-	# Regenerate Config File:
+	# Create Boot Loader Extension object: and regenerate config file
+	ext = None
 	try:
+		ext = extmodule.getExtension(config)
+		ext.mesg = mesg
 		success, msgs = ext.regenerate()[1:]
-	except ExtensionError,  e:
+	except ExtensionError as e:
 		success = False
 		messages.append(["fatal",  e])
 	else:
@@ -189,7 +188,7 @@ def update(config, success, messages):
 		mesg("info","Unmounting /boot")
 		os.system("umount /boot")
 
-	cleanup(success, allmsgs)
+	cleanup(success, allmsgs, ext)
 
 if os.geteuid() != 0:
 	print
