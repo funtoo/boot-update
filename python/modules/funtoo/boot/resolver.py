@@ -144,7 +144,7 @@ class Resolver:
 					return [ ok, allmsgs, param[11:] ]
 		return [ ok, allmsgs, None ]
 
-	def GetMountPoint(self,  scanpath):
+	def GetMountPoint(self, scanpath):
 		"""Searches through scanpath for a matching mountpoint in /etc/fstab"""
 		mountpoint = scanpath
 
@@ -161,7 +161,7 @@ class Resolver:
 				# If we made it here, strip off last dir and try again
 				mountpoint = os.path.dirname(mountpoint)
 
-	def MountIfNecessary(self,scanpath):
+	def MountIfNecessary(self, scanpath):
 		mesgs = []
 
 		if os.path.normpath(scanpath) == "/boot":
@@ -176,7 +176,7 @@ class Resolver:
 			return mesgs
 		elif os.path.ismount(mountpoint):
 			# mounted, but not in our list yet, so add, but don't unmount later:
-			self.mounted[mountpoint] = {"unmount" : False}
+			self.mounted[mountpoint] = False
 			return mesgs
 		else:
 			# not mounted, and mountable, so we should mount it.
@@ -185,13 +185,13 @@ class Resolver:
 				mesgs.append(["fatal", "Error mounting {mp}".format(mp = mountpoint)])
 				return mesgs
 			else:
-				self.mounted[mountpoint] = {"mount" : True}
+				self.mounted[mountpoint] = True
 				return mesgs
 
 	def UnmountIfNecessary(self):
 		mesgs = []
-		for mountpoint, unmount in self.mounted.iteritems():
-			if unmount == False:
+		for mountpoint, we_mounted in self.mounted.iteritems():
+			if we_mounted == False:
 				continue
 			else:
 				out = commands.getstatusoutput("umount {mp}".format(mp = mountpoint))
@@ -318,7 +318,7 @@ class Resolver:
 		else:
 			return os.path.normpath(imagepath)
 
-	def StripMountPoint(self,  scanpath):
+	def StripMountPoint(self, scanpath):
 		"""Strips mount point from scanpath"""
 
 		mountpoint = self.GetMountPoint(scanpath)
@@ -332,5 +332,5 @@ class Resolver:
 			else:
 				return os.path.normpath(split_path[1])
 		else:
-			# No mount point, just return kname
+			# No mount point, just return scanpath
 			return scanpath
