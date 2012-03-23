@@ -176,8 +176,8 @@ class Resolver:
 			return mesgs
 		elif os.path.ismount(mountpoint):
 			# mounted, but not in our list yet, so add, but don't unmount later:
-			    self.mounted[mountpoint] = {"unmount" : False}
-			    return mesgs
+			self.mounted[mountpoint] = {"unmount" : False}
+			return mesgs
 		else:
 			# not mounted, and mountable, so we should mount it.
 			out = commands.getstatusoutput("mount {mp}".format(mp = mountpoint))
@@ -317,3 +317,20 @@ class Resolver:
 			return "/"+os.path.relpath(imagepath,mountpath)
 		else:
 			return os.path.normpath(imagepath)
+
+	def StripMountPoint(self,  scanpath):
+		"""Strips mount point from scanpath"""
+
+		mountpoint = self.GetMountPoint(scanpath)
+
+		if mountpoint:
+			split_path = scanpath.split(mountpoint, 1)
+			if len(split_path) != 2:
+				# TODO Handle error better
+				# Couldn't strip mount point, just return original scanpath
+				return scanpath
+			else:
+				return os.path.normpath(split_path[1])
+		else:
+			# No mount point, just return kname
+			return scanpath

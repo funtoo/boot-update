@@ -75,7 +75,7 @@ class GRUBExtension(Extension):
 		self.bootitems.append(label)
 
 		self.PrepareGRUBForFilesystem(self.config["%s/scan" % sect], l)
-		kpath = self.r.RelativePathTo(kname, self.config["%s/scan" % sect])
+		kpath = self.r.StripMountPoint(kname)
 		params = self.config["%s/params" % sect].split()
 
 		ok, allmsgs, myroot = self.r.DoRootAuto(params, ok, allmsgs)
@@ -92,7 +92,7 @@ class GRUBExtension(Extension):
 			params.append('root=' + self.r.resolvedev(myroot))
 		l.append("  linux %s %s" % ( kpath, " ".join(params) ))
 		for initrd in initrds:
-			l.append("  initrd %s" % self.r.RelativePathTo(initrd, self.config["%s/scan" % sect]))
+			l.append("  initrd %s" % self.r.StripMountPoint(initrd))
 		if self.config.hasItem("%s/gfxmode" % sect):
 			l.append("  set gfxpayload=%s" % self.config.item(sect, "gfxmode"))
 		else:
