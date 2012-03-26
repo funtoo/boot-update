@@ -34,6 +34,12 @@ class Resolver:
 		self.config = config
 		self.mounted = {}
 
+		# The following 4 variables are for use in generating sections.
+		self._pos = 0
+		self._defpos = None
+		self._defnames = []
+		self._default = self.config.deburr(self.config["boot/default"])
+
 	def resolvedev(self, dev):
 		if ((dev[0:5] == "UUID=") or (dev[0:6] == "LABEL=")):
 			out = commands.getstatusoutput("/sbin/findfs " + dev)
@@ -199,6 +205,132 @@ class Resolver:
 					mesgs.append(["fatal", "Error unmounting {mp}".format(mp = mountpoint)])
 		return mesgs
 
+	def _GenerateLinuxSection(self, l, sect, sfunc):
+		"""Generates section for Linux systems"""
+
+		allmsgs = []
+		def_mtime = None
+
+		# Process boot entry section (which can generate multiple boot
+		# entries if multiple kernel matches are found)
+		findlist, skiplist = self.config.flagItemList("%s/%s" % ( sect, "kernel" ))
+		findmatch=[]
+
+		scanpaths = self.config.item(sect,"scan").split()
+
+		for scanpath in scanpaths:
+			mesgs = self.MountIfNecessary(scanpath)
+			allmsgs += mesgs
+			skipmatch = self.GetMatchingKernels(scanpath, skiplist)
+			findmatch += self.GetMatchingKernels(scanpath, findlist, skipmatch)
+
+		# Generate individual boot entry using extension-supplied function
+
+		found_multi = False
+
+		for kname, kext in findmatch:
+			if (self._default == sect) or (self._default == os.path.basename(kname)):
+				# default match
+				if self._defpos != None:
+					found_multi = True
+					curtime = os.stat(kname)[8]
+					if curtime > def_mtime:
+						# this kernel is newer, use it instead
+						self._defpos = self._pos
+						def_mtime = curtime
+				else:
+					self._defpos = self._pos
+					def_mtime = os.stat(kname)[8]
+			self._defnames.append(kname)
+			ok, msgs = sfunc(l,sect,kname,kext)
+			allmsgs += msgs
+			if not ok:
+				break
+			self._pos += 1
+
+		if found_multi:
+			allmsgs.append(["warn", "multiple matches found for default \"{name}\" - most recent used.".format(name = self._default)])
+
+		return [ok, allmsgs]
+
+	def _GenerateOtherSection(self, l, sect, ofunc):
+		"""Generate section for non-Linux systems"""
+
+		allmsgs = []
+
+		ok, msgs = ofunc(l,sect)
+		allmsgs += msgs
+		self._defnames.append(sect)
+		if self._default == sect:
+			if self._defpos != None:
+				allmsgs.append(["warn", "multiple matches found for default boot entry \"{name}\" - first match used.".format(name = self._default)])
+			else:
+				self._defpos = self._pos
+		self._pos += 1
+		return [ ok, allmsgs]
+
+	def GenerateSections(self, l, sfunc, ofunc = None):
+		"""Generates sections using passed in extension-supplied functions"""
+
+		ok=True
+		allmsgs=[]
+
+		try:
+			timeout = int(self.config["boot/timeout"])
+		except ValueError:
+			ok = False
+			allmsgs.append(["fatal","Invalid value \"%s\" for boot/timeout." % timeout])
+			return [ ok, allmsgs, None, None ]
+
+		if timeout == 0:
+			allmsgs.append(["warn","boot/timeout value is zero - boot menu will not appear!"])
+		elif timeout < 3:
+			allmsgs.append(["norm","boot/timeout value is below 3 seconds."])
+
+		# Remove builtins from list of sections
+		sections = self.config.getSections()
+		for sect in sections:
+			if sect in self.config.builtins:
+				sections.remove(sect)
+
+		# If we have no boot entries, throw an error - force user to be
+		# explicit.
+		if len(sections) == 0:
+			allmsgs.append(["fatal","No boot entries are defined in /etc/boot.conf."])
+			ok=False
+			return[ ok, allmsgs, None, None ]
+
+		# Warn if there are no linux entries
+		has_linux = False
+		for sect in sections:
+			if self.config["{s}/{t}" .format(s = sect, t = "type")] == "linux":
+				has_linux = True
+				break
+		if has_linux == False:
+			allmsgs.append(["warn","No Linux boot entries are defined. You may not be able to re-enter Linux."])
+
+		# Generate sections
+		for sect in sections:
+			if self.config["{s}/{t}" .format(s = sect, t = "type")] == "linux":
+				ok,  msgs = self. _GenerateLinuxSection(l, sect, sfunc)
+			elif ofunc:
+				ok, msgs = self._GenerateOtherSection(l, sect, ofunc)
+
+			allmsgs += msgs
+
+		if self._pos == 0:
+			ok = False
+			allmsgs.append(["fatal","No matching kernels or boot entries found in /etc/boot.conf."])
+			self._defpos = None
+			return [ ok, allmsgs, self._defpos, None ]
+		elif self._defpos == None:
+			allmsgs.append(["warn","No boot/default match found - using first boot entry by default."])
+			# If we didn't find a specified default, use the first one
+			self._defpos = 0
+
+		return [ ok, allmsgs, self._defpos, self._defnames[self._defpos] ]
+
+	"""
 	def GenerateSections(self,l,sfunc,ofunc=None):
 		c=self.config
 
@@ -310,6 +442,7 @@ class Resolver:
 			# If we didn't find a specified default, use the first one
 			defpos = 0
 		return [ ok, allmsgs, defpos, defnames[defpos] ]
+	"""
 
 	def RelativePathTo(self,imagepath,mountpath):
 		# we expect /boot to be mounted if it is available when this is run

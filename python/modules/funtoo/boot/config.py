@@ -19,7 +19,7 @@ boot {
 	default bzImage
 }
 
-color { 
+color {
 	normal cyan/blue
 	highlight blue/cyan
 }
@@ -48,7 +48,7 @@ class BootConfigFile(config.ConfigFile):
 
 	def validate(self):
 		invalid=[]
-		validmap={ 
+		validmap={
 				"boot" : [ "path", "generate", "timeout", "default" ],
 				"display" : [ "gfxmode", "background", "font" ],
 				"color" : [ "normal", "highlight" ],
@@ -62,4 +62,4 @@ class BootConfigFile(config.ConfigFile):
 			for itemkey in self.sectionData[section].keys():
 				if itemkey not in validmap[cmpto]:
 					invalid.append("%s/%s" % ( section, itemkey ))
-		return invalid          
+		return invalid
