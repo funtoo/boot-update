@@ -25,14 +25,20 @@ def bracketzap(instr, wild=True):
 		return instr[0:wstart]+instr[wstop+1:]
 
 class Resolver:
-	
+
 	# The resolver goes out and finds kernels and initrds. Then it is the job of the
 	# extension to generate the proper boot-loader-specific configuration file based
 	# on what the resolver found.
-	
+
 	def __init__(self, config):
 		self.config = config
 		self.mounted = {}
+
+		# The following 4 variables are for use in generating sections.
+		self._pos = 0
+		self._defpos = None
+		self._defnames = []
+		self._default = self.config.deburr(self.config["boot/default"])
 
 	def resolvedev(self, dev):
 		if ((dev[0:5] == "UUID=") or (dev[0:6] == "LABEL=")):
@@ -47,7 +53,7 @@ class Resolver:
 		for pattern in globlist:
 			#base_glob = os.path.normpath(scanpath+"/"+ pattern.replace("[-v]",""))
 			base_glob = os.path.normpath(scanpath+"/"+ bracketzap(pattern,wild=False))
-			#wild_glob = os.path.normpath(scanpath+"/"+ pattern.replace("[-v]","-*"))    
+			#wild_glob = os.path.normpath(scanpath+"/"+ pattern.replace("[-v]","-*"))
 			wild_glob = os.path.normpath(scanpath+"/"+ bracketzap(pattern,wild=True))
 			for match in glob.glob(base_glob):
 				if match not in skip and match not in found:
@@ -144,44 +150,199 @@ class Resolver:
 					return [ ok, allmsgs, param[11:] ]
 		return [ ok, allmsgs, None ]
 
+	def GetMountPoint(self, scanpath):
+		"""Searches through scanpath for a matching mountpoint in /etc/fstab"""
+		mountpoint = scanpath
 
-	def MountIfNecessary(self,scanpath):
-		if scanpath in self.mounted:
-			# already mounted, return
-			return
-		elif os.path.normpath(scanpath) == "/boot":
+		# Avoids problems
+		if os.path.isabs(scanpath) == False:
+			return None
+
+		while True:
+			if mountpoint == "/":
+				return None
+			elif  fstabHasEntry(mountpoint):
+				return mountpoint
+			else:
+				# If we made it here, strip off last dir and try again
+				mountpoint = os.path.dirname(mountpoint)
+
+	def MountIfNecessary(self, scanpath):
+		mesgs = []
+
+		if os.path.normpath(scanpath) == "/boot":
 			# /boot mounting is handled via another process, so skip:
-			return
+			return mesgs
+
 		# we record things to a self.mounted list, which is used later to track when we personally mounted
 		# something, so we can unmount it. If it's already mounted, we leave it mounted:
-		if os.path.ismount(scanpath):
+		mountpoint = self.GetMountPoint(scanpath)
+		if mountpoint in self.mounted:
+			# already mounted, return
+			return mesgs
+		elif os.path.ismount(mountpoint):
 			# mounted, but not in our list yet, so add, but don't unmount later:
-			self.mounted[scanpath] = {"unmount" : False}
-		elif fstabHasEntry(scanpath):
+			self.mounted[mountpoint] = False
+			return mesgs
+		else:
 			# not mounted, and mountable, so we should mount it.
-			os.system("mount %s" % scanpath)
-			self.mounted[scanpath] = {"mount" : True}
-		# if we get here, it's not a mountpoint, just a regular filesystem location, so we don't add it to our
-		# mount list.
+			out = commands.getstatusoutput("mount {mp}".format(mp = mountpoint))
+			if out[0] != 0:
+				mesgs.append(["fatal", "Error mounting {mp}".format(mp = mountpoint)])
+				return mesgs
+			else:
+				self.mounted[mountpoint] = True
+				return mesgs
 
 	def UnmountIfNecessary(self):
-		for mountpoint, unmount in self.mounted.iteritems():
-			if unmount == False:
+		mesgs = []
+		for mountpoint, we_mounted in self.mounted.iteritems():
+			if we_mounted == False:
 				continue
-			os.system("umount %s" % mountpoint)
+			else:
+				out = commands.getstatusoutput("umount {mp}".format(mp = mountpoint))
+				if out[0] != 0:
+					mesgs.append(["fatal", "Error unmounting {mp}".format(mp = mountpoint)])
+		return mesgs
 
+	def _GenerateLinuxSection(self, l, sect, sfunc):
+		"""Generates section for Linux systems"""
+
+		allmsgs = []
+		def_mtime = None
+
+		# Process boot entry section (which can generate multiple boot
+		# entries if multiple kernel matches are found)
+		findlist, skiplist = self.config.flagItemList("%s/%s" % ( sect, "kernel" ))
+		findmatch=[]
+
+		scanpaths = self.config.item(sect,"scan").split()
+
+		for scanpath in scanpaths:
+			mesgs = self.MountIfNecessary(scanpath)
+			allmsgs += mesgs
+			skipmatch = self.GetMatchingKernels(scanpath, skiplist)
+			findmatch += self.GetMatchingKernels(scanpath, findlist, skipmatch)
+
+		# Generate individual boot entry using extension-supplied function
+
+		found_multi = False
+
+		for kname, kext in findmatch:
+			if (self._default == sect) or (self._default == os.path.basename(kname)):
+				# default match
+				if self._defpos != None:
+					found_multi = True
+					curtime = os.stat(kname)[8]
+					if curtime > def_mtime:
+						# this kernel is newer, use it instead
+						self._defpos = self._pos
+						def_mtime = curtime
+				else:
+					self._defpos = self._pos
+					def_mtime = os.stat(kname)[8]
+			self._defnames.append(kname)
+			ok, msgs = sfunc(l,sect,kname,kext)
+			allmsgs += msgs
+			if not ok:
+				break
+			self._pos += 1
+
+		if found_multi:
+			allmsgs.append(["warn", "multiple matches found for default \"{name}\" - most recent used.".format(name = self._default)])
+
+		return [ok, allmsgs]
+
+	def _GenerateOtherSection(self, l, sect, ofunc):
+		"""Generate section for non-Linux systems"""
+
+		allmsgs = []
+
+		ok, msgs = ofunc(l,sect)
+		allmsgs += msgs
+		self._defnames.append(sect)
+		if self._default == sect:
+			if self._defpos != None:
+				allmsgs.append(["warn", "multiple matches found for default boot entry \"{name}\" - first match used.".format(name = self._default)])
+			else:
+				self._defpos = self._pos
+		self._pos += 1
+		return [ ok, allmsgs]
+
+	def GenerateSections(self, l, sfunc, ofunc = None):
+		"""Generates sections using passed in extension-supplied functions"""
+
+		ok=True
+		allmsgs=[]
+
+		try:
+			timeout = int(self.config["boot/timeout"])
+		except ValueError:
+			ok = False
+			allmsgs.append(["fatal","Invalid value \"%s\" for boot/timeout." % timeout])
+			return [ ok, allmsgs, None, None ]
+
+		if timeout == 0:
+			allmsgs.append(["warn","boot/timeout value is zero - boot menu will not appear!"])
+		elif timeout < 3:
+			allmsgs.append(["norm","boot/timeout value is below 3 seconds."])
+
+		# Remove builtins from list of sections
+		sections = self.config.getSections()
+		for sect in sections:
+			if sect in self.config.builtins:
+				sections.remove(sect)
+
+		# If we have no boot entries, throw an error - force user to be
+		# explicit.
+		if len(sections) == 0:
+			allmsgs.append(["fatal","No boot entries are defined in /etc/boot.conf."])
+			ok=False
+			return[ ok, allmsgs, None, None ]
+
+		# Warn if there are no linux entries
+		has_linux = False
+		for sect in sections:
+			if self.config["{s}/{t}" .format(s = sect, t = "type")] == "linux":
+				has_linux = True
+				break
+		if has_linux == False:
+			allmsgs.append(["warn","No Linux boot entries are defined. You may not be able to re-enter Linux."])
+
+		# Generate sections
+		for sect in sections:
+			if self.config["{s}/{t}" .format(s = sect, t = "type")] == "linux":
+				ok,  msgs = self. _GenerateLinuxSection(l, sect, sfunc)
+			elif ofunc:
+				ok, msgs = self._GenerateOtherSection(l, sect, ofunc)
+
+			allmsgs += msgs
+
+		if self._pos == 0:
+			ok = False
+			allmsgs.append(["fatal","No matching kernels or boot entries found in /etc/boot.conf."])
+			self._defpos = None
+			return [ ok, allmsgs, self._defpos, None ]
+		elif self._defpos == None:
+			allmsgs.append(["warn","No boot/default match found - using first boot entry by default."])
+			# If we didn't find a specified default, use the first one
+			self._defpos = 0
+
+		return [ ok, allmsgs, self._defpos, self._defnames[self._defpos] ]
+
+	"""
 	def GenerateSections(self,l,sfunc,ofunc=None):
 		c=self.config
 
 		ok=True
 		allmsgs=[]
-	
+
 		default = c.deburr(c["boot/default"])
 
 		pos = 0
 		defpos = None
 		def_mtime = None
-		defnames = [] 
+		defnames = []
 
 		linuxsections = []
 		othersections = []
@@ -205,17 +366,17 @@ class Resolver:
 					linuxsections.append(sect)
 				else:
 					othersections.append(sect)
-		
+
 		# if we have no linux boot entries, throw an error - force user to be
 		# explicit.
 		if len(linuxsections) + len(othersections) == 0:
 			allmsgs.append(["fatal","No boot entries are defined in /etc/boot.conf."])
 			ok=False
-			return[ ok, allmsgs, None, None ] 
+			return[ ok, allmsgs, None, None ]
 		if len(linuxsections) == 0:
 			allmsgs.append(["warn","No Linux boot entries are defined. You may not be able to re-enter Linux."])
 
-		for sect in linuxsections:  
+		for sect in linuxsections:
 			# Process boot entry section (which can generate multiple boot
 			# entries if multiple kernel matches are found)
 			findlist, skiplist = c.flagItemList("%s/%s" % ( sect, "kernel" ))
@@ -225,7 +386,8 @@ class Resolver:
 
 
 			for scanpath in scanpaths:
-				self.MountIfNecessary(scanpath)
+				mesgs = self.MountIfNecessary(scanpath)
+				allmsgs += mesgs
 				skipmatch = self.GetMatchingKernels(scanpath, skiplist)
 				findmatch += self.GetMatchingKernels(scanpath, findlist, skipmatch)
 
@@ -252,8 +414,8 @@ class Resolver:
 				if not ok:
 					break
 				pos += 1
-						
-			if found_multi:         
+
+			if found_multi:
 				allmsgs.append(["warn","multiple matches found for default \"%s\" - most recent used." % default])
 
 		if ofunc:
@@ -269,7 +431,7 @@ class Resolver:
 				pos += 1
 				if not ok:
 					return [ ok, allmsgs, defpos, None ]
-			
+
 		if pos == 0:
 			ok = False
 			allmsgs.append(["fatal","No matching kernels or boot entries found in /etc/boot.conf."])
@@ -280,10 +442,28 @@ class Resolver:
 			# If we didn't find a specified default, use the first one
 			defpos = 0
 		return [ ok, allmsgs, defpos, defnames[defpos] ]
-	
+	"""
+
 	def RelativePathTo(self,imagepath,mountpath):
 		# we expect /boot to be mounted if it is available when this is run
 		if os.path.ismount("/boot"):
 			return "/"+os.path.relpath(imagepath,mountpath)
 		else:
 			return os.path.normpath(imagepath)
+
+	def StripMountPoint(self, scanpath):
+		"""Strips mount point from scanpath"""
+
+		mountpoint = self.GetMountPoint(scanpath)
+
+		if mountpoint:
+			split_path = scanpath.split(mountpoint, 1)
+			if len(split_path) != 2:
+				# TODO Handle error better
+				# Couldn't strip mount point, just return original scanpath
+				return scanpath
+			else:
+				return os.path.normpath(split_path[1])
+		else:
+			# No mount point, just return scanpath
+			return scanpath

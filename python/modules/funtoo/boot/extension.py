@@ -2,6 +2,16 @@
 import os
 from resolver import Resolver
 
+class ExtensionError(Exception):
+	def __init__(self, *args):
+		self.args = args
+	def __str__(self):
+		if len(self.args) == 1:
+			return str(self.args[0])
+		else:
+			return "(no message)"
+
+
 class Extension:
 	def __init__(self,config):
 		# initialization should always succeed.
@@ -38,7 +48,7 @@ class Extension:
 		print "*",type,line
 
 	def backupConfigFile(self):
-		
+
 		# create backup as necessary
 
 		oldfn = self.fn+".old"
@@ -50,10 +60,10 @@ class Extension:
 
 
 	def validateConfigFile(self,lines):
-	
+
 		# This method should be overridden - it looks at the config file specified in the "lines" list, and
-		# prints any warnings or throws any errors as required. 
-		
+		# prints any warnings or throws any errors as required.
+
 		# Return values:
 		#       [ True, [list of warnings] ] - OK
 		#       [ False, [list of warnings, errors] - Not OK, should abort.
@@ -67,7 +77,7 @@ class Extension:
 
 	def regenerate(self):
 		# This performs the main loop that calls all our sub-steps - you should not need to override this method. If you do, an API upgrade is probably in order.
-	
+
 		allmsgs = []
 
 		# CHECK DEPENDENCIES
@@ -83,20 +93,20 @@ class Extension:
 		allmsgs += msgs
 		if not ok:
 			return [ "config generation", ok, allmsgs ]
-		
+
 		allmsgs.append(["info","Configuration file %s generated - %s lines." % ( self.fn, len(l))])
 
-		# TRY VALIDATING CONFIG FILE    
+		# TRY VALIDATING CONFIG FILE
 
 		self.mesg("info","Validating config file %s" % self.fn)
 
 		ok, msgs = self.validateConfigFile(l)
 		allmsgs += msgs
 		if not ok:
-			return [ "validation", ok, allmsgs ] 
+			return [ "validation", ok, allmsgs ]
 
 		# TRY BACKING UP CONFIG FILE
-	
+
 		self.mesg("info","Backing up original config file to %s.old" % self.fn)
 
 		ok, msgs = self.backupConfigFile()
@@ -105,7 +115,7 @@ class Extension:
 			return [ "config file backup", ok, allmsgs ]
 
 		# TRY WRITING CONFIG FILE
-	
+
 		self.mesg("info","Writing new config file to %s" % self.fn)
 
 		ok, msgs = self.writeConfigFile(l)
@@ -114,7 +124,7 @@ class Extension:
 			return [ "config file write", ok, allmsgs ]
 
 		# TRY UPDATING BOOT LOADER
-	
+
 		ok, msgs = self.updateBootLoader()
 		allmsgs += msgs
 		if not ok:
