@@ -1,0 +1,37 @@
+# *** DO NOT MODIFY THIS FILE ***
+# These are the defaults for boot-update.
+# User settings go in /etc/boot.conf which overrides this file.
+# `man boot.conf` for more info.
+
+boot {
+	path /boot
+	generate grub
+	timeout 5
+	default bzImage
+}
+
+color {
+	normal cyan/blue
+	highlight blue/cyan
+}
+
+default {
+	type linux
+	scan /boot
+	kernel bzImage[-v] kernel[-v] vmlinuz[-v] vmlinux[-v]
+	params root=auto rootfstype=auto
+}
+
+grub {
+	dir grub
+	file grub.cfg
+	grub-probe /sbin/grub-probe
+	grub-mkdevicemap /sbin/grub-mkdevicemap
+	font_src /usr/share/grub/fonts
+}
+
+grub-legacy {
+	dir grub-legacy
+	file grub.conf
+}
+

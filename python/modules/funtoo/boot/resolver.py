@@ -311,7 +311,7 @@ class Resolver:
 
 		# Generate sections
 		for sect in sections:
-			if self.config["{s}/{t}" .format(s = sect, t = "type")] == "linux":
+			if self.config["{s}/type" .format(s = sect)] == "linux":
 				ok,  msgs = self. _GenerateLinuxSection(l, sect, sfunc)
 			elif ofunc:
 				ok, msgs = self._GenerateOtherSection(l, sect, ofunc)

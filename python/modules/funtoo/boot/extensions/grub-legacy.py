@@ -11,14 +11,14 @@ class GRUBLegacyExtension(Extension):
 
 	def __init__(self,config):
 		Extension.__init__(self,config)
-		self.fn = "/boot/grub-legacy/grub.conf"
+		self.fn = "{path}/{dir}/{file}".format(path = self.config["boot/path"], dir = self.config["grub-legacy/dir"], file = self.config["grub-legacy/file"])
 		self.bootitems = []
 
 	def isAvailable(self):
 		msgs=[]
 		ok=True
 		return [ok, msgs]
-	
+
 	def generateOtherBootEntry(self,l,sect):
 		ok=True
 		msgs=[]
@@ -59,20 +59,20 @@ class GRUBLegacyExtension(Extension):
 
 	def Guppy(self,argstring,fatal=True):
 		# grub-probe is from grub-1.97+ -- we use it here as well
-		if not os.path.exists("/boot/grub/device.map"):
-			out = commands.getstatusoutput("/sbin/grub-mkdevicemap --no-floppy")
+		if not os.path.exists("{path}/{dir}/device.map".format(path = self.config["boot/path"], dir = self.config["grub/dir"])):
+			out = commands.getstatusoutput("{cmd} --no-floppy".format(self.config["grub/grub-mkdevicemap"]))
 			if out[0] != 0:
-				print "ERROR calling /sbin/grub-mkdevicemap"
+				print("ERROR calling {cmd}".format(self.config["grub/grub-mkdevicemap"]))
 				return None
-		retval,out=commands.getstatusoutput("/sbin/grub-probe "+argstring)
+		retval,out=commands.getstatusoutput("{cmd} {args}".format(cmd = self.config["grub/grub-probe"], args = argstring))
 		if retval:
-			print "ERROR calling /sbin/grub-probe"
+			print("ERROR calling {cmd}".format(cmd = self.config["grub/grub-probe"]))
 			return None
 		else:
 			return out
 
 	def DeviceGRUB(self,dev):
-		out=self.Guppy(" --device %s --target=drive" % dev) 
+		out=self.Guppy(" --device %s --target=drive" % dev)
 		# Convert GRUB "count from 1" (hdx,y) format to legacy "count from 0" format
 		if out == None:
 			return None
@@ -82,12 +82,12 @@ class GRUBLegacyExtension(Extension):
 		return out
 
 	def generateBootEntry(self,l,sect,kname,kext):
-		
+
 		ok=True
 		allmsgs=[]
 
 		label = self.r.GetBootEntryString( sect, kname )
-		
+
 		l.append("title %s" % label)
 		self.bootitems.append(label)
 
@@ -100,8 +100,8 @@ class GRUBLegacyExtension(Extension):
 		ok, allmsgs, fstype = self.r.DoRootfstypeAuto(params,ok,allmsgs)
 		if not ok:
 			return [ ok, allmsgs ]
-	
-		mygrubroot = self.DeviceGRUB(self.DeviceOfFilesystem(self.config["boot/path"])) 
+
+		mygrubroot = self.DeviceGRUB(self.DeviceOfFilesystem(self.config["boot/path"]))
 		if mygrubroot == None:
 			allmsgs.append(["fatal","Could not determine device of filesystem using grub-probe"])
 			return [ False, allmsgs ]
@@ -127,12 +127,12 @@ class GRUBLegacyExtension(Extension):
 		allmsgs += msgs
 		if not ok:
 			return [ ok, allmsgs, l ]
-		
-		l = [ 
+
+		l = [
 			c.condSubItem("boot/timeout", "timeout %s"),
 			"default %s" % self.defpos,
 			""
 		] + l
-	
+
 		return [ok, allmsgs, l ]
-			
+

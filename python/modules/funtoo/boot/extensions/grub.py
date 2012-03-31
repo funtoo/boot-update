@@ -14,14 +14,8 @@ class GRUBExtension(Extension):
 	""" implements an extension for the grub bootloader """
 	def __init__(self, config, testing = False):
 		Extension.__init__(self,config)
-
-		# For compatibility with gentoo
-		if os.path.exists("/boot/grub2"):
-			self.gname = "grub2"
-		else:
-			self.gname = "grub"
-
-		self.fn = "{path}/{name}/grub.cfg".format(path = self.config["boot/path"], name = self.gname)
+		self.grubpath =  "{path}/{dir}".format(path = self.config["boot/path"], dir = self.config["grub/dir"])
+		self.fn = "{path}/{file}".format(path = self.grubpath, file = self.config["grub/file"])
 		self.bootitems = []
 		self.testing = testing
 		self.GuppyMap()
@@ -31,8 +25,9 @@ class GRUBExtension(Extension):
 	def isAvailable(self):
 		msgs = []
 		ok = True
-		if not os.path.exists("/sbin/{name}-probe".format(name = self.gname)):
-			msgs.append(["fatal", "/sbin/{name}-probe, required for boot/generate = grub,  does not exist".format(name = self.gname)])
+		gprobe = self.config["grub/grub-probe"]
+		if not os.path.exists(gprobe):
+			msgs.append(["fatal", "{cmd}, required for boot/generate = grub,  does not exist".format(cmd = gprobe)])
 			ok = False
 		return [ok, msgs]
 
@@ -125,8 +120,8 @@ class GRUBExtension(Extension):
 			else:
 				font = "unifont.pf2"
 
-			src_font = "/usr/share/{name}/fonts/{f}".format(name = self.gname, f = font)
-			dst_font = "{path}/{name}/{f}".format(path = c["boot/path"], name = self.gname, f = font)
+			src_font = "{src}/{f}".format(src = self.config["grub/font_src"], f = font)
+			dst_font = "{path}/{f}".format(path = self.grubpath, f = font)
 
 			if not os.path.exists(dst_font):
 				if os.path.exists(src_font):
@@ -201,19 +196,21 @@ class GRUBExtension(Extension):
 
 	def GuppyMap(self):
 		""" creates the device map """
+		gmkdevmap = self.config["grub/grub-mkdevicemap"]
 		out = None
 		if self.testing:
-			out = commands.getstatusoutput("/sbin/{name}-mkdevicemap --no-floppy -m /dev/null".format(name = self.gname))
+			out = commands.getstatusoutput("{cmd} --no-floppy -m /dev/null".format(cmd = gmkdevmap))
 		else:
-			out = commands.getstatusoutput("/sbin/{name}-mkdevicemap --no-floppy".format(name = self.gname))
+			out = commands.getstatusoutput("{cmd} --no-floppy".format(cmd = gmkdevmap))
 		if out[0] != 0:
-			raise ExtensionError,  "{name}-mkdevicemap\n{output}".format(name = self.gname, output = out[1])
+			raise ExtensionError,  "{cmd}\n{output}".format(cmd = gmkdevmap, output = out[1])
 
 	def Guppy(self, argstring, fatal=True):
 		""" probes a device """
-		out = commands.getstatusoutput("/sbin/{name}-probe ".format(name = self.gname) + argstring)
+		gprobe = self.config["grub/grub-probe"]
+		out = commands.getstatusoutput("{cmd} {args}".format(cmd = gprobe, args = argstring))
 		if fatal and out[0] != 0:
-			raise ExtensionError, "{name}-probe {args}\n{output}".format(name = self.gname, args = argstring, output = out[1])
+			raise ExtensionError, "{cmd} {args}\n{output}".format(cmd = gprobe, args = argstring, output = out[1])
 		else:
 			return out
 
