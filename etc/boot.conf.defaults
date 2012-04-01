@@ -35,3 +35,7 @@ grub-legacy {
 	file grub.conf
 }
 
+lilo {
+	file /etc/lilo.conf
+	lilo /sbin/lilo
+}

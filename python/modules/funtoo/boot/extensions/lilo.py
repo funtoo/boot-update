@@ -1,8 +1,9 @@
 #!/usr/bin/python2
 # -*- coding: ascii -*-
+
 import os
 
-from ..resolver import Resolver
+from funtoo.boot.extension import Extension
 
 
 def getExtension(config):
@@ -12,20 +13,34 @@ class LILOExtension(Extension):
 
 	def __init__(self,config):
 		Extension.__init__(self,config)
-		self.fn = "/etc/lilo.conf"
+		self.fn = self.config["lilo/file"]
+		self.lilo_cmd = self.config["lilo/lilo"]
 		self.bootitems = []
 
 	def isAvailable(self):
 		msgs=[]
 		ok=True
-		if not os.path.exists("/sbin/lilo"):
-			msgs.append(["fatal","/sbin/lilo, required for boot/generate = lilo, does not exist"])
+		if not os.path.exists(self.lilo_cmd):
+			msgs.append(["fatal","{cmd}, required for boot/generate = lilo, does not exist".format(cmd = self.lilo_cmd)])
 			ok=False
 		return [ok, msgs]
 
 	def updateBootLoader(self):
-		msgs = [ [ "warn", "This version of coreboot requires that you run /sbin/lilo manually." ] ]
+		msgs = [ [ "warn", "This version of boot-update requires that you run /sbin/lilo manually." ] ]
 		return [True, msgs]
+
+	def generateOtherBootEntry(self,l,sect):
+		ok = True
+		allmsgs = []
+
+		params=self.config["%s/params" % sect].split()
+		myroot = self.r.GetParam(params,"root=")
+
+		l.append("")
+		l.append("other = {dev}".format(dev = myroot))
+		l.append("	label = {name}".format(name = sect))
+
+		return [ ok, allmsgs  ]
 
 	def generateBootEntry(self,l,sect,kname,kext):
 
@@ -35,7 +50,7 @@ class LILOExtension(Extension):
 		l.append("")
 		self.bootitems.append(kname)
 		l.append("image=%s" % kname )
-		
+
 		params=self.config.item(sect,"params").split()
 
 		ok, allmsgs, myroot = self.r.DoRootAuto(params,ok,allmsgs)
@@ -68,17 +83,17 @@ class LILOExtension(Extension):
 		l.append(c.condSubItem("boot/timeout", "timeout=%s"))
 		# pass our boot entry generator function to GenerateSections, and everything is taken care of for our boot entries
 
-		ok, msgs, defpos, defname = self.self.r.GenerateSections(l,self.generateBootEntry)
+		ok, msgs, self.defpos, self.defname = self.r.GenerateSections(l,self.generateBootEntry, self.generateOtherBootEntry)
 		allmsgs += msgs
 		if not ok:
 			return [ ok, allmsgs, l, None]
-		
-		l += [ 
+
+		l += [
 			""
-			"default=%s" % defname
+			"default=%s" % self.defname
 		]
-	
+
 		allmsgs.append(["warn","Please note that LILO support is *ALPHA* quality and is for testing only."])
 
-		return [ok, allmsgs, l, defname]
-			
+		return [ok, allmsgs, l]
+
