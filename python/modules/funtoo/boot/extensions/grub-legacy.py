@@ -60,9 +60,9 @@ class GRUBLegacyExtension(Extension):
 	def Guppy(self,argstring,fatal=True):
 		# grub-probe is from grub-1.97+ -- we use it here as well
 		if not os.path.exists("{path}/{dir}/device.map".format(path = self.config["boot/path"], dir = self.config["grub/dir"])):
-			out = commands.getstatusoutput("{cmd} --no-floppy".format(self.config["grub/grub-mkdevicemap"]))
+			out = commands.getstatusoutput("{cmd} --no-floppy".format(cmd = self.config["grub/grub-mkdevicemap"]))
 			if out[0] != 0:
-				print("ERROR calling {cmd}".format(self.config["grub/grub-mkdevicemap"]))
+				print("ERROR calling {cmd}".format(cmd = self.config["grub/grub-mkdevicemap"]))
 				return None
 		retval,out=commands.getstatusoutput("{cmd} {args}".format(cmd = self.config["grub/grub-probe"], args = argstring))
 		if retval:

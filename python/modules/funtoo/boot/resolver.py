@@ -289,7 +289,7 @@ class Resolver:
 
 		# Remove builtins from list of sections
 		sections = self.config.getSections()
-		for sect in sections:
+		for sect in sections[:]:
 			if sect in self.config.builtins:
 				sections.remove(sect)
 
