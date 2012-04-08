@@ -35,3 +35,8 @@ grub-legacy {
 	file grub.conf
 }
 
+lilo {
+	file /etc/lilo.conf
+	bin /sbin/lilo
+	gparams install=menu prompt
+}

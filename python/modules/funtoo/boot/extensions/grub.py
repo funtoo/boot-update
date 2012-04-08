@@ -120,7 +120,7 @@ class GRUBExtension(Extension):
 			else:
 				font = "unifont.pf2"
 
-			src_font = "{src}/{f}".format(src = self.config["grub/font_src"], f = font)
+			src_font = "{src}/{f}".format(src = c["grub/font_src"], f = font)
 			dst_font = "{path}/{f}".format(path = self.grubpath, f = font)
 
 			if not os.path.exists(dst_font):
