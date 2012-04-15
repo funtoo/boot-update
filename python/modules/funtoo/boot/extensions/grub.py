@@ -228,13 +228,7 @@ class GRUBExtension(Extension):
 		return mods
 
 	def DeviceProbe(self, dev, targ):
-		""" determines the devi		if msgtype == "warn":
-			print RED + " * WARN :" + OFF + " %s" % msg
-			warnings = True
-		elif msgtype == "fatal":
-			print RED + " * ERROR:" + OFF + " %s" % msg
-		elif (verbose and msgtype == "info") or msgtype == "norm":
-			print GREEN + " * " + OFF + msgce details """
+		""" determines the device details """
 		retval, mods = self.Guppy(" --device {d} --target={t}".format(d = dev, t = targ))
 		if retval == 0:
 			return mods.split()
