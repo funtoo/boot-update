@@ -1,7 +1,10 @@
-#!/usr/bin/python2
 # -*- coding: ascii -*-
 
 import os
+
+from subprocess import Popen
+from subprocess import PIPE
+from subprocess import STDOUT
 
 from funtoo.boot.extension import Extension
 
@@ -26,9 +29,19 @@ class LILOExtension(Extension):
 		return [ok, msgs]
 
 	def updateBootLoader(self):
+		""" Runs lilo command to update the boot loader map """
+		ok = True
+		allmsgs = [[ "info", "Now running {lilo}" .format(lilo = self.lilo_cmd)]]
 
-		msgs = [ [ "warn", "This version of boot-update requires that you run /sbin/lilo manually." ] ]
-		return [True, msgs]
+		cmdobj = Popen(self.lilo_cmd, bufsize=-1, stdout=PIPE,  stderr=STDOUT, shell=False)
+		output = cmdobj.communicate()
+		if cmdobj.poll() != 0:
+			ok = False
+			allmsgs.append(["fatal", "Error running {cmd} :\n{out}".format(cmd = self.lilo_cmd,  out = output[0])])
+			return [ok, allmsgs]
+		else:
+			allmsgs.append(["info",  "Successfully ran {cmd}. Output was :\n\n{out}\n".format(cmd = self.lilo_cmd, out = output[0])])
+			return [ok, allmsgs]
 
 	def generateOtherBootEntry(self,l,sect):
 		ok = True
@@ -40,7 +53,8 @@ class LILOExtension(Extension):
 			allmsgs.append(["fatal", "'{name}' is too long. Section names in /etc/boot.conf for non-linux OS must not exceed 15 characters when using lilo".format(name = sect)])
 			return [ ok, allmsgs  ]
 
-		params=self.config["%s/params" % sect].split()
+		self.bootitems.append(sect)
+		params=self.config["{s}/params".format(s = sect)].split()
 		myroot = self.r.GetParam(params,"root=")
 
 		l.append("")
@@ -61,7 +75,7 @@ class LILOExtension(Extension):
 			allmsgs.append(["fatal", "'{name}' is too long. Kernel names must not exceed 15 characters when using lilo".format(name =(os.path.basename(kname)))])
 		l.append("")
 		self.bootitems.append(kname)
-		l.append("image=%s" % kname )
+		l.append("image={k}".format(k = kname ))
 
 		params=self.config.item(sect,"params").split()
 
@@ -76,13 +90,13 @@ class LILOExtension(Extension):
 
 		l += [
 			"	read-only",
-			"	root=%s" % myroot,
-			"	append=\"%s\"" % " ".join(params)
+			"	root={dev}".format(dev = myroot),
+			"	append=\"{par}\"".format(par = " ".join(params))
 		]
 		initrds=self.config.item(sect,"initrd")
 		initrds=self.r.FindInitrds(initrds, kname, kext)
 		for initrd in initrds:
-			l.append("  initrd=" % self.r.RelativePathTo(initrd,"/boot"))
+			l.append("  initrd={rd}".format(self.r.RelativePathTo(initrd,"/boot")))
 
 		return [ ok, allmsgs ]
 
@@ -93,24 +107,31 @@ class LILOExtension(Extension):
 		allmsgs=[]
 
 		# Warn if no boot entry.
-		if c.hasItem("lilo/boot"):
-			l.append("boot={dev}".format(dev = c["lilo/boot"]))
+		if c.hasItem("boot/bootdev"):
+			l.append("boot={dev}".format(dev = c["boot/bootdev"]))
 		else:
-			allmsgs.append(["warn", "No 'boot' entry specified in section 'lilo'. Lilo will install itself to the current root partition. See `man 5 boot.conf` for more info"])
+			allmsgs.append(["warn", "No 'bootdev' entry specified in section 'boot'. Lilo will install itself to the current root partition. See `man 5 boot.conf` for more info"])
 
 		# Append global lilo params
 		for gparam in c["lilo/gparams"].split() :
 			l.append(gparam)
 
-		# pass our boot entry generator function to GenerateSections, and everything is taken care of for our boot entries
+		# Pass our boot entry generator function to GenerateSections, and everything is taken care of for our boot entries
 
 		ok, msgs, self.defpos, self.defname = self.r.GenerateSections(l,self.generateBootEntry, self.generateOtherBootEntry)
 		allmsgs += msgs
 		if not ok:
 			return [ ok, allmsgs, l]
 
+		# Lilo's config uses 1/10 secs.
+		if c.hasItem("boot/timeout") :
+			timeout = "timeout={time}".format(time = int(c["boot/timeout"]) * 10)
+		else:
+			timeout = ""
+
+		#Global options need to come first
 		l = [
-			c.condSubItem("boot/timeout", "timeout=%s"),
+			timeout,
 			# Replace spaces with "_" in default name. Lilo doesn't like spaces
 			"default=\"{name}\"" .format(name=self.defname.replace(" ", "_")),
 		] + l

@@ -9,7 +9,7 @@ class DefaultBootConfigFile(config.ConfigFile):
 		return None
 
 	def __init__(self,fn="/etc/boot.conf.defaults",existing=True):
-		self.builtins = [ "default", "grub", "grub-legacy", "lilo"]
+		self.builtins = ["boot", "default", "color", "grub", "grub-legacy", "lilo"]
 		config.ConfigFile.__init__(self,fn,existing)
 
 
@@ -31,13 +31,13 @@ class BootConfigFile(config.ConfigFile):
 	def validate(self):
 		invalid=[]
 		validmap={
-				"boot" : [ "path", "generate", "timeout", "default" ],
-				"display" : [ "gfxmode", "background", "font" ],
-				"color" : [ "normal", "highlight" ],
-				"default" : [ "scan", "kernel", "initrd", "params", "type" ],
-				"grub" : [ "dir", "file", "grub-mkdevicemap", "grub-probe", "font_src" ],
-				"grub-legacy" : [ "dir", "file" ],
-				"lilo" : ["file", "bin", "boot", "gparams"]
+				"boot" : ["path", "generate", "timeout", "default", "bootdev"],
+				"display" : ["gfxmode", "background", "font"],
+				"color" : ["normal", "highlight"],
+				"default" : ["scan", "kernel", "initrd", "params", "type"],
+				"grub" : ["dir", "file", "grub-mkdevicemap", "grub-probe", "font_src"],
+				"grub-legacy" : ["dir", "file"],
+				"lilo" : ["file", "bin", "gparams"]
 		}
 		for section in self.sectionData.keys():
 			if section not in validmap.keys():
@@ -46,5 +46,5 @@ class BootConfigFile(config.ConfigFile):
 				cmpto=section
 			for itemkey in self.sectionData[section].keys():
 				if itemkey not in validmap[cmpto]:
-					invalid.append("%s/%s" % ( section, itemkey ))
+					invalid.append("{sect}/{name}".format(sect = section, name = itemkey ))
 		return invalid

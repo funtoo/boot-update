@@ -1,8 +1,13 @@
-#!/usr/bin/python2
 # -*- coding: ascii -*-
-import os, commands
 
-from ..extension import Extension
+import os
+import shlex
+
+from subprocess import Popen
+from subprocess import PIPE
+from subprocess import STDOUT
+
+from funtoo.boot.extension import Extension
 
 def getExtension(config):
 	return GRUBLegacyExtension(config)
@@ -22,31 +27,30 @@ class GRUBLegacyExtension(Extension):
 	def generateOtherBootEntry(self,l,sect):
 		ok=True
 		msgs=[]
-		mytype = self.config["%s/type" % sect ].lower()
-		if mytype in [ "dos", "msdos", ]:
+		mytype = self.config["{s}/type".format(s = sect)].lower()
+		if mytype in ["dos", "msdos"]:
 			mytype = "dos"
-		elif mytype in [ "windows", "windows 2000", "win2000", "windows xp", "winxp" ]:
+		elif mytype in ["windows", "windows 2000", "win2000", "windows xp", "winxp"]:
 			mytype = "winxp"
-		elif mytype in [ "windows vista", "vista" ]:
+		elif mytype in ["windows vista", "vista"]:
 			mytype = "vista"
-		elif mytype in [ "windows 7", "win7" ]:
+		elif mytype in ["windows 7", "win7"]:
 			mytype = "win7"
 		else:
 			ok = False
-			msgs.append(["fatal","Unrecognized boot entry type \"%s\"" % mytype])
+			msgs.append(["fatal","Unrecognized boot entry type \"{type}\"".format(type = mytype)])
 			return [ ok, msgs ]
-		params=self.config["%s/params" % sect].split()
+		params=self.config["{s}/params".format(s = sect)].split()
 		myroot = self.r.GetParam(params,"root=")
-		myname = sect
 		# TODO check for valid root entry
-		l.append("title %s" % myname )
+		l.append("title {s}".format(s = sect))
 		#self.PrepareGRUBForDevice(myroot,l)
-		self.bootitems.append(myname)
+		self.bootitems.append(sect)
 		mygrubroot = self.DeviceGRUB(myroot)
 		if mygrubroot == None:
 			msgs.append(["fatal","Couldn't determine root device using grub-probe"])
 			return [ False, msgs ]
-		l.append("root %s" % mygrubroot )
+		l.append("root {dev}".format(dev = mygrubroot))
 		if mytype == "win7":
 			l.append("chainloader +4")
 		elif mytype in [ "vista", "dos", "winxp" ]:
@@ -55,30 +59,36 @@ class GRUBLegacyExtension(Extension):
 		return [ ok, msgs ]
 
 	def DeviceOfFilesystem(self,fs):
-		return self.Guppy(" --target=device %s" % fs)
+		return self.Guppy(" --target=device {f}".format(f = fs))
 
 	def Guppy(self,argstring,fatal=True):
-		# grub-probe is from grub-1.97+ -- we use it here as well
+		# gmkdevmap and grub-probe is from grub-1.97+ -- we use it here as well
 		if not os.path.exists("{path}/{dir}/device.map".format(path = self.config["boot/path"], dir = self.config["grub/dir"])):
-			out = commands.getstatusoutput("{cmd} --no-floppy".format(cmd = self.config["grub/grub-mkdevicemap"]))
-			if out[0] != 0:
-				print("ERROR calling {cmd}".format(cmd = self.config["grub/grub-mkdevicemap"]))
+			gmkdevmap = self.config["grub/grub-mkdevicemap"]
+			cmdobj = Popen([gmkdevmap, "--no-floppy"], bufsize = -1, stdout = PIPE, stderr = STDOUT, shell = False)
+			if cmdobj.poll() != 0:
+				output = cmdobj.communicate()
+				print("ERROR calling {cmd}, Output was:\n{out}".format(cmd = gmkdevmap, out = output[0]))
 				return None
-		retval,out=commands.getstatusoutput("{cmd} {args}".format(cmd = self.config["grub/grub-probe"], args = argstring))
-		if retval:
-			print("ERROR calling {cmd}".format(cmd = self.config["grub/grub-probe"]))
+
+		gprobe = self.config["grub/grub-probe"]
+		cmd = shlex.split("{gcmd} {args}".format(gcmd = gprobe, args = argstring))
+		cmdobj = Popen(cmd, bufsize = -1, stdout = PIPE, stderr = STDOUT, shell = False)
+		output = cmdobj.communicate()
+		if cmdobj.poll() != 0:
+			print("ERROR calling {cmd} {args}, Output was:\n{out}".format(cmd = gprobe, args = argstring, out = output[0]))
 			return None
 		else:
-			return out
+			return output[0].strip("\n")
 
 	def DeviceGRUB(self,dev):
-		out=self.Guppy(" --device %s --target=drive" % dev)
+		out=self.Guppy(" --device {d} --target=drive".format(d = dev))
 		# Convert GRUB "count from 1" (hdx,y) format to legacy "count from 0" format
 		if out == None:
 			return None
 		mys = out[1:-1].split(",")
 		mys = ( mys[0], repr(int(mys[1]) - 1) )
-		out = "(%s,%s)" % mys
+		out = "({d},{p})".format(d = mys[0], p = mys[1])
 		return out
 
 	def generateBootEntry(self,l,sect,kname,kext):
@@ -88,7 +98,7 @@ class GRUBLegacyExtension(Extension):
 
 		label = self.r.GetBootEntryString( sect, kname )
 
-		l.append("title %s" % label)
+		l.append("title {name}".format(name = label))
 		self.bootitems.append(label)
 
 		kpath=self.r.RelativePathTo(kname,"/boot")
@@ -106,19 +116,18 @@ class GRUBLegacyExtension(Extension):
 			allmsgs.append(["fatal","Could not determine device of filesystem using grub-probe"])
 			return [ False, allmsgs ]
 		# print out our grub-ified root setting
-		l.append("root %s" % mygrubroot )
-		l.append("kernel %s %s" % ( kpath," ".join(params) ))
+		l.append("root {dev}".format(dev = mygrubroot ))
+		l.append("linux {k} {par}".format(k = kpath, par = " ".join(params)))
 		initrds=self.config.item(sect,"initrd")
 		initrds=self.r.FindInitrds(initrds, kname, kext)
 		for initrd in initrds:
-			l.append("initrd %s" % self.r.RelativePathTo(initrd,"/boot"))
+			l.append("initrd {rd}".format(rd = self.r.RelativePathTo(initrd,"/boot")))
 		l.append("")
 
 		return [ ok, allmsgs ]
 
 	def generateConfigFile(self):
 		l=[]
-		c=self.config
 		ok=True
 		allmsgs=[]
 		# pass our boot entry generator function to GenerateSections, and everything is taken care of for our boot entries
@@ -129,8 +138,8 @@ class GRUBLegacyExtension(Extension):
 			return [ ok, allmsgs, l ]
 
 		l = [
-			c.condSubItem("boot/timeout", "timeout %s"),
-			"default %s" % self.defpos,
+			self.config.condFormatSubItem("boot/timeout", "timeout {s}"),
+			"default {pos}".format(pos = self.defpos),
 			""
 		] + l
 

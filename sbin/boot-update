@@ -1,17 +1,9 @@
 #!/usr/bin/python2
-# -*- coding: ascii; tab-width: 4; indent-tabs-mode: nil -*-
+# -*- coding: ascii -*-
 """ runs the boot-update program from command line """
-import os, sys
 
-BLUE = "\x1b[34;01m"
-CYAN = "\x1b[36;01m"
-CYANN = "\x1b[36m"
-GREEN = "\x1b[32;01m"
-RED = "\x1b[31;01m"
-PURP = "\x1b[35;01m"
-OFF = "\x1b[0m"
-version = "1.5.2"
-verbose = False
+import os
+import sys
 
 # This is needed for testing from the root of the git repo - must come before
 # funtoo imports
@@ -23,37 +15,48 @@ if os.path.isdir(".git") and os.path.basename(os.getcwd()) == "coreboot":
 import funtoo.boot.config
 import funtoo.boot.helper
 import funtoo.boot.extensions
+
 from funtoo.boot.extension import ExtensionError
 from funtoo.core.config import ConfigFileError
 
+BLUE = "\x1b[34;01m"
+CYAN = "\x1b[36;01m"
+CYANN = "\x1b[36m"
+GREEN = "\x1b[32;01m"
+RED = "\x1b[31;01m"
+PURP = "\x1b[35;01m"
+OFF = "\x1b[0m"
+version = "1.6.0"
+verbose = False
+
 def banner(extra=True):
 	""" prints the banner message """
-	print
-	print " " + PURP + "boot-update " + OFF + CYANN + version + OFF + " /",
-	print "Copyright 2009-2012 Funtoo Technologies"
+	print("")
+	print("{P}boot-update {O}{C}{ver}{O} /".format(P = PURP, O = OFF, C = CYANN, ver = version))
+	print("Copyright 2009-2012 Funtoo Technologies")
 	if extra:
-		print
-		print " [use option \"-l\" for license info, \"-h\" for help]"
-	print
+		print("")
+		print(" [use option \"-l\" for license info, \"-h\" for help]")
+	print("")
 
 def versinfo():
 	""" prints version information """
 	banner(extra=False)
-	print
-	print """ This program is free software; you can redistribute and/or modify
+	print("")
+	print(""" This program is free software; you can redistribute and/or modify
  it under the terms of the GNU General Public License version 3 as published by
  the Free Software Foundation. Alternatively you may (at your option) use any
  other license that has been publicly approved for use with this program by
  Funtoo Technologies, LLC. (or its successors, if any.)
- """
+ """    )
 
 def printhelp():
 	""" prints the help message """
 	banner(extra=False)
-	print
-	print """ Usage: boot-update [options]
+	print("")
+	print(""" Usage: boot-update [options]
  Uses settings in /etc/boot.conf to generate new grub, grub-legacy or
- lilo (alpha) config file.
+ lilo  config file.
 
  Options:
    --showdefaults       Show hard-coded (user-overrideable) settings
@@ -62,22 +65,23 @@ def printhelp():
    -V, --verbose        Verbose mode
    -h, --help           Display this information
    -l, --license        Display license information
-"""
+"""     )
 
 
 def mesg(msgtype, msg):
 	""" prints different types of messages to the console """
 	if verbose and msgtype == "info":
-		print GREEN + " *" + OFF + " " + msg
+		print("{G} *{O} {m}".format(G = GREEN, O = OFF, m = msg))
 	elif msgtype == "norm":
-		print GREEN + " *" + OFF + " " + msg
+		print("{G} *{O} {m}".format(G = GREEN, O = OFF, m = msg))
 	elif msgtype == "boot":
-		print "           " + msg
+		print("           {m}".format(m = msg))
 	elif msgtype == "defboot":
-		print CYAN + " DEFAULT > " + GREEN + msg + OFF
+		print("{C} DEFAULT > {G}{m}{O}".format(C = CYAN, G = GREEN, m = msg, O = OFF))
 	elif msgtype == "warn":
-		print RED + " *" + OFF + " " + msg
-
+		print("{R} * WARN :{O} {m}".format(R = RED, O = OFF, m = msg))
+	elif msgtype == "fatal":
+		print("{R} * ERROR :{O} {m}".format(R = RED, O = OFF, m = msg))
 
 
 def cleanup(success, messages, ext = None):
@@ -90,34 +94,29 @@ def cleanup(success, messages, ext = None):
 		messages += mesgs
 
 	warnings = False
-
 	for msgtype, msg in messages:
 		if msgtype == "warn":
-			print RED + " * WARN :" + OFF + " %s" % msg
 			warnings = True
-		elif msgtype == "fatal":
-			print RED + " * ERROR:" + OFF + " %s" % msg
-		elif (verbose and msgtype == "info") or msgtype == "norm":
-			print GREEN + " * " + OFF + msg
+		mesg(msgtype, msg)
+
 	if not success:
-		print RED + " * Did not complete successfully." + OFF
-		print
+		print(RED + " * Did not complete successfully." + OFF)
+		print("")
 		sys.exit(1)
 	else:
 		out = GREEN + " * " + OFF + "Completed successfully"
 		if warnings:
-			print out + " with warnings."
+			print(out + " with warnings.")
 		else:
-			print out + "."
-		print
+			print(out + ".")
+		print("")
 		sys.exit(0)
 
 def update(config, success, messages):
 	""" update configuration """
 	# Generate warnings for any invalid config file entries...
 	for invalid in config.validate():
-		messages.append(["warn", "invalid config setting \"%s\"; ignored."
-						% invalid])
+		messages.append(["warn", "invalid config setting \"{iv}\"; ignored.".format(iv = invalid)])
 
 	# Figure out what extension we should be loading...
 
@@ -129,14 +128,14 @@ def update(config, success, messages):
 
 	if generate not in funtoo.boot.extensions.__all__:
 		success = False
-		messages.append(["fatal", "extension for boot loader \"%s\" (specified in boot/generate) not found." % generate ])
+		messages.append(["fatal", "extension for boot loader \"{gen}\" (specified in boot/generate) not found.".format(g = generate)])
 
 	if ("-C" in sys.argv) or ("--check" in sys.argv):
-		messages.append(["norm","Configuration file %s checked." % cfile])
+		messages.append(["norm","Configuration file {cf} checked.".format(cf = cfile)])
 		cleanup(success, messages)
 
-	mesg("norm","Generating config for %s..." % generate)
-	print
+	mesg("norm","Generating config for {gen}...".format(gen = generate))
+	print("")
 
 	if not success:
 		cleanup(success, messages)
@@ -157,7 +156,7 @@ def update(config, success, messages):
 	# Dynamically import the proper extension module (ie. grub.py,
 	# grub-legacy.py, lilo.py):
 
-	extname = "funtoo.boot.extensions.%s" % generate
+	extname = "funtoo.boot.extensions.{gen}".format(gen = generate)
 	__import__(extname)
 	extmodule = sys.modules[extname]
 
@@ -191,9 +190,9 @@ def update(config, success, messages):
 	cleanup(success, allmsgs, ext)
 
 if os.geteuid() != 0:
-	print
-	print RED + "boot-update requires root privileges"
-	print
+	print("")
+	mesg("fatal", "boot-update requires root privileges")
+	print("")
 else:
 	if len(sys.argv)>=2 and (( "-l" in sys.argv ) or ( "--license" in sys.argv )):
 		versinfo()
@@ -210,22 +209,23 @@ else:
 		c = funtoo.boot.config.BootConfigFile(cfile)
 		if not c.fileExists():
 			ok = False
-			allmsgs.append(["fatal", "Master configuration file \"%s\" does not exist." % cfile])
-	except ConfigFileError, e:
+			allmsgs.append(["fatal", "Master configuration file \"{cf}\" does not exist.".format(cf = cfile)])
+	except ConfigFileError as e:
 		ok = False
 		banner()
-		allmsgs.append(["fatal", "Parse Error: %s" % e])
+		allmsgs.append(["fatal", "Parse Error: {err}".format(err = e)])
 	if not ok:
 		cleanup(ok, allmsgs)
 
 	if len(sys.argv)>=3 and sys.argv[1] == "--show":
-		print c[sys.argv[2]]
+		print(c[sys.argv[2]])
 	elif len(sys.argv)>=2 and sys.argv[1] == "--showdefaults":
-		print "# These are default, hard-coded settings that can be overridden by"
-		print "# the /etc/boot.conf file."
-		print
+		print("# These are the default settings that can be overridden by")
+		print("# the /etc/boot.conf file.")
+		print("")
 		for line in c.parent.dump():
-			sys.stdout.write(line)
+			if not line.startswith("#"):
+				sys.stdout.write(line)
 	elif len(sys.argv)>=2 and (sys.argv[1] in [ "-h", "--help"]):
 		printhelp()
 	else:
