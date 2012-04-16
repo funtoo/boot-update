@@ -37,10 +37,10 @@ class LILOExtension(Extension):
 		output = cmdobj.communicate()
 		if cmdobj.poll() != 0:
 			ok = False
-			allmsgs.append(["fatal", "Error running {cmd} :\n{out}".format(cmd = self.lilo_cmd,  out = output[0])])
+			allmsgs.append(["fatal", "Error running {cmd} :\n{out}".format(cmd = self.lilo_cmd,  out = output[0].decode())])
 			return [ok, allmsgs]
 		else:
-			allmsgs.append(["info",  "Successfully ran {cmd}. Output was :\n\n{out}\n".format(cmd = self.lilo_cmd, out = output[0])])
+			allmsgs.append(["info",  "Successfully ran {cmd}. Output was :\n\n{out}\n".format(cmd = self.lilo_cmd, out = output[0].decode())])
 			return [ok, allmsgs]
 
 	def generateOtherBootEntry(self,l,sect):

@@ -51,9 +51,9 @@ class Resolver:
 
 	def resolvedev(self, dev):
 		if ((dev[0:5] == "UUID=") or (dev[0:6] == "LABEL=")):
-			cmdobj = Popen(["/sbin/findfs", dev], bufsize = -1, STDOUT = PIPE, STDERR = PIPE, shell = False)
+			cmdobj = Popen(["/sbin/findfs", dev], bufsize = -1, stdout = PIPE, stderr = PIPE, shell = False)
 			output = cmdobj.communicate()
-			return output[0]
+			return output[0].decode()
 		else:
 			return dev
 
@@ -91,8 +91,7 @@ class Resolver:
 		return "{s} - {k}".format(s = sect, k = os.path.basename(kname) )
 
 	def DoRootAuto(self,params,ok,allmsgs):
-
-		# properly handle the root=auto and real_root=auto parameters in the boot.conf config file:
+		""" Properly handle the root=auto and real_root=auto parameters in the boot.conf config file """
 
 		rootarg=None
 		doauto=False
@@ -196,10 +195,10 @@ class Resolver:
 			return mesgs
 		else:
 			# not mounted, and mountable, so we should mount it.
-			cmdobj = Popen(["mount",  mountpoint], bufsize = -1, STDOUT = PIPE, STDERR = STDOUT, shell = False)
+			cmdobj = Popen(["mount",  mountpoint], bufsize = -1, stdout = PIPE, stderr = STDOUT, shell = False)
 			output = cmdobj.communicate()
 			if cmdobj.poll() != 0:
-				mesgs.append(["fatal", "Error mounting {mp}, Output was :\n{out}".format(mp = mountpoint, out = output[0])])
+				mesgs.append(["fatal", "Error mounting {mp}, Output was :\n{out}".format(mp = mountpoint, out = output[0].decode())])
 				return mesgs
 			else:
 				self.mounted[mountpoint] = True
@@ -207,14 +206,14 @@ class Resolver:
 
 	def UnmountIfNecessary(self):
 		mesgs = []
-		for mountpoint, we_mounted in self.mounted.iteritems():
+		for mountpoint, we_mounted in iter(self.mounted.items()):
 			if we_mounted == False:
 				continue
 			else:
-				cmdobj = Popen(["umount", mountpoint], bufsize = -1, STDOUT = PIPE, STDERR = STDOUT, shell = False)
+				cmdobj = Popen(["umount", mountpoint], bufsize = -1, stdout = PIPE, stderr = STDOUT, shell = False)
 				output = cmdobj.communicate()
 				if cmdobj.poll() != 0:
-					mesgs.append(["warn", "Error unmounting {mp}, Output was :\n{out}".format(mp = mountpoint, out = output[0])])
+					mesgs.append(["warn", "Error unmounting {mp}, Output was :\n{out}".format(mp = mountpoint, out = output[0].decode())])
 		return mesgs
 
 	def _GenerateLinuxSection(self, l, sect, sfunc):
@@ -291,7 +290,7 @@ class Resolver:
 			timeout = int(self.config["boot/timeout"])
 		except ValueError:
 			ok = False
-			allmsgs.append(["fatal","Invalid value \"%s\" for boot/timeout." % timeout])
+			allmsgs.append(["fatal","Invalid value \"{t}\" for boot/timeout.".format(t = timeout)])
 			return [ ok, allmsgs, None, None ]
 
 		if timeout == 0:

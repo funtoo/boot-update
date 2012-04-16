@@ -37,7 +37,7 @@ class GRUBExtension(Extension):
 		return [ok, msgs]
 
 	def generateOtherBootEntry(self, l, sect):
-		""" generates the boot entry for other systems """
+		""" Generates the boot entry for other systems """
 		ok = True
 		msgs = []
 		mytype = self.config["{s}/type".format(s = sect)].lower()
@@ -70,7 +70,7 @@ class GRUBExtension(Extension):
 		return [ ok, msgs ]
 
 	def generateBootEntry(self, l, sect, kname, kext):
-		""" generates the boot entry """
+		""" Generates the boot entry """
 		ok = True
 		allmsgs = []
 
@@ -196,7 +196,7 @@ class GRUBExtension(Extension):
 		return [ok, allmsgs, l]
 
 	def GuppyMap(self):
-		""" creates the device map """
+		""" Creates the device map """
 		gmkdevmap = self.config["grub/grub-mkdevicemap"]
 		cmdobj = None
 		if self.testing:
@@ -205,22 +205,22 @@ class GRUBExtension(Extension):
 			cmdobj = Popen([gmkdevmap, "--no-floppy"], bufsize = -1, stdout = PIPE,  stderr = STDOUT, shell = False)
 		output = cmdobj.communicate()
 		if cmdobj.poll() != 0:
-			raise ExtensionError("{cmd}\n{out}".format(cmd = gmkdevmap, out = output[0]))
+			raise ExtensionError("{cmd}\n{out}".format(cmd = gmkdevmap, out = output[0].decode()))
 
 	def Guppy(self, argstring, fatal=True):
-		""" probes a device """
+		""" Probes a device """
 		gprobe = self.config["grub/grub-probe"]
 		cmd = shlex.split("{gcmd} {args}".format(gcmd = gprobe, args = argstring))
 		cmdobj = Popen(cmd, bufsize=-1, stdout=PIPE, stderr=PIPE, shell=False)
 		output = cmdobj.communicate()
 		retval = cmdobj.poll()
 		if fatal and retval != 0:
-			raise ExtensionError("{cmd} {args}\n{out}".format(cmd = gprobe, args = argstring, out = output[0]))
+			raise ExtensionError("{cmd} {args}\n{out}".format(cmd = gprobe, args = argstring, out = output[0].decode()))
 		else:
-			return retval, output[0].strip("\n")
+			return retval, output[0].decode().strip("\n")
 
 	def RequiredGRUBModules(self, dev):
-		""" determines required grub modules """
+		""" Determines required grub modules """
 		mods = []
 		for targ in [ "abstraction", "partmap", "fs" ]:
 			for mod in self.DeviceProbe(dev, targ):
@@ -228,7 +228,7 @@ class GRUBExtension(Extension):
 		return mods
 
 	def DeviceProbe(self, dev, targ):
-		""" determines the device details """
+		""" Determines the device details """
 		retval, mods = self.Guppy(" --device {d} --target={t}".format(d = dev, t = targ))
 		if retval == 0:
 			return mods.split()
@@ -236,27 +236,27 @@ class GRUBExtension(Extension):
 			return []
 
 	def DeviceOfFilesystem(self, fs):
-		""" determines the device of a filesystem """
+		""" Determines the device of a filesystem """
 		retval, out = self.Guppy(" --target=device {f}".format(f = fs))
 		return retval, out
 
 	def DeviceUUID(self, dev):
-		""" determines the UUID of the filesystem """
+		""" Determines the UUID of the filesystem """
 		retval, out = self.Guppy(" --device {d} --target=fs_uuid".format(d = dev))
 		return retval, out
 
 	def DeviceGRUB(self, dev):
-		""" determines the Grub device for a Linux device """
+		""" Determines the Grub device for a Linux device """
 		retval, out = self.Guppy(" --device {d} --target=drive".format(d = dev))
 		return retval, out
 
 	def PrepareGRUBForFilesystem(self, fs, l):
-		""" prepares Grub for the filesystem """
+		""" Prepares Grub for the filesystem """
 		retval, dev = self.DeviceOfFilesystem(fs)
 		return self.PrepareGRUBForDevice(dev, l)
 
 	def PrepareGRUBForDevice(self, dev, l):
-		""" prepares Grub for the device """
+		""" Prepares Grub for the device """
 		for mod in self.RequiredGRUBModules(dev):
 			l.append("  insmod {m}".format(m = mod))
 		retval, grubdev = self.DeviceGRUB(dev)

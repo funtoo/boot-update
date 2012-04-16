@@ -68,7 +68,7 @@ class GRUBLegacyExtension(Extension):
 			cmdobj = Popen([gmkdevmap, "--no-floppy"], bufsize = -1, stdout = PIPE, stderr = STDOUT, shell = False)
 			if cmdobj.poll() != 0:
 				output = cmdobj.communicate()
-				print("ERROR calling {cmd}, Output was:\n{out}".format(cmd = gmkdevmap, out = output[0]))
+				print("ERROR calling {cmd}, Output was:\n{out}".format(cmd = gmkdevmap, out = output[0].decode()))
 				return None
 
 		gprobe = self.config["grub/grub-probe"]
@@ -76,10 +76,10 @@ class GRUBLegacyExtension(Extension):
 		cmdobj = Popen(cmd, bufsize = -1, stdout = PIPE, stderr = STDOUT, shell = False)
 		output = cmdobj.communicate()
 		if cmdobj.poll() != 0:
-			print("ERROR calling {cmd} {args}, Output was:\n{out}".format(cmd = gprobe, args = argstring, out = output[0]))
+			print("ERROR calling {cmd} {args}, Output was:\n{out}".format(cmd = gprobe, args = argstring, out = output[0].decode()))
 			return None
 		else:
-			return output[0].strip("\n")
+			return output[0].decode().strip("\n")
 
 	def DeviceGRUB(self,dev):
 		out=self.Guppy(" --device {d} --target=drive".format(d = dev))

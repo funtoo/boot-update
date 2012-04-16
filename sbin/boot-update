@@ -1,6 +1,6 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 # -*- coding: ascii -*-
-""" runs the boot-update program from command line """
+""" Runs the boot-update program from command line """
 
 import os
 import sys

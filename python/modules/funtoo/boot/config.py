@@ -1,5 +1,6 @@
 # -*- coding: ascii -*-
-from ..core import config
+
+from funtoo.core import config
 
 class DefaultBootConfigFile(config.ConfigFile):
 
