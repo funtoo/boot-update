@@ -265,7 +265,7 @@ class ConfigFile:
 			return template in self.templates
 
 	def hasLocalTemplate(self,template):
-		return self.templates.has_key(template)
+		return template in self.templates
 
 	def hasItem(self,item):
 		return self.item(item,varname=None,bool=True)
@@ -330,7 +330,7 @@ class ConfigFile:
 		section="/".join(keysplit[:-1])
 		varname=keysplit[-1]
 
-		if not self.sectionData.has_key(section):
+		if not section in self.sectionData:
 			# initialize internal data store
 			self.sectionData[section] = {}
 			self.sectionDataOrder[section] = []

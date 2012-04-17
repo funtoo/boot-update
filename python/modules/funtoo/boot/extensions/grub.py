@@ -200,7 +200,8 @@ class GRUBExtension(Extension):
 		gmkdevmap = self.config["grub/grub-mkdevicemap"]
 		cmdobj = None
 		if self.testing:
-			cmdobj = Popen([gmkdevmap, "--no-floppy", "-m /dev/null"], bufsize = -1, stdout = PIPE,  stderr = STDOUT, shell = True)
+			cmdstr = "{gm} --no-floppy --device-map=/dev/null".format(gm = gmkdevmap)
+			cmdobj = Popen(cmdstr, bufsize = -1, stdout = PIPE,  stderr = STDOUT, shell = True)
 		else:
 			cmdobj = Popen([gmkdevmap, "--no-floppy"], bufsize = -1, stdout = PIPE,  stderr = STDOUT, shell = False)
 		output = cmdobj.communicate()
