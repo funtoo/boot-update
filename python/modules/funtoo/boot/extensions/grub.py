@@ -1,17 +1,22 @@
-#!/usr/bin/python2
-# -*- coding: ascii; tab-width: 4; indent-tabs-mode: nil -*-
-""" extension for handling grub """
-import os, commands
+# -*- coding: ascii -*-
+
+import os
+import shlex
+
+from subprocess import Popen
+from subprocess import PIPE
+from subprocess import STDOUT
 
 from funtoo.boot.extension import Extension
 from funtoo.boot.extension import ExtensionError
 
 def getExtension(config):
-	""" gets the extension based on the configuration """
+	""" Gets the extension based on the configuration """
 	return GRUBExtension(config)
 
 class GRUBExtension(Extension):
-	""" implements an extension for the grub bootloader """
+	""" Implements an extension for the grub bootloader """
+
 	def __init__(self, config, testing = False):
 		Extension.__init__(self,config)
 		self.grubpath =  "{path}/{dir}".format(path = self.config["boot/path"], dir = self.config["grub/dir"])
@@ -27,15 +32,15 @@ class GRUBExtension(Extension):
 		ok = True
 		gprobe = self.config["grub/grub-probe"]
 		if not os.path.exists(gprobe):
-			msgs.append(["fatal", "{cmd}, required for boot/generate = grub,  does not exist".format(cmd = gprobe)])
+			msgs.append(["fatal", "{cmd}, required for boot/generate = grub, does not exist".format(cmd = gprobe)])
 			ok = False
 		return [ok, msgs]
 
 	def generateOtherBootEntry(self, l, sect):
-		""" generates the boot entry for other systems """
+		""" Generates the boot entry for other systems """
 		ok = True
 		msgs = []
-		mytype = self.config["%s/type" % sect ].lower()
+		mytype = self.config["{s}/type".format(s = sect)].lower()
 		if mytype in [ "dos", "msdos", ]:
 			mytype = "dos"
 		elif mytype in [ "windows", "windows 2000", "win2000", "windows xp", "winxp" ]:
@@ -46,14 +51,14 @@ class GRUBExtension(Extension):
 			mytype = "win7"
 		else:
 			ok = False
-			msgs.append(["fatal", "Unrecognized boot entry type \"%s\"" % mytype])
+			msgs.append(["fatal", "Unrecognized boot entry type \"{mt}\"".format(mt = mytype)])
 			return [ ok, msgs ]
-		params = self.config["%s/params" % sect].split()
+		params = self.config["{s}/params".format(s = sect)].split()
 		myroot = self.r.GetParam(params, "root=")
 		myname = sect
 		# TODO check for valid root entry
 		l.append("")
-		l.append("menuentry \"%s\" {" % myname )
+		l.append("menuentry \"{mn}\" {{".format(mn = myname))
 		self.PrepareGRUBForDevice(myroot, l)
 		self.bootitems.append(myname)
 		self.DeviceGRUB(myroot)
@@ -65,20 +70,19 @@ class GRUBExtension(Extension):
 		return [ ok, msgs ]
 
 	def generateBootEntry(self, l, sect, kname, kext):
-		""" generates the boot entry """
+		""" Generates the boot entry """
 		ok = True
 		allmsgs = []
 
 		l.append("")
 		label = self.r.GetBootEntryString( sect, kname )
-
-		l.append("menuentry \"%s\" {" % label )
+		l.append("menuentry \"{l}\" {{".format(l = label))
 		# self.bootitems records all our boot items
 		self.bootitems.append(label)
 
-		self.PrepareGRUBForFilesystem(self.config["%s/scan" % sect], l)
+		self.PrepareGRUBForFilesystem(self.config["{s}/scan".format(s = sect)], l)
 		kpath = self.r.StripMountPoint(kname)
-		params = self.config["%s/params" % sect].split()
+		params = self.config["{s}/params".format(s = sect)].split()
 
 		ok, allmsgs, myroot = self.r.DoRootAuto(params, ok, allmsgs)
 		if not ok:
@@ -92,11 +96,11 @@ class GRUBExtension(Extension):
 		if myroot and ('root=' + myroot) in params and 0 == len(initrds):
 			params.remove('root=' + myroot)
 			params.append('root=' + self.r.resolvedev(myroot))
-		l.append("  linux %s %s" % ( kpath, " ".join(params) ))
+		l.append("  linux {k} {par}".format(k = kpath, par = " ".join(params)))
 		for initrd in initrds:
-			l.append("  initrd %s" % self.r.StripMountPoint(initrd))
-		if self.config.hasItem("%s/gfxmode" % sect):
-			l.append("  set gfxpayload=%s" % self.config.item(sect, "gfxmode"))
+			l.append("  initrd {rd}".format(rd = self.r.StripMountPoint(initrd)))
+		if self.config.hasItem("{s}/gfxmode".format(s = sect)):
+			l.append("  set gfxpayload={gm}".format(gm = self.config.item(sect, "gfxmode")))
 		else:
 			l.append("  set gfxpayload=keep")
 		l.append("}")
@@ -107,7 +111,7 @@ class GRUBExtension(Extension):
 		c = self.config
 		ok = True
 		allmsgs = []
-		l.append(c.condSubItem("boot/timeout", "set timeout=%s"))
+		l.append(c.condFormatSubItem("boot/timeout", "set timeout={s}"))
 		# pass our boot entry generator function to GenerateSections,
 		# and everything is taken care of for our boot entries
 
@@ -129,12 +133,11 @@ class GRUBExtension(Extension):
 					import shutil
 					shutil.copy(src_font,dst_font)
 				else:
-					allmsgs.append(["fatal", "specified font \"%s\" not found at %s; aborting." % ( font, dst_font)] )
+					allmsgs.append(["fatal", "specified font \"{ft}\" not found at {dst}; aborting.".format(ft = font, dst = dst_font)] )
 					return (False, allmsgs)
 
-			l += [ "if loadfont %s; then" %
-				   self.r.RelativePathTo(dst_font,c["boot/path"]),
-				"   set gfxmode=%s" % c["display/gfxmode"],
+			l += [ "if loadfont {dst}; then".format(self.r.RelativePathTo(dst_font,c["boot/path"])),
+				"   set gfxmode={gfx}".format(gfx = c["display/gfxmode"]),
 				"   insmod gfxterm",
 				"   insmod vbe",
 				"   terminal_output gfxterm" ]
@@ -149,7 +152,7 @@ class GRUBExtension(Extension):
 					bgext = "jpeg"
 				if bgext in [ "jpeg", "png", "tga" ]:
 
-					rel_cfgpath = "%s/%s" % ( c["boot/path"], bgimg)
+					rel_cfgpath = "{path}/{img}".format(path = c["boot/path"], img = bgimg)
 
 					# first, look for absolute path, because our relative path
 					# can eval to "/boot/boot/foo.png" which
@@ -158,29 +161,27 @@ class GRUBExtension(Extension):
 					if bgimg[0] == "/" and os.path.exists(bgimg):
 						# user specified absolute path to file on disk:
 						l += [
-							"   insmod %s" % bgext,
-							"   background_image %s" %
-							self.r.RelativePathTo(bgimg, c["boot/path"] )
+							"   insmod {bg}".format(bg = bgext),
+							"   background_image {img}".format(img = self.r.RelativePathTo(bgimg, c["boot/path"] ))
 						]
 					elif os.path.exists(rel_cfgpath):
 						# user specified path relative to /boot:
 						l += [
-							"   insmod %s" % bgext,
-							"   background_image %s" %
-							self.r.RelativePathTo(rel_cfgpath , c["boot/path"] )
+							"   insmod {ext}".format(ext = bgext),
+							"   background_image {img}".format(img = self.r.RelativePathTo(rel_cfgpath , c["boot/path"] ))
 						]
 					else:
-						allmsgs.append(["warn","background image \"%s\" does not exist - skipping." % bgimg])
+						allmsgs.append(["warn","background image \"{img}\" does not exist - skipping.".format(img = bgimg)])
 				else:
-					allmsgs.append(["warn","background image \"%s\" (format \"%s\") not recognized - skipping." % (bgimg, bgext)])
+					allmsgs.append(["warn","background image \"{img}\" (format \"{ext}\") not recognized - skipping.".format(img = bgimg, ext = bgext)])
 			l += [ "fi",
 				"",
-				c.condSubItem("color/normal", "set menu_color_normal=%s"),
-				c.condSubItem("color/highlight", "set menu_color_highlight=%s"),
+				c.condFormatSubItem("color/normal", "set menu_color_normal={s}"),
+				c.condFormatSubItem("color/highlight", "set menu_color_highlight={s}"),
 			]
 		else:
 			if c.hasItem("display/background"):
-				allmsgs.append(["warn","display/gfxmode not provided - display/background \"%s\" will not be displayed." % c["display/background"]] )
+				allmsgs.append(["warn","display/gfxmode not provided - display/background \"{bg}\" will not be displayed.".format(bg = c["display/background"])] )
 
 		ok, msgs, self.defpos, self.defname = self.r.GenerateSections(l, self.generateBootEntry, self.generateOtherBootEntry)
 		allmsgs += msgs
@@ -189,33 +190,38 @@ class GRUBExtension(Extension):
 
 		l += [
 			""
-			"set default=%s" % self.defpos
+			"set default={pos}".format(pos = self.defpos)
 		]
 
 		return [ok, allmsgs, l]
 
 	def GuppyMap(self):
-		""" creates the device map """
+		""" Creates the device map """
 		gmkdevmap = self.config["grub/grub-mkdevicemap"]
-		out = None
+		cmdobj = None
 		if self.testing:
-			out = commands.getstatusoutput("{cmd} --no-floppy -m /dev/null".format(cmd = gmkdevmap))
+			cmdstr = "{gm} --no-floppy --device-map=/dev/null".format(gm = gmkdevmap)
+			cmdobj = Popen(cmdstr, bufsize = -1, stdout = PIPE,  stderr = STDOUT, shell = True)
 		else:
-			out = commands.getstatusoutput("{cmd} --no-floppy".format(cmd = gmkdevmap))
-		if out[0] != 0:
-			raise ExtensionError,  "{cmd}\n{output}".format(cmd = gmkdevmap, output = out[1])
+			cmdobj = Popen([gmkdevmap, "--no-floppy"], bufsize = -1, stdout = PIPE,  stderr = STDOUT, shell = False)
+		output = cmdobj.communicate()
+		if cmdobj.poll() != 0:
+			raise ExtensionError("{cmd}\n{out}".format(cmd = gmkdevmap, out = output[0].decode()))
 
 	def Guppy(self, argstring, fatal=True):
-		""" probes a device """
+		""" Probes a device """
 		gprobe = self.config["grub/grub-probe"]
-		out = commands.getstatusoutput("{cmd} {args}".format(cmd = gprobe, args = argstring))
-		if fatal and out[0] != 0:
-			raise ExtensionError, "{cmd} {args}\n{output}".format(cmd = gprobe, args = argstring, output = out[1])
+		cmd = shlex.split("{gcmd} {args}".format(gcmd = gprobe, args = argstring))
+		cmdobj = Popen(cmd, bufsize=-1, stdout=PIPE, stderr=PIPE, shell=False)
+		output = cmdobj.communicate()
+		retval = cmdobj.poll()
+		if fatal and retval != 0:
+			raise ExtensionError("{cmd} {args}\n{out}".format(cmd = gprobe, args = argstring, out = output[0].decode()))
 		else:
-			return out
+			return retval, output[0].decode().strip("\n")
 
 	def RequiredGRUBModules(self, dev):
-		""" determines required grub modules """
+		""" Determines required grub modules """
 		mods = []
 		for targ in [ "abstraction", "partmap", "fs" ]:
 			for mod in self.DeviceProbe(dev, targ):
@@ -223,40 +229,40 @@ class GRUBExtension(Extension):
 		return mods
 
 	def DeviceProbe(self, dev, targ):
-		""" determines the device details """
-		retval, mods = self.Guppy(" --device %s --target=%s" % (dev, targ))
+		""" Determines the device details """
+		retval, mods = self.Guppy(" --device {d} --target={t}".format(d = dev, t = targ))
 		if retval == 0:
 			return mods.split()
 		else:
 			return []
 
 	def DeviceOfFilesystem(self, fs):
-		""" determines the device of a filesystem """
-		retval, out = self.Guppy(" --target=device %s" % fs)
+		""" Determines the device of a filesystem """
+		retval, out = self.Guppy(" --target=device {f}".format(f = fs))
 		return retval, out
 
 	def DeviceUUID(self, dev):
-		""" determines the UUID of the filesystem """
-		retval, out = self.Guppy(" --device %s --target=fs_uuid 2> /dev/null" % dev)
+		""" Determines the UUID of the filesystem """
+		retval, out = self.Guppy(" --device {d} --target=fs_uuid".format(d = dev))
 		return retval, out
 
 	def DeviceGRUB(self, dev):
-		""" determines the Grub device for a Linux device """
-		retval, out = self.Guppy(" --device %s --target=drive" % dev)
+		""" Determines the Grub device for a Linux device """
+		retval, out = self.Guppy(" --device {d} --target=drive".format(d = dev))
 		return retval, out
 
 	def PrepareGRUBForFilesystem(self, fs, l):
-		""" prepares Grub for the filesystem """
+		""" Prepares Grub for the filesystem """
 		retval, dev = self.DeviceOfFilesystem(fs)
 		return self.PrepareGRUBForDevice(dev, l)
 
 	def PrepareGRUBForDevice(self, dev, l):
-		""" prepares Grub for the device """
+		""" Prepares Grub for the device """
 		for mod in self.RequiredGRUBModules(dev):
-			l.append("  insmod %s" % mod)
+			l.append("  insmod {m}".format(m = mod))
 		retval, grubdev = self.DeviceGRUB(dev)
-		l.append("  set root=%s" % grubdev)
+		l.append("  set root={dev}".format(dev = grubdev))
 		retval, uuid = self.DeviceUUID(dev)
 		if retval == 0:
-			l.append("  search --no-floppy --fs-uuid --set %s" % uuid )
+			l.append("  search --no-floppy --fs-uuid --set {u}".format(u = uuid ))
 		# TODO: add error handling for retvals

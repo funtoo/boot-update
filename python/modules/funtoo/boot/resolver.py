@@ -1,10 +1,18 @@
-# -*- coding: ascii; tab-width: 4; indent-tabs-mode: nil -*-
+# -*- coding: ascii -*-
 """ The resolver provides various mechanisms for doing things automatically
 that might be found in the configuration file. For example, it handles matching
 the [-v] in a file path to the various files it can match. """
 
-import os, glob, commands
-from helper import fstabGetRootDevice, fstabGetFilesystemOfDevice, fstabHasEntry
+import glob
+import os
+
+from subprocess import Popen
+from subprocess import PIPE
+from subprocess import STDOUT
+
+from funtoo.boot.helper import fstabGetRootDevice
+from funtoo.boot.helper import fstabGetFilesystemOfDevice
+from funtoo.boot.helper import fstabHasEntry
 
 def bracketzap(instr, wild=True):
 	""" Removes various bracket types from the input string. """
@@ -25,10 +33,11 @@ def bracketzap(instr, wild=True):
 		return instr[0:wstart]+instr[wstop+1:]
 
 class Resolver:
-
-	# The resolver goes out and finds kernels and initrds. Then it is the job of the
-	# extension to generate the proper boot-loader-specific configuration file based
-	# on what the resolver found.
+	"""
+	The resolver goes out and finds kernels and initrds. Then it is the job of the
+	extension to generate the proper boot-loader-specific configuration file based
+	on what the resolver found.
+	"""
 
 	def __init__(self, config):
 		self.config = config
@@ -42,8 +51,9 @@ class Resolver:
 
 	def resolvedev(self, dev):
 		if ((dev[0:5] == "UUID=") or (dev[0:6] == "LABEL=")):
-			out = commands.getstatusoutput("/sbin/findfs " + dev)
-			return out[1]
+			cmdobj = Popen(["/sbin/findfs", dev], bufsize = -1, stdout = PIPE, stderr = PIPE, shell = False)
+			output = cmdobj.communicate()
+			return output[0].decode()
 		else:
 			return dev
 
@@ -78,11 +88,10 @@ class Resolver:
 		return found
 
 	def GetBootEntryString(self,sect,kname):
-		return "%s - %s" % ( sect, os.path.basename(kname) )
+		return "{s} - {k}".format(s = sect, k = os.path.basename(kname) )
 
 	def DoRootAuto(self,params,ok,allmsgs):
-
-		# properly handle the root=auto and real_root=auto parameters in the boot.conf config file:
+		""" Properly handle the root=auto and real_root=auto parameters in the boot.conf config file """
 
 		rootarg=None
 		doauto=False
@@ -99,9 +108,9 @@ class Resolver:
 			if ((rootdev[0:5] != "/dev/") and (rootdev[0:5] != "UUID=")
 					and (rootdev[0:6] != "LABEL=")):
 				ok = False
-				allmsgs.append(["fatal","(root=auto) - / entry in /etc/fstab not recognized (%s)." % rootdev])
+				allmsgs.append(["fatal","(root=auto) - / entry in /etc/fstab not recognized ({dev}).".format(dev = rootdev)])
 			else:
-				params.append("%s=%s" % ( rootarg, rootdev ))
+				params.append("{arg}={dev}".format(arg = rootarg, dev = rootdev ))
 			return [ ok, allmsgs, rootdev ]
 		else:
 			# nothing to do - but we'll generate a warning if there is no root
@@ -142,7 +151,7 @@ class Resolver:
 						ok = False
 						allmsgs.append(["fatal","(rootfstype=auto) - cannot find a valid / entry in /etc/fstab."])
 						return [ ok, allmsgs, None ]
-					params.append("rootfstype=%s" % fstype)
+					params.append("rootfstype={fs}".format(fs = fstype))
 					break
 		else:
 			for param in params:
@@ -155,7 +164,7 @@ class Resolver:
 		mountpoint = scanpath
 
 		# Avoids problems
-		if os.path.isabs(scanpath) == False:
+		if os.path.isabs(mountpoint) == False:
 			return None
 
 		while True:
@@ -186,9 +195,10 @@ class Resolver:
 			return mesgs
 		else:
 			# not mounted, and mountable, so we should mount it.
-			out = commands.getstatusoutput("mount {mp}".format(mp = mountpoint))
-			if out[0] != 0:
-				mesgs.append(["fatal", "Error mounting {mp}".format(mp = mountpoint)])
+			cmdobj = Popen(["mount",  mountpoint], bufsize = -1, stdout = PIPE, stderr = STDOUT, shell = False)
+			output = cmdobj.communicate()
+			if cmdobj.poll() != 0:
+				mesgs.append(["fatal", "Error mounting {mp}, Output was :\n{out}".format(mp = mountpoint, out = output[0].decode())])
 				return mesgs
 			else:
 				self.mounted[mountpoint] = True
@@ -196,13 +206,14 @@ class Resolver:
 
 	def UnmountIfNecessary(self):
 		mesgs = []
-		for mountpoint, we_mounted in self.mounted.iteritems():
+		for mountpoint, we_mounted in iter(self.mounted.items()):
 			if we_mounted == False:
 				continue
 			else:
-				out = commands.getstatusoutput("umount {mp}".format(mp = mountpoint))
-				if out[0] != 0:
-					mesgs.append(["fatal", "Error unmounting {mp}".format(mp = mountpoint)])
+				cmdobj = Popen(["umount", mountpoint], bufsize = -1, stdout = PIPE, stderr = STDOUT, shell = False)
+				output = cmdobj.communicate()
+				if cmdobj.poll() != 0:
+					mesgs.append(["warn", "Error unmounting {mp}, Output was :\n{out}".format(mp = mountpoint, out = output[0].decode())])
 		return mesgs
 
 	def _GenerateLinuxSection(self, l, sect, sfunc):
@@ -213,7 +224,7 @@ class Resolver:
 
 		# Process boot entry section (which can generate multiple boot
 		# entries if multiple kernel matches are found)
-		findlist, skiplist = self.config.flagItemList("%s/%s" % ( sect, "kernel" ))
+		findlist, skiplist = self.config.flagItemList("{s}/kernel".format(s = sect))
 		findmatch=[]
 
 		scanpaths = self.config.item(sect,"scan").split()
@@ -279,7 +290,7 @@ class Resolver:
 			timeout = int(self.config["boot/timeout"])
 		except ValueError:
 			ok = False
-			allmsgs.append(["fatal","Invalid value \"%s\" for boot/timeout." % timeout])
+			allmsgs.append(["fatal","Invalid value \"{t}\" for boot/timeout.".format(t = timeout)])
 			return [ ok, allmsgs, None, None ]
 
 		if timeout == 0:
@@ -329,120 +340,6 @@ class Resolver:
 			self._defpos = 0
 
 		return [ ok, allmsgs, self._defpos, self._defnames[self._defpos] ]
-
-	"""
-	def GenerateSections(self,l,sfunc,ofunc=None):
-		c=self.config
-
-		ok=True
-		allmsgs=[]
-
-		default = c.deburr(c["boot/default"])
-
-		pos = 0
-		defpos = None
-		def_mtime = None
-		defnames = []
-
-		linuxsections = []
-		othersections = []
-
-		try:
-			timeout = int(c["boot/timeout"])
-		except ValueError:
-			ok = False
-			allmsgs.append(["fatal","Invalid value \"%s\" for boot/timeout."
-							% timeout])
-			return [ ok, allmsgs, None, None ]
-
-		if timeout == 0:
-			allmsgs.append(["warn","boot/timeout value is zero - boot menu will not appear!"])
-		elif timeout < 3:
-			allmsgs.append(["norm","boot/timeout value is below 3 seconds."])
-
-		for sect in c.getSections():
-			if sect not in c.builtins:
-				if c["%s/%s" % (sect, "type")] == "linux":
-					linuxsections.append(sect)
-				else:
-					othersections.append(sect)
-
-		# if we have no linux boot entries, throw an error - force user to be
-		# explicit.
-		if len(linuxsections) + len(othersections) == 0:
-			allmsgs.append(["fatal","No boot entries are defined in /etc/boot.conf."])
-			ok=False
-			return[ ok, allmsgs, None, None ]
-		if len(linuxsections) == 0:
-			allmsgs.append(["warn","No Linux boot entries are defined. You may not be able to re-enter Linux."])
-
-		for sect in linuxsections:
-			# Process boot entry section (which can generate multiple boot
-			# entries if multiple kernel matches are found)
-			findlist, skiplist = c.flagItemList("%s/%s" % ( sect, "kernel" ))
-			findmatch=[]
-
-			scanpaths = c.item(sect,"scan").split()
-
-
-			for scanpath in scanpaths:
-				mesgs = self.MountIfNecessary(scanpath)
-				allmsgs += mesgs
-				skipmatch = self.GetMatchingKernels(scanpath, skiplist)
-				findmatch += self.GetMatchingKernels(scanpath, findlist, skipmatch)
-
-			# Generate individual boot entry using extension-supplied function
-
-			found_multi = False
-
-			for kname, kext in findmatch:
-				if (default == sect) or (default == os.path.basename(kname)):
-					# default match
-					if defpos != None:
-						found_multi = True
-						curtime = os.stat(kname)[8]
-						if curtime > def_mtime:
-							# this kernel is newer, use it instead
-							defpos = pos
-							def_mtime = curtime
-					else:
-						defpos = pos
-						def_mtime = os.stat(kname)[8]
-				defnames.append(kname)
-				ok, msgs = sfunc(l,sect,kname,kext)
-				allmsgs += msgs
-				if not ok:
-					break
-				pos += 1
-
-			if found_multi:
-				allmsgs.append(["warn","multiple matches found for default \"%s\" - most recent used." % default])
-
-		if ofunc:
-			for sect in othersections:
-				ok, msgs = ofunc(l,sect)
-				allmsgs += msgs
-				defnames.append(sect)
-				if default == sect:
-					if defpos != None:
-						allmsgs.append(["warn","multiple matches found for default boot entry \"%s\" - first match used." % default])
-					else:
-						defpos = pos
-				pos += 1
-				if not ok:
-					return [ ok, allmsgs, defpos, None ]
-
-		if pos == 0:
-			ok = False
-			allmsgs.append(["fatal","No matching kernels or boot entries found in /etc/boot.conf."])
-			defpos = None
-			return [ ok, allmsgs, defpos, None ]
-		elif defpos == None:
-			allmsgs.append(["warn","No boot/default match found - using first boot entry by default."])
-			# If we didn't find a specified default, use the first one
-			defpos = 0
-		return [ ok, allmsgs, defpos, defnames[defpos] ]
-	"""
 
 	def RelativePathTo(self,imagepath,mountpath):
 		# we expect /boot to be mounted if it is available when this is run
