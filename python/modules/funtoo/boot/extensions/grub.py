@@ -41,14 +41,16 @@ class GRUBExtension(Extension):
 		ok = True
 		msgs = []
 		mytype = self.config["{s}/type".format(s = sect)].lower()
-		if mytype in [ "dos", "msdos", ]:
+		if mytype in ["dos", "msdos"]:
 			mytype = "dos"
-		elif mytype in [ "windows", "windows 2000", "win2000", "windows xp", "winxp" ]:
+		elif mytype in ["windows", "windows 2000", "win2000", "windows xp", "winxp"]:
 			mytype = "winxp"
-		elif mytype in [ "windows vista", "vista" ]:
+		elif mytype in ["windows vista", "vista"]:
 			mytype = "vista"
-		elif mytype in [ "windows 7", "win7" ]:
+		elif mytype in ["windows 7", "win7"]:
 			mytype = "win7"
+		elif mytype in ["haiku", "haiku os"]:
+			mytype = "haiku"
 		else:
 			ok = False
 			msgs.append(["fatal", "Unrecognized boot entry type \"{mt}\"".format(mt = mytype)])
@@ -64,7 +66,7 @@ class GRUBExtension(Extension):
 		self.DeviceGRUB(myroot)
 		if mytype == "win7":
 			l.append("  chainloader +4")
-		elif mytype in [ "vista", "dos", "winxp" ]:
+		elif mytype in ["vista", "dos", "winxp", "haiku"]:
 			l.append("  chainloader +1")
 		l.append("}")
 		return [ ok, msgs ]

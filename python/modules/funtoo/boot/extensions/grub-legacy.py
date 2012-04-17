@@ -36,6 +36,8 @@ class GRUBLegacyExtension(Extension):
 			mytype = "vista"
 		elif mytype in ["windows 7", "win7"]:
 			mytype = "win7"
+		elif mytype in ["haiku", "haiku os"]:
+			mytype = "haiku"
 		else:
 			ok = False
 			msgs.append(["fatal","Unrecognized boot entry type \"{type}\"".format(type = mytype)])
@@ -50,10 +52,13 @@ class GRUBLegacyExtension(Extension):
 		if mygrubroot == None:
 			msgs.append(["fatal","Couldn't determine root device using grub-probe"])
 			return [ False, msgs ]
-		l.append("root {dev}".format(dev = mygrubroot))
+		if mytype == "haiku" :
+			l.append("rootnoverify {dev}".format(dev = mygrubroot))
+		else :
+			l.append("root {dev}".format(dev = mygrubroot))
 		if mytype == "win7":
 			l.append("chainloader +4")
-		elif mytype in [ "vista", "dos", "winxp" ]:
+		elif mytype in ["vista", "dos", "winxp", "haiku"]:
 			l.append("chainloader +1")
 		l.append("")
 		return [ ok, msgs ]
