@@ -1,6 +1,6 @@
 .\" Man page generated from reStructeredText.
 .
-.TH BOOT.CONF 5 "" "1.5.2" "Funtoo Linux Core System"
+.TH BOOT.CONF 5 "" "##VERSION##" "Funtoo Linux Core System"
 .SH NAME
 boot.conf \- Funtoo global boot loader configuration file
 .
@@ -33,7 +33,6 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .SH SYNOPSIS
 .INDENT 0.0
 .INDENT 3.5
-.sp
 \fI/etc/boot.conf\fP
 .UNINDENT
 .UNINDENT
@@ -85,7 +84,6 @@ display {
 "Funtoo Linux with uvesafb" { 
         kernel bzImage\-RHEL5\-uvesafb[\-v]
         params += video=uvesafb:1440x900\-8,mtrr:2
-        gfxmode 1440x900
 }
 
 "Windows 7" {
@@ -268,10 +266,10 @@ And in the following example, the initial \fI+=\fP tells coreboot to append
 .fi
 .SS Parameters
 .sp
-The \fIparams\fP variable specifies kernel parameters used to boot the kernel. Typical
-kernel parameters, such as \fIinit=/bin/bash\fP, \fIroot=/dev/sda3\fP or others can
-be specified as necessary. Here\(aqs a sophisticated example from Andreas Matuschek
-that was posted on the funtoo\-dev mailing list:
+The \fIparams\fP variable specifies kernel parameters used to boot the kernel.
+Typical kernel parameters, such as \fIinit=/bin/bash\fP, \fIroot=/dev/sda3\fP or others
+can be specified as necessary. Here\(aqs a sophisticated example from Andreas
+Matuschek that was posted on the funtoo\-dev mailing list:
 .sp
 .nf
 .ft C
@@ -299,11 +297,9 @@ params settings. But in this case, Andreas specified the first \fIparams\fP
 parameter in this boot entry without a \fI+=\fP, so his settings replace the
 default settings.
 .SS Special Parameters
-.sp
-\fB+=\fP
 .INDENT 0.0
-.INDENT 3.5
-.sp
+.TP
+.B \fB+=\fP
 When \fI+=\fP is specified at the beginning of the first \fIparams\fP, \fIinitrd\fP or
 \fIkernel\fP definition in a section, then the arguments after the \fI+=\fP will be
 added to the default settings defined in \fIdefault\fP (type \fIboot\-update
@@ -311,40 +307,24 @@ added to the default settings defined in \fIdefault\fP (type \fIboot\-update
 \fIinitrd\fP or \fIkernel\fP lines can appear in a section, as long as the successive
 lines begin with \fI+=\fP. This allows these values to be defined over multiple
 lines.
-.UNINDENT
-.UNINDENT
-.sp
-\fBroot=auto\fP
-.INDENT 0.0
-.INDENT 3.5
-.sp
+.TP
+.B \fBroot=auto\fP
 When \fIroot=auto\fP is evaluated, the framework will look at \fI/etc/fstab\fP to
 determine the root filesystem device. Then \fIroot=auto\fP will changed to
 reflect this, so the actual parameter passed to the kernel will be something
 like \fIroot=/dev/sda3\fP .
-.UNINDENT
-.UNINDENT
-.sp
-\fBrootfstype=auto\fP
-.INDENT 0.0
-.INDENT 3.5
-.sp
+.TP
+.B \fBrootfstype=auto\fP
 In a similar fashion to \fIroot=auto\fP, \fIrootfstype=auto\fP will be
 replaced with something like \fIrootfstype=ext4\fP, with the filesystem type
 determined by the setting in \fI/etc/fstab\fP.
-.UNINDENT
-.UNINDENT
-.sp
-\fBreal_root=auto\fP
-.INDENT 0.0
-.INDENT 3.5
-.sp
+.TP
+.B \fBreal_root=auto\fP
 This special parameter is useful when using \fIgenkernel\fP initrds that expect a
 \fIreal_root\fP parameter. When specified, any \fIroot=\fP options already specified
 (including \fIroot=auto\fP) will be removed from \fIparams\fP, and \fIreal_root\fP will
 be set to the root filesystem based on \fI/etc/fstab\fP, so you\(aqll end up with a
 setting such as \fIreal_root=/dev/sda3\fP.
-.UNINDENT
 .UNINDENT
 .SH ALTERNATE OS LOADING
 .sp
@@ -364,49 +344,30 @@ The \fItype\fP variable should be set to one of the operating system names that
 \fIboot\-update\fP recognizes (case\-insensitive,) which are:
 .INDENT 0.0
 .IP \(bu 2
-.
 linux (default)
 .IP \(bu 2
-.
 dos
 .IP \(bu 2
-.
 msdos
 .IP \(bu 2
-.
 Windows 2000
 .IP \(bu 2
-.
 win2000
 .IP \(bu 2
-.
 Windows XP
 .IP \(bu 2
-.
 winxp
 .IP \(bu 2
-.
 Windows Vista
 .IP \(bu 2
-.
 vista
 .IP \(bu 2
-.
 Windows 7
 .IP \(bu 2
-.
 win7
 .IP \(bu 2
-.
-BeOS
-.IP \(bu 2
-.
-Be OS
-.IP \(bu 2
-.
 Haiku
 .IP \(bu 2
-.
 Haiku OS
 .UNINDENT
 .sp
@@ -418,8 +379,7 @@ syntax used is \fIroot=device\fP.
 .sp
 Specifies the boot loader that \fIboot\-update\fP should generate a configuration
 files for. This setting should be a single string, set to one of \fIgrub\fP,
-\fIgrub\-legacy\fP or \fIlilo\fP. Note that \fIlilo\fP support is currently \fIalpha\fP
-quality. Defaults to \fIgrub\fP.
+\fIgrub\-legacy\fP or \fIlilo\fP. Defaults to \fIgrub\fP.
 .SS \fIboot :: timeout\fP
 .sp
 Specifies the boot loader timeout, in seconds. Defaults to \fI5\fP.
@@ -473,6 +433,19 @@ recently created kernel (by file mtime) will be booted by default.
 .sp
 Note that double\-quotes are optional both in section names and in the
 \fIboot/default\fP value.
+.SS \fIboot :: bootdev\fP
+.sp
+Specifies which device or partition to install the bootloader to. This is
+currently only used for lilo and is the equivalent of setting "boot = <bootdev>"
+in /etc/lilo.conf. Other bootloaders will just ignore it if set:
+.sp
+.nf
+.ft C
+boot {
+        bootdev /dev/sda
+}
+.ft P
+.fi
 .SH DEFAULT AND BOOT ENTRY SECTIONS
 .SS \fIdefault :: type\fP
 .sp

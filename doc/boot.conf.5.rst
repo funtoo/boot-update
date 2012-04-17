@@ -266,8 +266,6 @@ The *type* variable should be set to one of the operating system names that
 - vista
 - Windows 7
 - win7
-- BeOS
-- Be OS
 - Haiku
 - Haiku OS
 
@@ -283,8 +281,7 @@ syntax used is *root=device*.
 
 Specifies the boot loader that *boot-update* should generate a configuration
 files for. This setting should be a single string, set to one of *grub*,
-*grub-legacy* or *lilo*. Note that *lilo* support is currently *alpha*
-quality. Defaults to *grub*.
+*grub-legacy* or *lilo*. Defaults to *grub*.
 
 *boot :: timeout*
 ~~~~~~~~~~~~~~~~~~~
@@ -330,6 +327,17 @@ recently created kernel (by file mtime) will be booted by default.
 
 Note that double-quotes are optional both in section names and in the
 *boot/default* value.
+
+*boot :: bootdev*
+~~~~~~~~~~~~~~~~~~~
+
+Specifies which device or partition to install the bootloader to. This is
+currently only used for lilo and is the equivalent of setting "boot = <bootdev>"
+in /etc/lilo.conf. Other bootloaders will just ignore it if set::
+
+        boot {
+                bootdev /dev/sda
+        }
 
 *default* and Boot Entry Sections
 ---------------------------------
