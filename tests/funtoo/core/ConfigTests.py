@@ -1,8 +1,14 @@
-# -*- coding: ascii; tab-width: 4; indent-tabs-mode: nil -*-
+# -*- coding: ascii -*-
+
 import sys
-import StringIO
 import random
 import unittest
+
+try:
+	import StringIO
+except ImportError:
+	import io as StringIO
+
 from funtoo.core import config
 
 class ErrorTests(unittest.TestCase):
@@ -51,15 +57,22 @@ class ConfigFileConstructionTests(unittest.TestCase):
 		cf = config.ConfigFile()
 		fuzzcount = 1000
 		maxlength = 1000
-		for i in xrange(fuzzcount):
+
+		# For py2 compatibility
+		if hasattr(__builtins__, "xrange"):
+			myrange = xrange
+		else:
+			myrange = range
+
+		for i in myrange(fuzzcount):
 			argument1 = ''
 			argument2 = ''
 			length1 = random.randint(0, maxlength)
 			length2 = random.randint(0, maxlength)
-			for i in xrange(length1):
+			for i in myrange(length1):
 				character = random.randint(0, 255)
 				argument1 = argument1 + chr(character)
-			for i in xrange(length2):
+			for i in myrange(length2):
 				character = random.randint(0, 255)
 				argument2 = argument2 + chr(character)
 			wildint = random.randint(0, 1)
@@ -128,7 +141,7 @@ class ConfigFileConstructionTests(unittest.TestCase):
 		sys.stdout = StringIO.StringIO()
 		cf.printDump()
 		output = sys.stdout.getvalue()
-		sys.stdout.close()        
+		sys.stdout.close()
 		self.assertEqual('', output)
 		sys.stdout = StringIO.StringIO()
 		cf['foo'] = 'foo'

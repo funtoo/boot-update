@@ -1,4 +1,4 @@
-# -*- coding: ascii; tab-width: 4; indent-tabs-mode: nil -*-
+# -*- coding: ascii -*-
 import sys
 import os
 import unittest
@@ -7,12 +7,12 @@ class FuntooSuite(unittest.TestSuite):
 	def __init__(self, root = 'funtoo'):
 		unittest.TestSuite.__init__(self)
 		for current, dirs, files in os.walk(root):
-			print "Building suite for " + current
+			print("Building suite for " + current)
 			sys.path = [current] + sys.path
 			for filename in files:
 				root, ext = os.path.splitext(filename)
 				if ".py" == ext:
-					print filename
+					print(filename)
 					testmodule = __import__(root)
 					newsuite = unittest.defaultTestLoader.loadTestsFromModule(testmodule)
 					self.addTest(newsuite)

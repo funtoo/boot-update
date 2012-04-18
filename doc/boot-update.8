@@ -1,6 +1,6 @@
 .\" Man page generated from reStructeredText.
 .
-.TH BOOT-UPDATE 8 "" "1.5.2" "Funtoo Linux Core System"
+.TH BOOT-UPDATE 8 "" "##VERSION##" "Funtoo Linux Core System"
 .SH NAME
 boot-update \- Automatically create a boot loader configuration file
 .
@@ -33,11 +33,10 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .SH SYNOPSIS
 .sp
 The standard invocation of the command is as follows with no options or
-arguments, which causes a boot loader configuration file to be (re)generated based
-on settings in \fI/etc/boot.conf\fP:
+arguments, which causes a boot loader configuration file to be (re)generated
+based on settings in \fI/etc/boot.conf\fP:
 .INDENT 0.0
 .INDENT 3.5
-.sp
 \fBboot\-update\fP
 .UNINDENT
 .UNINDENT
@@ -47,27 +46,25 @@ were changed by the user, or additional kernels were installed. This would allow
 the boot loader menu to reflect these changes.
 .SH OPTIONS
 .INDENT 0.0
-.INDENT 3.5
-.INDENT 0.0
-.TP
-.B Options:
-.INDENT 7.0
 .TP
 .B \-\-showdefaults
-.
 Show hard\-coded (user\-overrideable) settings
-.UNINDENT
-.IP "System Message: WARNING/2 (<stdin>:, line 32)"
-.
-Option list ends without a blank line; unexpected unindent.
-.sp
-\-\-show [sect/var]            Display variable "var" defined in section "sect" in \fI/etc/boot.conf\fP
-\-C, \-\-check                  Validate configuration file, but do nothing else
-\-V, \-\-verbose                Verbose mode
-\-h, \-\-help                   Display this information
-\-l, \-\-license                Display license information
-.UNINDENT
-.UNINDENT
+.TP
+.BI \-\-show \ <sect/var>
+Display variable "var" defined in section "sect"
+in \fI/etc/boot.conf\fP
+.TP
+.B \-C,  \-\-check
+Validate configuration file, but do nothing else
+.TP
+.B \-V,  \-\-verbose
+Verbose mode
+.TP
+.B \-h,  \-\-help
+Display this information
+.TP
+.B \-l,  \-\-license
+Display license information
 .UNINDENT
 .SH DESCRIPTION
 .sp
@@ -79,8 +76,8 @@ loader configuration file is stored at \fI/boot/grub/grub.cfg\fP, is quite
 complex and is not intended to be edited directly by system administrators.
 .sp
 \fIboot\-update\fP has since been extended to support GRUB (\fIsys\-boot/grub\fP), GRUB
-Legacy (\fIsys\-boot/grub\-legacy\fP) and (alpha) LILO (\fIsys\-boot/lilo\fP).  This
-allows a single file, \fI/etc/boot.conf\fP, to store boot\-related information in a
+Legacy (\fIsys\-boot/grub\-legacy\fP) and LILO (\fIsys\-boot/lilo\fP).  This allows a
+single file, \fI/etc/boot.conf\fP, to store boot\-related information in a
 boot\-loader\-independent way, thus simplifying boot loader configuration and
 providing advanced features to all popular boot loaders.
 .sp

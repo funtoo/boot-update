@@ -1,5 +1,5 @@
-#!/usr/bin/python2
 # -*- coding: ascii -*-
+
 def fstabHasEntry(fs):
 	fn=open("/etc/fstab","r")
 	for line in fn.readlines():
@@ -30,8 +30,8 @@ def fstabGetDeviceOfFilesystem(fs):
 		if (len(split) != 6):
 			continue
 		if split[1] == fs:
-			return split[0]  
-	return "" 
+			return split[0]
+	return ""
 
 
 def fstabGetRootDevice():
@@ -45,4 +45,4 @@ def fstabGetRootDevice():
 			return split[0]
 	return ""
 
-	
+
