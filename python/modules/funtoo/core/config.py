@@ -161,7 +161,6 @@ class ConfigFile:
 				ln += 1
 				continue
 
-			# remove extra trailing newline
 			elif lines[ln].rstrip()[-1:] == "{":
 				# section start
 				section = self.deburr(lines[ln], "{")
@@ -186,7 +185,6 @@ class ConfigFile:
 						line = lines[ln]
 					ls = line.split()
 					if len(ls) == 0:
-			# remove extra trailing newline
 						# empty line, skip
 						ln += 1
 						continue
