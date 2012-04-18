@@ -12,7 +12,11 @@
 import os
 import sys
 
-from collections import OrderedDict
+# For py2.6 compatibility
+try :
+	from collections import OrderedDict
+except ImportError :
+	from funtoo.core.ordereddict import OrderedDict
 
 class ConfigFileError(Exception):
 	def __init__(self, *args):
