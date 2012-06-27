@@ -75,14 +75,20 @@ class Resolver:
 					if match not in skip and match not in found:
 						# append the matching kernel, and the literal [-v]
 						# extension that was found on this kernel
-						found.append([match,match[len(wild_glob)-2:]])
+						found.append([match,match[len(scanpath)+1+pattern.find("["):]])
 		return found
 
 	def FindInitrds(self,initrds,kernel,kext):
 		found=[]
 		base_path=os.path.dirname(kernel)
 		for initrd in initrds.split():
-			initrd=os.path.normpath(base_path+"/"+initrd.replace("[-v]",kext))
+			# Split up initrd at bracket and replace glob with kernel version string if brackets exists.
+			head, sep, tail = initrd.rpartition("[")
+			if sep :
+				initrd=os.path.normpath("{base_path}/{initrd}{kext}".format(base_path = base_path, initrd = head, kext = kext))
+			else:
+				initrd=os.path.normpath("{base_path}/{initrd}".format(base_path = base_path, initrd = tail))
+
 			if os.path.exists(initrd):
 				found.append(initrd)
 		return found
