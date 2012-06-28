@@ -175,8 +175,19 @@ class Resolver:
 
 		while True:
 			if mountpoint == "/":
-				return None
+				break
 			elif  fstabHasEntry(mountpoint):
+				return mountpoint
+			else:
+				# If we made it here, strip off last dir and try again
+				mountpoint = os.path.dirname(mountpoint)
+
+		# If here, no entry in fstab. Let's try searching for it
+		mountpoint = scanpath
+		while True:
+			if mountpoint == "/":
+				return None
+			elif os.path.ismount(mountpoint):
 				return mountpoint
 			else:
 				# If we made it here, strip off last dir and try again
@@ -192,23 +203,28 @@ class Resolver:
 		# we record things to a self.mounted list, which is used later to track when we personally mounted
 		# something, so we can unmount it. If it's already mounted, we leave it mounted:
 		mountpoint = self.GetMountPoint(scanpath)
-		if mountpoint in self.mounted:
-			# already mounted, return
-			return mesgs
-		elif os.path.ismount(mountpoint):
-			# mounted, but not in our list yet, so add, but don't unmount later:
-			self.mounted[mountpoint] = False
-			return mesgs
-		else:
-			# not mounted, and mountable, so we should mount it.
-			cmdobj = Popen(["mount",  mountpoint], bufsize = -1, stdout = PIPE, stderr = STDOUT, shell = False)
-			output = cmdobj.communicate()
-			if cmdobj.poll() != 0:
-				mesgs.append(["fatal", "Error mounting {mp}, Output was :\n{out}".format(mp = mountpoint, out = output[0].decode())])
+		if mountpoint:
+			if mountpoint in self.mounted:
+				# already mounted, return
+				return mesgs
+			elif os.path.ismount(mountpoint):
+				# mounted, but not in our list yet, so add, but don't unmount later:
+				self.mounted[mountpoint] = False
 				return mesgs
 			else:
-				self.mounted[mountpoint] = True
-				return mesgs
+				# not mounted, and mountable, so we should mount it.
+				cmdobj = Popen(["mount",  mountpoint], bufsize = -1, stdout = PIPE, stderr = STDOUT, shell = False)
+				output = cmdobj.communicate()
+				if cmdobj.poll() != 0:
+					mesgs.append(["fatal", "Error mounting {mp}, Output was :\n{out}".format(mp = mountpoint, out = output[0].decode())])
+					return mesgs
+				else:
+					self.mounted[mountpoint] = True
+					return mesgs
+		else:
+			# No mountpoint, just return mesgs
+			return mesgs
+
 
 	def UnmountIfNecessary(self):
 		mesgs = []
@@ -224,7 +240,7 @@ class Resolver:
 
 	def _GenerateLinuxSection(self, l, sect, sfunc):
 		"""Generates section for Linux systems"""
-
+		ok = True
 		allmsgs = []
 		def_mtime = None
 
