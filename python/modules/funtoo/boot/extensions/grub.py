@@ -75,7 +75,7 @@ class GRUBExtension(Extension):
 		""" Generates the boot entry """
 		ok = True
 		allmsgs = []
-
+		mytype = self.config["{s}/type" .format(s = sect)]
 		l.append("")
 		label = self.r.GetBootEntryString( sect, kname )
 		l.append("menuentry \"{l}\" {{".format(l = label))
@@ -83,6 +83,13 @@ class GRUBExtension(Extension):
 		self.bootitems.append(label)
 
 		self.PrepareGRUBForFilesystem(self.config["{s}/scan".format(s = sect)], l)
+
+		# Populate xen variables if type is xen
+		if  mytype == "xen":
+			xenkernel = self.config["{s}/xenkernel".format(s = sect)]
+			xenpath = self.r.StripMountPoint(xenkernel)
+			xenparams = self.config["{s}/xenparams".format(s = sect)].split()
+
 		kpath = self.r.StripMountPoint(kname)
 		params = self.config["{s}/params".format(s = sect)].split()
 
@@ -98,14 +105,25 @@ class GRUBExtension(Extension):
 		if myroot and ('root=' + myroot) in params and 0 == len(initrds):
 			params.remove('root=' + myroot)
 			params.append('root=' + self.r.resolvedev(myroot))
-		l.append("  linux {k} {par}".format(k = kpath, par = " ".join(params)))
-		for initrd in initrds:
-			l.append("  initrd {rd}".format(rd = self.r.StripMountPoint(initrd)))
+
+		# Append kernel lines based on type
+		if mytype == "xen" :
+			l.append("  multiboot {xker} {xparams}".format(xker = xenpath, xparams = " ".join(xenparams)))
+			l.append("  module {ker} {params}".format(ker = kpath, params = " ".join(params)))
+			for initrd in initrds:
+				l.append("  module {initrd}".format(initrd = initrd))
+		else :
+			l.append("  linux {k} {par}".format(k = kpath, par = " ".join(params)))
+			for initrd in initrds:
+				l.append("  initrd {rd}".format(rd = self.r.StripMountPoint(initrd)))
+
+		# Append graphics line
 		if self.config.hasItem("{s}/gfxmode".format(s = sect)):
 			l.append("  set gfxpayload={gm}".format(gm = self.config.item(sect, "gfxmode")))
 		else:
 			l.append("  set gfxpayload=keep")
 		l.append("}")
+
 		return [ ok, allmsgs ]
 
 	def generateConfigFile(self):
