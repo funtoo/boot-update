@@ -114,7 +114,7 @@ class GRUBExtension(Extension):
 			l.append("  multiboot {xker} {xparams}".format(xker = xenpath, xparams = " ".join(xenparams)))
 			l.append("  module {ker} {params}".format(ker = kpath, params = " ".join(params)))
 			for initrd in initrds:
-				l.append("  module {initrd}".format(initrd = initrd))
+				l.append("  module {initrd}".format(initrd = self.r.StripMountPoint(initrd)))
 		else :
 			l.append("  linux {k} {par}".format(k = kpath, par = " ".join(params)))
 			for initrd in initrds:
