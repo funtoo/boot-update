@@ -10,7 +10,7 @@ boot {
 }
 
 display {
-	# gfxmode 1440x900 
+	# gfxmode 1440x900
 	# background /boot/background.jpg
 }
 
@@ -27,17 +27,25 @@ display {
 	kernel bzImage
 }
 
-"Funtoo Linux with uvesafb" { 
+"Funtoo Linux with uvesafb" {
 	kernel bzImage-RHEL5-uvesafb[-v]
 	params += video=uvesafb:1440x900-8,mtrr:2
 }
 
+"Xen" {
+	type xen
+	xenkernel xen-4.1.1.gz
+	xenparams loglvl=all guest_loglvl=all
+	kernel bzImage[-v]
+	initrd initramfs[-v]
+}
+
 "Windows 7" {
-	type win7 
+	type win7
 	params root=/dev/sda1
 }
 
 "Windows XP" {
-	type winxp 
+	type winxp
 	params root=/dev/sda4
 }

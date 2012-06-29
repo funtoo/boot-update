@@ -87,6 +87,9 @@ class GRUBExtension(Extension):
 		# Populate xen variables if type is xen
 		if  mytype == "xen":
 			xenkernel = self.config["{s}/xenkernel".format(s = sect)]
+			# Add leading / if needed
+			if not xenkernel.startswith("/"):
+				xenkernel = "/{xker}".format(xker = xenkernel)
 			xenpath = self.r.StripMountPoint(xenkernel)
 			xenparams = self.config["{s}/xenparams".format(s = sect)].split()
 
