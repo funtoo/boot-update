@@ -79,6 +79,7 @@ class GRUBExtension(Extension):
 		l.append("")
 		label = self.r.GetBootEntryString( sect, kname )
 		l.append("menuentry \"{l}\" {{".format(l = label))
+
 		# self.bootitems records all our boot items
 		self.bootitems.append(label)
 
@@ -159,7 +160,7 @@ class GRUBExtension(Extension):
 					allmsgs.append(["fatal", "specified font \"{ft}\" not found at {dst}; aborting.".format(ft = font, dst = dst_font)] )
 					return (False, allmsgs)
 
-			l += [ "if loadfont {dst}; then".format(self.r.RelativePathTo(dst_font,c["boot/path"])),
+			l += [ "if loadfont {dst}; then".format(dst = self.r.RelativePathTo(dst_font,c["boot/path"])),
 				"   set gfxmode={gfx}".format(gfx = c["display/gfxmode"]),
 				"   insmod gfxterm",
 				"   insmod vbe",

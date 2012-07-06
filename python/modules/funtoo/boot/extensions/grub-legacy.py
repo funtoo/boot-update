@@ -53,13 +53,13 @@ class GRUBLegacyExtension(Extension):
 			msgs.append(["fatal","Couldn't determine root device using grub-probe"])
 			return [ False, msgs ]
 		if mytype == "haiku" :
-			l.append("rootnoverify {dev}".format(dev = mygrubroot))
+			l.append("  rootnoverify {dev}".format(dev = mygrubroot))
 		else :
-			l.append("root {dev}".format(dev = mygrubroot))
+			l.append("  root {dev}".format(dev = mygrubroot))
 		if mytype == "win7":
-			l.append("chainloader +4")
+			l.append("  chainloader +4")
 		elif mytype in ["vista", "dos", "winxp", "haiku"]:
-			l.append("chainloader +1")
+			l.append("  chainloader +1")
 		l.append("")
 		return [ ok, msgs ]
 
@@ -98,15 +98,25 @@ class GRUBLegacyExtension(Extension):
 
 	def generateBootEntry(self,l,sect,kname,kext):
 
-		ok=True
-		allmsgs=[]
-
+		ok = True
+		allmsgs = []
+		mytype = self.config["{s}/type" .format(s = sect)]
 		label = self.r.GetBootEntryString( sect, kname )
 
 		l.append("title {name}".format(name = label))
 		self.bootitems.append(label)
 
-		kpath=self.r.RelativePathTo(kname,"/boot")
+		# Populate xen variables if type is xen
+		if  mytype == "xen":
+			xenkernel = self.config["{s}/xenkernel".format(s = sect)]
+			# Add leading / if needed
+			if not xenkernel.startswith("/"):
+				xenkernel = "/{xker}".format(xker = xenkernel)
+			xenpath = self.r.StripMountPoint(xenkernel)
+			xenparams = self.config["{s}/xenparams".format(s = sect)].split()
+
+		# Get kernel and params
+		kpath = self.r.StripMountPoint(kname)
 		params=self.config.item(sect,"params").split()
 
 		ok, allmsgs, myroot = self.r.DoRootAuto(params,ok,allmsgs)
@@ -120,13 +130,25 @@ class GRUBLegacyExtension(Extension):
 		if mygrubroot == None:
 			allmsgs.append(["fatal","Could not determine device of filesystem using grub-probe"])
 			return [ False, allmsgs ]
+
 		# print out our grub-ified root setting
-		l.append("root {dev}".format(dev = mygrubroot ))
-		l.append("linux {k} {par}".format(k = kpath, par = " ".join(params)))
-		initrds=self.config.item(sect,"initrd")
-		initrds=self.r.FindInitrds(initrds, kname, kext)
-		for initrd in initrds:
-			l.append("initrd {rd}".format(rd = self.r.RelativePathTo(initrd,"/boot")))
+		l.append("  root {dev}".format(dev = mygrubroot ))
+
+		# Get initrds
+		initrds = self.config.item(sect, "initrd")
+		initrds = self.r.FindInitrds(initrds, kname, kext)
+
+		# Append kernel lines based on type
+		if mytype == "xen" :
+			l.append("  kernel {xker} {xparams}".format(xker = xenpath, xparams = " ".join(xenparams)))
+			l.append("  module {ker} {params}".format(ker = kpath, params = " ".join(params)))
+			for initrd in initrds:
+				l.append("  module {initrd}".format(initrd = self.r.StripMountPoint(initrd)))
+		else :
+			l.append("  kernel {k} {par}".format(k = kpath, par = " ".join(params)))
+			for initrd in initrds:
+				l.append("  initrd {rd}".format(rd = self.r.StripMountPoint(initrd)))
+
 		l.append("")
 
 		return [ ok, allmsgs ]

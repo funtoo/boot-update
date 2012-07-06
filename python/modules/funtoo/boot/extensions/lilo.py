@@ -70,9 +70,17 @@ class LILOExtension(Extension):
 		ok=True
 		allmsgs=[]
 
+		# Type 'xen' isn't supported in lilo
+		if  self.config["{s}/type" .format(s = sect)] == "xen" :
+			ok = False
+			allmsgs.append([ "fatal", "Type 'xen' is not supported in lilo" ])
+			return [ ok, allmsgs ]
+
 		if len(os.path.basename(kname)) > 15:
 			ok = False
 			allmsgs.append(["fatal", "'{name}' is too long. Kernel names must not exceed 15 characters when using lilo".format(name =(os.path.basename(kname)))])
+			return [ ok, allmsgs ]
+
 		l.append("")
 		self.bootitems.append(kname)
 		l.append("image={k}".format(k = kname ))

@@ -41,8 +41,10 @@ Sections are specified by an alphanumeric name, followed by a space and a *{*.
 A section ends when a single *}* appears on a line.
 
 There are special *built-in* sections that are expected to be found by the
-framework and used for configuation settings, such as *boot*, *display* and
-*color*.
+framework and used for configuation settings. You can not use the name of
+a *built-in* section as the name of a boot entry.
+Currently these are all *built-in* sections:
+*boot*, *color*, *default*, *grub*, *grub-legacy*, *lilo*
 
 In addition, other sections can be created. Any sections with non-builtin names
 are recognized as boot entry definitions. For example, the sections *"Funtoo
@@ -239,6 +241,30 @@ Special Parameters
   (including *root=auto*) will be removed from *params*, and *real_root* will
   be set to the root filesystem based on */etc/fstab*, so you'll end up with a
   setting such as *real_root=/dev/sda3*.
+
+Linux distributions on separate partitions
+------------------------------------------
+
+*boot-update* supports creating boot entries for Linux distributions installed
+on separate partitions. In order for *boot-update* to find the kernels and initrds
+located on other partitions you have to create a mount point for the partition.
+After creating a mount point you must specify the absolute path to the kernels
+using the scan variable::
+
+	"Debian Sid" {
+		scan /mnt/debian/boot
+		kernel vmlinuz[-v]
+		initrd initrd.img
+		params root=/dev/sdb1
+	}
+
+Note that you must also set *params root=/dev/<root>* to the correct root
+partition in order to override the default *root=auto* setting. At this time
+*boot-update* does not support auto detecting for other Linux systems.
+
+If you would like boot-update to auto mount the partition whenever it is ran, you
+must create an entry for mounting it in */etc/fstab*. Otherwise you will need to
+mount the partition before running *boot-update*.
 
 Alternate OS Loading
 --------------------
