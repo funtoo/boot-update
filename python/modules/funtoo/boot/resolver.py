@@ -83,11 +83,16 @@ class Resolver:
 		base_path=os.path.dirname(kernel)
 		for initrd in initrds.split():
 			# Split up initrd at bracket and replace glob with kernel version string if brackets exists.
-			head, sep, tail = initrd.rpartition("[")
-			if sep :
-				initrd=os.path.normpath("{base_path}/{initrd}{kext}".format(base_path = base_path, initrd = head, kext = kext))
+			head1, sep1, tail1 = initrd.rpartition("[")
+			if sep1:
+				head2, sep2, tail2 = tail1.partition("]")
+				if sep2:
+					initrd = os.path.normpath("{base_path}/{initrd}{kext}{iext}".format(base_path = base_path, initrd = head1, kext = kext, iext = tail2))
+				else:
+					#Shouldn't be here. just add original initrd value
+					initrd = os.path.normpath("{base_path}/{initrd}".format(base_path = base_path, initrd = initrd)) 
 			else:
-				initrd=os.path.normpath("{base_path}/{initrd}".format(base_path = base_path, initrd = tail))
+				initrd=os.path.normpath("{base_path}/{initrd}".format(base_path = base_path, initrd = tail1))
 
 			if os.path.exists(initrd):
 				found.append(initrd)
