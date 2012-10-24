@@ -222,6 +222,9 @@ class GRUBExtension(Extension):
 	def GuppyMap(self):
 		""" Creates the device map """
 		gmkdevmap = self.config["grub/grub-mkdevicemap"]
+		if not os.path.exists(gmkdevmap):
+			# grub-2.00 and above does not have mkdevicemap - so skip it if we don't see it.
+			return
 		cmdobj = None
 		if self.testing:
 			cmdstr = "{gm} --no-floppy --device-map=/dev/null".format(gm = gmkdevmap)
