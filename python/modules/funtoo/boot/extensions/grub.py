@@ -30,9 +30,11 @@ class GRUBExtension(Extension):
 	def isAvailable(self):
 		msgs = []
 		ok = True
-		gprobe = self.config["grub/grub-probe"]
+		gprobe = "/usr/sbin/grub-probe"
 		if not os.path.exists(gprobe):
-			msgs.append(["fatal", "{cmd}, required for boot/generate = grub, does not exist".format(cmd = gprobe)])
+			gprobe = "/sbin/grub-probe"
+		if not os.path.exists(gprobe):
+			msgs.append(["fatal", "Unable to find grub-probe"])
 			ok = False
 		return [ok, msgs]
 
@@ -252,6 +254,9 @@ class GRUBExtension(Extension):
 		mods = []
 		for targ in [ "abstraction", "partmap", "fs" ]:
 			for mod in self.DeviceProbe(dev, targ):
+				# grub-1.98 will return "part_gpt", while 2.00 will return "gpt" -- accommodate this:
+				if targ == "partmap" and mod[:5] != "part_":
+					mod = "part_" + mod
 				mods.append(mod)
 		return mods
 
