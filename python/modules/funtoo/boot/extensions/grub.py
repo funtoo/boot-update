@@ -27,16 +27,13 @@ class GRUBExtension(Extension):
 		self.defpos = 0
 		self.defname = "undefined"
 
-	def isAvailable(self):
-		msgs = []
-		ok = True
+	def grubProbe(self):
 		gprobe = "/usr/sbin/grub-probe"
 		if not os.path.exists(gprobe):
 			gprobe = "/sbin/grub-probe"
 		if not os.path.exists(gprobe):
-			msgs.append(["fatal", "Unable to find grub-probe"])
-			ok = False
-		return [ok, msgs]
+			raise ExtensionError("couldn't find grub-probe")
+		return gprobe
 
 	def generateOtherBootEntry(self, l, sect):
 		""" Generates the boot entry for other systems """
@@ -239,7 +236,7 @@ class GRUBExtension(Extension):
 
 	def Guppy(self, argstring, fatal=True):
 		""" Probes a device """
-		gprobe = self.config["grub/grub-probe"]
+		gprobe = self.grubProbe()
 		cmd = shlex.split("{gcmd} {args}".format(gcmd = gprobe, args = argstring))
 		cmdobj = Popen(cmd, bufsize=-1, stdout=PIPE, stderr=PIPE, shell=False)
 		output = cmdobj.communicate()
