@@ -21,6 +21,7 @@ default {
 	kernel bzImage[-v] kernel[-v] vmlinuz[-v] vmlinux[-v]
 	params root=auto rootfstype=auto
 	xenkernel /boot/xen.gz
+	gfxmode text
 }
 
 grub {

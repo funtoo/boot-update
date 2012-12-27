@@ -125,8 +125,6 @@ class GRUBExtension(Extension):
 		# Append graphics line
 		if self.config.hasItem("{s}/gfxmode".format(s = sect)):
 			l.append("  set gfxpayload={gm}".format(gm = self.config.item(sect, "gfxmode")))
-		else:
-			l.append("  set gfxpayload=keep")
 		l.append("}")
 
 		return [ ok, allmsgs ]
