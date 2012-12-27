@@ -102,6 +102,8 @@ class GRUBExtension(Extension):
 		ok, allmsgs, fstype = self.r.DoRootfstypeAuto(params, ok, allmsgs)
 		if not ok:
 			return [ ok, allmsgs ]
+		if fstype == "btrfs":
+			params.append('%sflags=subvol=%s' % i( self.r.rootarg, self.BtrfsSubvol()))
 
 		initrds = self.config.item(sect, "initrd")
 		initrds = self.r.FindInitrds(initrds, kname, kext)
@@ -245,6 +247,14 @@ class GRUBExtension(Extension):
 			raise ExtensionError("{cmd} {args}\n{out}".format(cmd = gprobe, args = argstring, out = output[0].decode()))
 		else:
 			return retval, output[0].decode().strip("\n")
+
+	def BtrfsSubvol(self):
+		cmdobj = Popen("btrfs subvol list /", bufsize=-1, stdout=PIPE, stderr=PIPE, shell=False)
+		output = cmdobj.communicate()[0].decode()
+		retval = cmdobj.poll()
+		if retval != 0:
+			raise ExtensionError("btrfs command failed: %s" % output)
+		return output.split()[6]	
 
 	def RequiredGRUBModules(self, dev):
 		""" Determines required grub modules """

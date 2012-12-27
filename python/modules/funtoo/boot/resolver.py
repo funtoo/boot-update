@@ -48,6 +48,7 @@ class Resolver:
 		self._defpos = None
 		self._defnames = []
 		self._default = self.config.deburr(self.config["boot/default"])
+		self.rootarg = None
 
 	def resolvedev(self, dev):
 		if ((dev[0:5] == "UUID=") or (dev[0:6] == "LABEL=")):
@@ -104,15 +105,14 @@ class Resolver:
 	def DoRootAuto(self,params,ok,allmsgs):
 		""" Properly handle the root=auto and real_root=auto parameters in the boot.conf config file """
 
-		rootarg=None
 		doauto=False
 		if "root=auto" in params:
 			params.remove("root=auto")
-			rootarg="root"
+			self.rootarg="root"
 			doauto=True
 		if "real_root=auto" in params:
 			params.remove("real_root=auto")
-			rootarg="real_root"
+			self.rootarg="real_root"
 			doauto=True
 		if doauto:
 			rootdev = fstabGetRootDevice()
@@ -121,7 +121,7 @@ class Resolver:
 				ok = False
 				allmsgs.append(["fatal","(root=auto) - / entry in /etc/fstab not recognized ({dev}).".format(dev = rootdev)])
 			else:
-				params.append("{arg}={dev}".format(arg = rootarg, dev = rootdev ))
+				params.append("{arg}={dev}".format(arg = self.rootarg, dev = rootdev ))
 			return [ ok, allmsgs, rootdev ]
 		else:
 			# nothing to do - but we'll generate a warning if there is no root
