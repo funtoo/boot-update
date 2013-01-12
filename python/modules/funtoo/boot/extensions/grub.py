@@ -157,7 +157,7 @@ class GRUBExtension(Extension):
 					shutil.copy(src_font,dst_font)
 				else:
 					allmsgs.append(["fatal", "specified font \"{ft}\" not found at {dst}; aborting.".format(ft = font, dst = dst_font)] )
-					return (False, allmsgs)
+					return [False, allmsgs, l]
 
 			l += [ "if loadfont {dst}; then".format(dst = self.r.RelativePathTo(dst_font,c["boot/path"])),
 				"   set gfxmode={gfx}".format(gfx = c["display/gfxmode"]),
