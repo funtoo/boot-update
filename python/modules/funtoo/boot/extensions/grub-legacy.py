@@ -36,6 +36,8 @@ class GRUBLegacyExtension(Extension):
 			mytype = "vista"
 		elif mytype in ["windows 7", "win7"]:
 			mytype = "win7"
+		elif mytype in [ "windows 8", "win8"]:
+			mytype = "win8"
 		elif mytype in ["haiku", "haiku os"]:
 			mytype = "haiku"
 		else:
@@ -56,7 +58,7 @@ class GRUBLegacyExtension(Extension):
 			l.append("  rootnoverify {dev}".format(dev = mygrubroot))
 		else :
 			l.append("  root {dev}".format(dev = mygrubroot))
-		if mytype == "win7":
+		if mytype in [ "win7", "win8" ]:
 			l.append("  chainloader +4")
 		elif mytype in ["vista", "dos", "winxp", "haiku"]:
 			l.append("  chainloader +1")

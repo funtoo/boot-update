@@ -292,6 +292,8 @@ The *type* variable should be set to one of the operating system names that
 - vista
 - Windows 7
 - win7
+- Windows 8
+- win8
 - Haiku
 - Haiku OS
 

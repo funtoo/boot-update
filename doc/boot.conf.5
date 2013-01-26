@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH BOOT.CONF 5 "" "##VERSION##" "Funtoo Linux Core System"
+.TH BOOT.CONF 5 "" "1.6.9" "Funtoo Linux Core System"
 .SH NAME
 boot.conf \- Funtoo global boot loader configuration file
 .
@@ -49,6 +49,8 @@ format and feature set for configuring all boot loaders.
 updating boot loader configuration, regardless of the actual boot loader used.
 .sp
 Here is a sample \fI/etc/boot.conf\fP configuration file:
+.INDENT 0.0
+.INDENT 3.5
 .sp
 .nf
 .ft C
@@ -106,6 +108,8 @@ display {
 
 .ft P
 .fi
+.UNINDENT
+.UNINDENT
 .SS Sections
 .sp
 Sections are specified by an alphanumeric name, followed by a space and a \fI{\fP.
@@ -149,6 +153,8 @@ generated for each matching kernel found.
 So, for example, the following
 \fI/etc/boot.conf\fP could generate two boot entries named "Funtoo Linux \-
 bzImage" and "Funtoo Linux \- bzImage\-new":
+.INDENT 0.0
+.INDENT 3.5
 .sp
 .nf
 .ft C
@@ -157,10 +163,14 @@ bzImage" and "Funtoo Linux \- bzImage\-new":
 }
 .ft P
 .fi
+.UNINDENT
+.UNINDENT
 .sp
 The \fI[\-v]\fP wildcard, which can only appear once per filename, can be used at
 the end of a kernel image name to match the base name, or any combination of
 the base name, plus a hypen and any additional text:
+.INDENT 0.0
+.INDENT 3.5
 .sp
 .nf
 .ft C
@@ -169,11 +179,15 @@ the base name, plus a hypen and any additional text:
 }
 .ft P
 .fi
+.UNINDENT
+.UNINDENT
 .sp
 Above, \fIbzImage[\-v]\fP will match \fIbzImage\fP as well as \fIbzImage\-*\fP.
 .sp
 In addition, \fIboot.conf\fP now supports the inclusion of arbitrary glob wildcards
 within brackets, which work similarly to \fI[\-v]\fP, above:
+.INDENT 0.0
+.INDENT 3.5
 .sp
 .nf
 .ft C
@@ -182,6 +196,8 @@ within brackets, which work similarly to \fI[\-v]\fP, above:
 }
 .ft P
 .fi
+.UNINDENT
+.UNINDENT
 .sp
 The above wildcard will match "bzImage", "bzImage\-2.6.18", and "bzImage\-2.6.24".
 .sp
@@ -191,6 +207,8 @@ can just provide the name of a kernel image.
 .sp
 The \fIinitrd\fP variable specifies one or more initrds or initramfs images, like
 this:
+.INDENT 0.0
+.INDENT 3.5
 .sp
 .nf
 .ft C
@@ -200,11 +218,15 @@ this:
 }
 .ft P
 .fi
+.UNINDENT
+.UNINDENT
 .sp
 \fIinitrd\fP also allows the use of the \fI[\-v]\fP wildcard to allow you to create
 matching pairs of kernels and initrds on disk that boot\-update will associate
 with one another automatically by suffix. Here\(aqs how it works \-\- assume you have
 the following boot entry:
+.INDENT 0.0
+.INDENT 3.5
 .sp
 .nf
 .ft C
@@ -214,6 +236,8 @@ the following boot entry:
 }
 .ft P
 .fi
+.UNINDENT
+.UNINDENT
 .sp
 The \fI/etc/boot.conf\fP entry above will look for all kernels matching \fIbzImage\fP
 and \fIbzImage\-*\fP and generate a boot entry for each one. For the boot entry for
@@ -232,6 +256,8 @@ specify more than one initrd in a boot entry, and the specified initrds will be
 loaded in succession abt boot time. Note that this is different from the
 \fIkernel\fP option \- where multiple matches will generate multiple boot entries,
 since you can only load one kernel at boot. Here\(aqs an example:
+.INDENT 0.0
+.INDENT 3.5
 .sp
 .nf
 .ft C
@@ -241,6 +267,8 @@ since you can only load one kernel at boot. Here\(aqs an example:
 }
 .ft P
 .fi
+.UNINDENT
+.UNINDENT
 .sp
 In the above example, a single boot entry will be generated, which will load
 \fIinitramfs\-1.igz\fP and \fIinitramfs\-2.igz\fP as the primary and secondary initramfs
@@ -249,6 +277,8 @@ respectively, and then boot the kernel \fIbzImage\fP.
 Note that the \fI+=\fP operator can be used to either extend the default initramfs
 setting or to specify multiple initramfs images over multiple lines. Here\(aqs
 a boot entry that is equivalent to the previous example:
+.INDENT 0.0
+.INDENT 3.5
 .sp
 .nf
 .ft C
@@ -261,9 +291,13 @@ a boot entry that is equivalent to the previous example:
 }
 .ft P
 .fi
+.UNINDENT
+.UNINDENT
 .sp
 And in the following example, the initial \fI+=\fP tells coreboot to append
 \fIinitramfs\-1.igz\fP to the default initramfs list:
+.INDENT 0.0
+.INDENT 3.5
 .sp
 .nf
 .ft C
@@ -274,12 +308,16 @@ And in the following example, the initial \fI+=\fP tells coreboot to append
 }
 .ft P
 .fi
+.UNINDENT
+.UNINDENT
 .SS Parameters
 .sp
 The \fIparams\fP variable specifies kernel parameters used to boot the kernel.
 Typical kernel parameters, such as \fIinit=/bin/bash\fP, \fIroot=/dev/sda3\fP or others
 can be specified as necessary. Here\(aqs a sophisticated example from Andreas
 Matuschek that was posted on the funtoo\-dev mailing list:
+.INDENT 0.0
+.INDENT 3.5
 .sp
 .nf
 .ft C
@@ -298,6 +336,8 @@ Matuschek that was posted on the funtoo\-dev mailing list:
 }
 .ft P
 .fi
+.UNINDENT
+.UNINDENT
 .sp
 As you can see, when  \fI+=\fP is used as the first argument for \fIparams\fP, the
 default setting can be \fIextended\fP with additional parameters. If the first
@@ -343,6 +383,8 @@ on separate partitions. In order for \fIboot\-update\fP to find the kernels and 
 located on other partitions you have to create a mount point for the partition.
 After creating a mount point you must specify the absolute path to the kernels
 using the scan variable:
+.INDENT 0.0
+.INDENT 3.5
 .sp
 .nf
 .ft C
@@ -354,6 +396,8 @@ using the scan variable:
 }
 .ft P
 .fi
+.UNINDENT
+.UNINDENT
 .sp
 Note that you must also set \fIparams root=/dev/<root>\fP to the correct root
 partition in order to override the default \fIroot=auto\fP setting. At this time
@@ -366,6 +410,8 @@ mount the partition before running \fIboot\-update\fP.
 .sp
 Boot entries can be created for alternate operating systems using the following
 approach:
+.INDENT 0.0
+.INDENT 3.5
 .sp
 .nf
 .ft C
@@ -375,6 +421,8 @@ approach:
 }
 .ft P
 .fi
+.UNINDENT
+.UNINDENT
 .sp
 The \fItype\fP variable should be set to one of the operating system names that
 \fIboot\-update\fP recognizes (case\-insensitive,) which are:
@@ -401,6 +449,10 @@ vista
 Windows 7
 .IP \(bu 2
 win7
+.IP \(bu 2
+Windows 8
+.IP \(bu 2
+win8
 .IP \(bu 2
 Haiku
 .IP \(bu 2
@@ -431,6 +483,8 @@ is the default mechanism, due to the setting of \fIbzImage\fP.
 Alternatively, you can also specify the literal name of the boot entry you want
 to boot. This is handy if you want to boot a non\-Linux operating system by
 default. If you had the following boot entry:
+.INDENT 0.0
+.INDENT 3.5
 .sp
 .nf
 .ft C
@@ -440,8 +494,12 @@ default. If you had the following boot entry:
 }
 .ft P
 .fi
+.UNINDENT
+.UNINDENT
 .sp
 ...then, you could boot this entry by default with the following boot section:
+.INDENT 0.0
+.INDENT 3.5
 .sp
 .nf
 .ft C
@@ -451,10 +509,14 @@ boot {
 }
 .ft P
 .fi
+.UNINDENT
+.UNINDENT
 .sp
 This is also a handy mechanism if you want to boot the most recently created
 kernel by default. To do this, specify the name of the boot entry rather than
 the kernel image name:
+.INDENT 0.0
+.INDENT 3.5
 .sp
 .nf
 .ft C
@@ -463,6 +525,8 @@ boot {
 }
 .ft P
 .fi
+.UNINDENT
+.UNINDENT
 .sp
 If multiple "Funtoo Linux" boot entries are created, the one that has the most
 recently created kernel (by file mtime) will be booted by default.
@@ -474,6 +538,8 @@ Note that double\-quotes are optional both in section names and in the
 Specifies which device or partition to install the bootloader to. This is
 currently only used for lilo and is the equivalent of setting "boot = <bootdev>"
 in /etc/lilo.conf. Other bootloaders will just ignore it if set:
+.INDENT 0.0
+.INDENT 3.5
 .sp
 .nf
 .ft C
@@ -482,6 +548,8 @@ boot {
 }
 .ft P
 .fi
+.UNINDENT
+.UNINDENT
 .SH DEFAULT AND BOOT ENTRY SECTIONS
 .SS \fIdefault :: type\fP
 .sp
@@ -490,6 +558,8 @@ entries are also supported. Set to one of: \fIlinux\fP, \fIdos\fP, \fImsdos\fP, 
 2000\fP, \fIwin2000\fP, \fIWindows XP\fP, \fIwinxp\fP, \fIWindows Vista\fP, \fIvista\fP, \fIWindows 7\fP,
 \fIwin7\fP. Here\(aqs how to specify a Windows 7 boot entry, which will automatically
 use the proper chainloader +4 parameter to load Microsoft Windows 7:
+.INDENT 0.0
+.INDENT 3.5
 .sp
 .nf
 .ft C
@@ -499,6 +569,8 @@ use the proper chainloader +4 parameter to load Microsoft Windows 7:
 }
 .ft P
 .fi
+.UNINDENT
+.UNINDENT
 .SS \fIdefault :: scan\fP
 .sp
 This setting specifies one or more directories to scan for kernels and
