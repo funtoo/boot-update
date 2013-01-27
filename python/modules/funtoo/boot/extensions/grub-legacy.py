@@ -69,16 +69,11 @@ class GRUBLegacyExtension(Extension):
 		return self.Guppy(" --target=device {f}".format(f = fs))
 
 	def Guppy(self,argstring,fatal=True):
-		# gmkdevmap and grub-probe is from grub-1.97+ -- we use it here as well
-		if not os.path.exists("{path}/{dir}/device.map".format(path = self.config["boot/path"], dir = self.config["grub/dir"])):
-			gmkdevmap = self.config["grub/grub-mkdevicemap"]
-			cmdobj = Popen([gmkdevmap, "--no-floppy"], bufsize = -1, stdout = PIPE, stderr = STDOUT, shell = False)
-			if cmdobj.poll() != 0:
-				output = cmdobj.communicate()
-				print("ERROR calling {cmd}, Output was:\n{out}".format(cmd = gmkdevmap, out = output[0].decode()))
-				return None
-
-		gprobe = self.config["grub/grub-probe"]
+		gprobe = "/usr/sbin/grub-probe"
+		if not os.path.exists(gprobe):
+			gprobe = "/sbin/grub-probe"
+		if not os.path.exists(gprobe):
+			raise ExtensionError("couldn't find grub-probe")
 		cmd = shlex.split("{gcmd} {args}".format(gcmd = gprobe, args = argstring))
 		cmdobj = Popen(cmd, bufsize = -1, stdout = PIPE, stderr = STDOUT, shell = False)
 		output = cmdobj.communicate()
