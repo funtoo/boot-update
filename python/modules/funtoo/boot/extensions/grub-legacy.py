@@ -89,7 +89,15 @@ class GRUBLegacyExtension(Extension):
 		if out == None:
 			return None
 		mys = out[1:-1].split(",")
-		mys = ( mys[0], repr(int(mys[1]) - 1) )
+		partnum = mys[1]
+		if partnum[:-1] == "msdos":
+			partnum = partnum[:-1]
+		try:
+			partnum = int(partnum)
+		except ValueError:
+			print("ERROR: could not parse: %s" % out)
+			return None
+		mys = ( mys[0], partnum - 1 )
 		out = "({d},{p})".format(d = mys[0], p = mys[1])
 		return out
 
