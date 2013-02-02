@@ -91,7 +91,7 @@ class GRUBLegacyExtension(Extension):
 		mys = out[1:-1].split(",")
 		partnum = mys[1]
 		if partnum[:-1] == "msdos":
-			partnum = partnum[:-1]
+			partnum = partnum[-1:]
 		try:
 			partnum = int(partnum)
 		except ValueError:
