@@ -121,8 +121,9 @@ class GRUBExtension(Extension):
 				l.append("  module {initrd}".format(initrd = self.r.StripMountPoint(initrd)))
 		else :
 			l.append("  linux {k} {par}".format(k = kpath, par = " ".join(params)))
-			for initrd in initrds:
-				l.append("  initrd {rd}".format(rd = self.r.StripMountPoint(initrd)))
+			if initrds:
+				initrds = (self.r.StripMountPoint(initrd) for initrd in initrds)
+				l.append("  initrd {rds}".format(rds = " ".join(initrds)))
 
 		# Append graphics line
 		if self.config.hasItem("{s}/gfxmode".format(s = sect)):
