@@ -44,7 +44,7 @@ There are special *built-in* sections that are expected to be found by the
 framework and used for configuation settings. You can not use the name of
 a *built-in* section as the name of a boot entry.
 Currently these are all *built-in* sections:
-*boot*, *color*, *default*, *grub*, *grub-legacy*, *lilo*
+*boot*, *color*, *default*, *grub*, *grub-legacy*, *lilo*, *serial*
 
 In addition, other sections can be created. Any sections with non-builtin names
 are recognized as boot entry definitions. For example, the sections *"Funtoo
@@ -212,6 +212,9 @@ params settings. But in this case, Andreas specified the first *params*
 parameter in this boot entry without a *+=*, so his settings replace the
 default settings.
 
+Note that when serial console support is enabled, the appropriate parameters
+for serial support (from the serial section) will be added to params.
+
 Special Parameters
 ~~~~~~~~~~~~~~~~~~
 
@@ -311,6 +314,7 @@ Specifies the boot loader that *boot-update* should generate a configuration
 files for. This setting should be a single string, set to one of *grub*,
 *grub-legacy* or *lilo*. Defaults to *grub*.
 
+
 *boot :: timeout*
 ~~~~~~~~~~~~~~~~~~~
 
@@ -366,6 +370,29 @@ in /etc/lilo.conf. Other bootloaders will just ignore it if set::
         boot {
                 bootdev /dev/sda
         }
+
+
+*boot :: terminal*
+~~~~~~~~~~~~~~~~~
+
+Specifies the terminal mode: either "serial" or "video". Defaults to "video".
+This setting affects your boot-loader input/output as well as your kernel's
+output.
+
+If you set it to "serial", use the "serial" section (see below) to set serial
+options.
+
+*serial* Section
+----------------
+
+Specifies the serial port settings for both boot-loader and kernel. Possible
+values are: 
+
+*unit* (tty number, defaults to 0)
+*speed* (bps, defaults to 115200)
+*word* (word size, defaults to 8)
+*parity* (yes/no, defaults to no)
+*stop* (stop bit, defaults to 1)
 
 *default* and Boot Entry Sections
 ---------------------------------

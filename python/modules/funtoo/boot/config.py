@@ -32,13 +32,14 @@ class BootConfigFile(config.ConfigFile):
 	def validate(self):
 		invalid=[]
 		validmap={
-				"boot" : ["path", "generate", "timeout", "default", "bootdev"],
+				"boot" : ["path", "generate", "timeout", "default", "bootdev","terminal"],
 				"display" : ["gfxmode", "background", "font"],
 				"color" : ["normal", "highlight"],
 				"default" : ["scan", "gfxmode", "kernel", "initrd", "params", "type", "xenkernel", "xenparams"],
 				"grub" : ["dir", "file", "grub-mkdevicemap", "grub-probe", "font_src"],
 				"grub-legacy" : ["dir", "file"],
-				"lilo" : ["file", "bin", "gparams"]
+				"lilo" : ["file", "bin", "gparams"],
+				"serial" : [ "parity", "port", "speed", "stop", "unit", "word" ]
 		}
 		for section in self.sectionData.keys():
 			if section not in validmap.keys():

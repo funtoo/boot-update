@@ -44,7 +44,7 @@ class GRUBLegacyExtension(Extension):
 			ok = False
 			msgs.append(["fatal","Unrecognized boot entry type \"{type}\"".format(type = mytype)])
 			return [ ok, msgs ]
-		params=self.config["{s}/params".format(s = sect)].split()
+		params = self.config["{s}/params".format(s = sect)].split()
 		myroot = self.r.GetParam(params,"root=")
 		# TODO check for valid root entry
 		l.append("title {s}".format(s = sect))
@@ -122,8 +122,14 @@ class GRUBLegacyExtension(Extension):
 
 		# Get kernel and params
 		kpath = self.r.StripMountPoint(kname)
-		params=self.config.item(sect,"params").split()
-
+		params = []
+		c = self.config
+		if c.hasItem("boot/terminal") and c["boot/terminal"] == "serial":
+			params += [
+				"console=tty0",
+				"console=ttyS%s,%s%s%s" % ( c["serial/unit"], c["serial/speed"], c["serial/parity"][0], c["serial/word"] )
+			]
+		params += self.config.item(sect,"params").split()
 		ok, allmsgs, myroot = self.r.DoRootAuto(params,ok,allmsgs)
 		if not ok:
 			return [ ok, allmsgs ]
@@ -168,12 +174,21 @@ class GRUBLegacyExtension(Extension):
 		allmsgs += msgs
 		if not ok:
 			return [ ok, allmsgs, l ]
-
-		l = [
-			self.config.condFormatSubItem("boot/timeout", "timeout {s}"),
-			"default {pos}".format(pos = self.defpos),
-			""
-		] + l
+		c = self.config
+		if c.hasItem("boot/terminal") and c["boot/terminal"] == "serial":
+			allmsgs.append(["warn","Configured for SERIAL input/output."])
+			l = [
+				"serial --unit=%s --speed=%s --word=%s --parity=%s --stop=%s" % ( c["serial/unit"], c["serial/speed"], c["serial/word"], c["serial/parity"], c["serial/stop"] ),
+				"terminal %s serial console" % "--timeout=%s" % c["boot/timeout"] if c.hasItem("boot/timeout") else "",
+				"default {pos}".format(pos = self.defpos),
+				""
+			] + l
+		else:
+			l = [
+				self.config.condFormatSubItem("boot/timeout", "timeout {s}"),
+				"default {pos}".format(pos = self.defpos),
+				""
+			] + l
 
 		return [ok, allmsgs, l ]
 

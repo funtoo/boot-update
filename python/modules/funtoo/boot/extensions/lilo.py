@@ -85,8 +85,14 @@ class LILOExtension(Extension):
 		l.append("")
 		self.bootitems.append(kname)
 		l.append("image={k}".format(k = kname ))
-
-		params=self.config.item(sect,"params").split()
+		c = self.config
+		params = []
+		if c.hasItem("boot/terminal") and c["boot/terminal"] == "serial":
+			params += [
+				"console=tty0",
+				"console=ttyS%s,%s%s%s" % ( c["serial/unit"], c["serial/speed"], c["serial/parity"][0], c["serial/word"] )
+			]
+		params += self.config.item(sect,"params").split()
 
 		ok, allmsgs, myroot = self.r.DoRootAuto(params,ok,allmsgs)
 		if not ok:
@@ -139,14 +145,17 @@ class LILOExtension(Extension):
 		else:
 			timeout = ""
 
+		if c.hasItem("boot/terminal") and c["boot/terminal"] == "serial": 
+			allmsgs.append(["warn","Configured for SERIAL input/output."])
+			l += [
+				"serial=%s,%s%s%s" % ( c["serial/unit"], c["serial/speed"], c["serial/parity"][0], c["serial/word"] ),
+			]	
 		#Global options need to come first
-		l = [
+		l += [
 			timeout,
 			# Replace spaces with "_" in default name. Lilo doesn't like spaces
 			"default=\"{name}\"" .format(name=self.defname.replace(" ", "_")),
 		] + l
-
-		allmsgs.append(["warn","Please note that LILO support is *BETA* quality and is for testing only."])
 
 		return [ok, allmsgs, l]
 

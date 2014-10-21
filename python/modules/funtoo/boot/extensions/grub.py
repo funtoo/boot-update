@@ -96,7 +96,14 @@ class GRUBExtension(Extension):
 			xenparams = self.config["{s}/xenparams".format(s = sect)].split()
 
 		kpath = self.r.StripMountPoint(kname)
-		params = self.config["{s}/params".format(s = sect)].split()
+		c = self.config
+		params = []
+		if c.hasItem("boot/terminal") and c["boot/terminal"] == "serial":
+			params += [
+				"console=tty0",
+				"console=ttyS%s,%s%s%s" % ( c["serial/unit"], c["serial/speed"], c["serial/parity"][0], c["serial/word"] )
+			]
+		params += self.config["{s}/params".format(s = sect)].split()
 
 		ok, allmsgs, myroot = self.r.DoRootAuto(params, ok, allmsgs)
 		if not ok:
@@ -140,9 +147,14 @@ class GRUBExtension(Extension):
 		l.append(c.condFormatSubItem("boot/timeout", "set timeout={s}"))
 		# pass our boot entry generator function to GenerateSections,
 		# and everything is taken care of for our boot entries
-
-		if c.hasItem("display/gfxmode"):
-
+		if c.hasItem("boot/terminal") and c["boot/terminal"] == "serial": 
+			allmsgs.append(["warn","Configured for SERIAL input/output."])
+			l += [
+				"serial --unit=%s --speed=%s --word=%s --parity=%s --stop=%s" % ( c["serial/unit"], c["serial/speed"], c["serial/word"], c["serial/parity"], c["serial/stop"] ),
+				"terminal_input serial",
+				"terminal_output serial"
+			]
+		elif c.hasItem("display/gfxmode"):
 			l.append("")
 			self.PrepareGRUBForFilesystem(c["boot/path"], l)
 			if c.hasItem("display/font"):

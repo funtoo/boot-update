@@ -8,6 +8,7 @@ boot {
 	generate grub
 	timeout 5
 	default bzImage
+	terminal video
 }
 
 color {
@@ -22,6 +23,14 @@ default {
 	params root=auto rootfstype=auto
 	xenkernel /boot/xen.gz
 	gfxmode text
+}
+
+serial {
+	unit 0
+	speed 115200
+	word 8
+	parity no
+	stop 1
 }
 
 grub {

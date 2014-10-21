@@ -7,7 +7,7 @@ import sys
 
 # This is needed for testing from the root of the git repo - must come before
 # funtoo imports
-if os.path.isdir(".git") and os.path.basename(os.getcwd()) == "coreboot":
+if os.path.isdir(".git") and os.path.basename(os.getcwd()) == "boot-update":
 	sys.path = [ "python/modules" ] + sys.path
 
 # Import Funtoo extensions that we use:
