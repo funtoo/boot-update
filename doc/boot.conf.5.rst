@@ -373,7 +373,7 @@ in /etc/lilo.conf. Other bootloaders will just ignore it if set::
 
 
 *boot :: terminal*
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 Specifies the terminal mode: either "serial" or "video". Defaults to "video".
 This setting affects your boot-loader input/output as well as your kernel's
