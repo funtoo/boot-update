@@ -76,7 +76,8 @@ class LILOExtension(Extension):
 			allmsgs.append([ "fatal", "Type 'xen' is not supported in lilo" ])
 			return [ ok, allmsgs ]
 
-		if len(os.path.basename(kname)) > 15:
+                # 'Label' has a character limit, not kernel name.
+		if len(os.path.basename(sect)) > 15:
 			ok = False
 			allmsgs.append(["fatal", "'{name}' is too long. Kernel names must not exceed 15 characters when using lilo".format(name =(os.path.basename(kname)))])
 			return [ ok, allmsgs ]
@@ -97,6 +98,7 @@ class LILOExtension(Extension):
 		self.r.ZapParam(params,"root=")
 
 		l += [
+                        "	label=\"{name}\"".format(name = sect.replace(" ", "_")),
 			"	read-only",
 			"	root={dev}".format(dev = myroot),
 			"	append=\"{par}\"".format(par = " ".join(params))
