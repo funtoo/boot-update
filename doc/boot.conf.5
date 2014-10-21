@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH BOOT.CONF 5 "" "1.6.10" "Funtoo Linux Core System"
+.TH BOOT.CONF 5 "" "1.7.0" "Funtoo Linux Core System"
 .SH NAME
 boot.conf \- Funtoo global boot loader configuration file
 .
@@ -112,14 +112,14 @@ display {
 .UNINDENT
 .SS Sections
 .sp
-Sections are specified by an alphanumeric name, followed by a space and a \fI{\fP.
+Sections are specified by an alphanumeric name, followed by a space and a \fI{\fP\&.
 A section ends when a single \fI}\fP appears on a line.
 .sp
 There are special \fIbuilt\-in\fP sections that are expected to be found by the
 framework and used for configuation settings. You can not use the name of
 a \fIbuilt\-in\fP section as the name of a boot entry.
 Currently these are all \fIbuilt\-in\fP sections:
-\fIboot\fP, \fIcolor\fP, \fIdefault\fP, \fIgrub\fP, \fIgrub\-legacy\fP, \fIlilo\fP
+\fIboot\fP, \fIcolor\fP, \fIdefault\fP, \fIgrub\fP, \fIgrub\-legacy\fP, \fIlilo\fP, \fIserial\fP
 .sp
 In addition, other sections can be created. Any sections with non\-builtin names
 are recognized as boot entry definitions. For example, the sections \fI"Funtoo
@@ -134,11 +134,11 @@ In addition, there is a special section named \fIdefault\fP which is used to
 specify default settings for the boot entry sections. \fIboot\-update\fP has several
 reasonable default built\-in settings that can be overridden. For example, if
 you leave out the \fIboot/timeout\fP setting, the boot menu timeout will default to
-5 seconds. To see all built\-in settings, type \fIboot\-update \-\-showdefaults\fP.
+5 seconds. To see all built\-in settings, type \fIboot\-update \-\-showdefaults\fP\&.
 .SS Linux Boot Entries
 .sp
 There are four critical parameters that are used in boot entry and \fIdefault\fP
-sections \-\- \fItype\fP, \fIkernel\fP, \fIinitrd\fP and \fIparams\fP. \fItype\fP defaults
+sections \-\- \fItype\fP, \fIkernel\fP, \fIinitrd\fP and \fIparams\fP\&. \fItype\fP defaults
 to "linux" and informs \fIboot\-update\fP that we are specifying a Linux boot
 entry.  It can be set to other values to tell \fIboot\-update\fP that we are
 specifying a Microsoft Windows 7 boot entry, for example.
@@ -182,7 +182,7 @@ the base name, plus a hypen and any additional text:
 .UNINDENT
 .UNINDENT
 .sp
-Above, \fIbzImage[\-v]\fP will match \fIbzImage\fP as well as \fIbzImage\-*\fP.
+Above, \fIbzImage[\-v]\fP will match \fIbzImage\fP as well as \fIbzImage\-*\fP\&.
 .sp
 In addition, \fIboot.conf\fP now supports the inclusion of arbitrary glob wildcards
 within brackets, which work similarly to \fI[\-v]\fP, above:
@@ -272,7 +272,7 @@ since you can only load one kernel at boot. Here\(aqs an example:
 .sp
 In the above example, a single boot entry will be generated, which will load
 \fIinitramfs\-1.igz\fP and \fIinitramfs\-2.igz\fP as the primary and secondary initramfs
-respectively, and then boot the kernel \fIbzImage\fP.
+respectively, and then boot the kernel \fIbzImage\fP\&.
 .sp
 Note that the \fI+=\fP operator can be used to either extend the default initramfs
 setting or to specify multiple initramfs images over multiple lines. Here\(aqs
@@ -346,6 +346,9 @@ then all the parameters specified in this boot entry would \fIextend\fP the defa
 params settings. But in this case, Andreas specified the first \fIparams\fP
 parameter in this boot entry without a \fI+=\fP, so his settings replace the
 default settings.
+.sp
+Note that when serial console support is enabled, the appropriate parameters
+for serial support (from the serial section) will be added to params.
 .SS Special Parameters
 .INDENT 0.0
 .TP
@@ -355,7 +358,7 @@ When \fI+=\fP is specified at the beginning of the first \fIparams\fP, \fIinitrd
 added to the default settings defined in \fIdefault\fP (type \fIboot\-update
 \-\-showdefaults\fP to see default settings.)  In addition, multiple \fIparams\fP,
 \fIinitrd\fP or \fIkernel\fP lines can appear in a section, as long as the successive
-lines begin with \fI+=\fP. This allows these values to be defined over multiple
+lines begin with \fI+=\fP\&. This allows these values to be defined over multiple
 lines.
 .TP
 .B \fBroot=auto\fP
@@ -367,14 +370,14 @@ like \fIroot=/dev/sda3\fP .
 .B \fBrootfstype=auto\fP
 In a similar fashion to \fIroot=auto\fP, \fIrootfstype=auto\fP will be
 replaced with something like \fIrootfstype=ext4\fP, with the filesystem type
-determined by the setting in \fI/etc/fstab\fP.
+determined by the setting in \fI/etc/fstab\fP\&.
 .TP
 .B \fBreal_root=auto\fP
 This special parameter is useful when using \fIgenkernel\fP initrds that expect a
 \fIreal_root\fP parameter. When specified, any \fIroot=\fP options already specified
 (including \fIroot=auto\fP) will be removed from \fIparams\fP, and \fIreal_root\fP will
 be set to the root filesystem based on \fI/etc/fstab\fP, so you\(aqll end up with a
-setting such as \fIreal_root=/dev/sda3\fP.
+setting such as \fIreal_root=/dev/sda3\fP\&.
 .UNINDENT
 .SH LINUX DISTRIBUTIONS ON SEPARATE PARTITIONS
 .sp
@@ -404,8 +407,8 @@ partition in order to override the default \fIroot=auto\fP setting. At this time
 \fIboot\-update\fP does not support auto detecting for other Linux systems.
 .sp
 If you would like boot\-update to auto mount the partition whenever it is ran, you
-must create an entry for mounting it in \fI/etc/fstab\fP. Otherwise you will need to
-mount the partition before running \fIboot\-update\fP.
+must create an entry for mounting it in \fI/etc/fstab\fP\&. Otherwise you will need to
+mount the partition before running \fIboot\-update\fP\&.
 .SH ALTERNATE OS LOADING
 .sp
 Boot entries can be created for alternate operating systems using the following
@@ -461,16 +464,16 @@ Haiku OS
 .sp
 For non\-Linux operating systems, the \fIparams\fP variable is used to specify the
 root partition for chain loading. For consistency with Linux boot entries, the
-syntax used is \fIroot=device\fP.
+syntax used is \fIroot=device\fP\&.
 .SH BOOT SECTION
 .SS \fIboot :: generate\fP
 .sp
 Specifies the boot loader that \fIboot\-update\fP should generate a configuration
 files for. This setting should be a single string, set to one of \fIgrub\fP,
-\fIgrub\-legacy\fP or \fIlilo\fP. Defaults to \fIgrub\fP.
+\fIgrub\-legacy\fP or \fIlilo\fP\&. Defaults to \fIgrub\fP\&.
 .SS \fIboot :: timeout\fP
 .sp
-Specifies the boot loader timeout, in seconds. Defaults to \fI5\fP.
+Specifies the boot loader timeout, in seconds. Defaults to \fI5\fP\&.
 .SS \fIboot :: default\fP
 .sp
 Use this setting to specify the boot entry to boot by default. There are two
@@ -478,7 +481,7 @@ ways to use this setting.
 .sp
 The first way is to specify the filename of the kernel to boot by default. This
 setting should contain no path information, just the kernel image name.  This
-is the default mechanism, due to the setting of \fIbzImage\fP.
+is the default mechanism, due to the setting of \fIbzImage\fP\&.
 .sp
 Alternatively, you can also specify the literal name of the boot entry you want
 to boot. This is handy if you want to boot a non\-Linux operating system by
@@ -497,7 +500,7 @@ default. If you had the following boot entry:
 .UNINDENT
 .UNINDENT
 .sp
-...then, you could boot this entry by default with the following boot section:
+\&...then, you could boot this entry by default with the following boot section:
 .INDENT 0.0
 .INDENT 3.5
 .sp
@@ -550,13 +553,44 @@ boot {
 .fi
 .UNINDENT
 .UNINDENT
+.SS \fIboot :: terminal\fP
+.IP "System Message: WARNING/2 (<stdin>:, line 376)"
+Title underline too short.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+*boot :: terminal*
+~~~~~~~~~~~~~~~~~
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Specifies the terminal mode: either "serial" or "video". Defaults to "video".
+This setting affects your boot\-loader input/output as well as your kernel\(aqs
+output.
+.sp
+If you set it to "serial", use the "serial" section (see below) to set serial
+options.
+.SH SERIAL SECTION
+.sp
+Specifies the serial port settings for both boot\-loader and kernel. Possible
+values are:
+.sp
+\fIunit\fP (tty number, defaults to 0)
+\fIspeed\fP (bps, defaults to 115200)
+\fIword\fP (word size, defaults to 8)
+\fIparity\fP (yes/no, defaults to no)
+\fIstop\fP (stop bit, defaults to 1)
 .SH DEFAULT AND BOOT ENTRY SECTIONS
 .SS \fIdefault :: type\fP
 .sp
-Specifies the boot entry type; defaults to \fIlinux\fP. Currently, DOS/Windows boot
+Specifies the boot entry type; defaults to \fIlinux\fP\&. Currently, DOS/Windows boot
 entries are also supported. Set to one of: \fIlinux\fP, \fIdos\fP, \fImsdos\fP, \fIWindows
 2000\fP, \fIwin2000\fP, \fIWindows XP\fP, \fIwinxp\fP, \fIWindows Vista\fP, \fIvista\fP, \fIWindows 7\fP,
-\fIwin7\fP. Here\(aqs how to specify a Windows 7 boot entry, which will automatically
+\fIwin7\fP\&. Here\(aqs how to specify a Windows 7 boot entry, which will automatically
 use the proper chainloader +4 parameter to load Microsoft Windows 7:
 .INDENT 0.0
 .INDENT 3.5
@@ -574,7 +608,7 @@ use the proper chainloader +4 parameter to load Microsoft Windows 7:
 .SS \fIdefault :: scan\fP
 .sp
 This setting specifies one or more directories to scan for kernels and
-initrds. Defaults to \fI/boot\fP.
+initrds. Defaults to \fI/boot\fP\&.
 .SS \fIdefault :: kernel\fP
 .sp
 This setting specifies kernel image name, names or patterns, to find kernels to
@@ -582,7 +616,7 @@ generate boot menu entries for. The path specified in the \fIscan\fP setting is
 searched. Glob patterns are supported, but only one glob pattern may appear per
 filename. The special pattern \fI[\-v]\fP is used to match a kernel base name (such
 as \fIbzImage\fP) plus all kernels with an optional version suffix beginning with a
-\fI\-\fP, such as \fIbzImage\-2.6.24\fP. In addition, arbitrary globs can be specified,
+\fI\-\fP, such as \fIbzImage\-2.6.24\fP\&. In addition, arbitrary globs can be specified,
 such as \fIbzImage[\-2.6.*]\fP If more than one kernel image matches a pattern, or
 more than one kernel image is specified, then more than one boot entry will be
 created using the settings in this section.
@@ -595,7 +629,7 @@ images being specified at boot time. Glob patterns are supported. The special
 pattern \fI[\-v]\fP is used to find initrd/initramfs images that match the
 \fI[\-v]\fP pattern of the current kernel.  For example, if the current menu
 entry\(aqs kernel image has a \fI[\-v]\fP pattern of \fI\-2.6.24\fP, then
-\fIinitramfs[\-v]\fP will match \fIinitramfs\-2.6.24\fP. If the current menu entry
+\fIinitramfs[\-v]\fP will match \fIinitramfs\-2.6.24\fP\&. If the current menu entry
 had a \fI[\-v]\fP pattern, but it was blank (in the case of \fIbzImage[\-v]\fP
 finding a kernel named \fIbzImage\fP,) then \fIinitramfs[\-v]\fP will match
 \fIinitramfs\fP, if it exists.
@@ -606,20 +640,20 @@ appearing in the \fIdefault\fP section can be extended in specific menu sections
 by using the \fI+=\fP operator. The special parameters \fIroot=auto\fP,
 \fIrootfstype=auto\fP and \fIreal_root=auto\fP are supported, which will be
 replaced with similar settings with the \fIauto\fP string replaced with the
-respective setting from \fI/etc/fstab\fP. Defaults to \fIroot=auto
-rootfstype=auto\fP.
+respective setting from \fI/etc/fstab\fP\&. Defaults to \fIroot=auto
+rootfstype=auto\fP\&.
 .SH DISPLAY SECTION
 .SS \fIdisplay :: gfxmode\fP
 .sp
 Specifies the video mode to be used by the boot loader\(aqs menus. This value is
 also inherited and used as the video mode for the kernel when a graphical boot
 (\fIuvesafb\fP, \fIvesafb\-tng\fP) is used. This option is only supported for
-\fIgrub\fP.
+\fIgrub\fP\&.
 .SS \fIdisplay :: background\fP
 .sp
 Specifies the graphical image to display at boot. The specified file should
 exist within \fB/boot\fP, and the path to the file should be specified relative
-to \fB/boot\fP. A file with a "jpg", "jpeg", "png", or "tga" extension
+to \fB/boot\fP\&. A file with a "jpg", "jpeg", "png", or "tga" extension
 (capitalized or lowercase) will be recognized and used. This option is only
 supported for \fIgrub\fP, and defaults to being unset.
 .SS \fIdisplay :: font\fP
@@ -633,15 +667,15 @@ option is only supported for \fIgrub\fP, and will only be enabled when a
 \fBgfxmode\fP has been specified.
 .SH COLOR SECTION
 .sp
-Currently, the color options are only supported for \fIgrub\fP.
+Currently, the color options are only supported for \fIgrub\fP\&.
 .SS \fIcolor :: normal\fP
 .sp
-Specifies the regular display colors in \fIfg/bg\fP format. Defaults to \fIcyan/blue\fP.
+Specifies the regular display colors in \fIfg/bg\fP format. Defaults to \fIcyan/blue\fP\&.
 \fBHINT\fP: a \fIblack\fP background will be transparent when a background image is
 specified.
 .SS \fIcolor :: highlight\fP
 .sp
-Specifies the menu highlight colors in \fIfg/bg\fP format. Defaults to \fIblue/cyan\fP.
+Specifies the menu highlight colors in \fIfg/bg\fP format. Defaults to \fIblue/cyan\fP\&.
 \fBHINT\fP: a \fIblack\fP background will be transparent when a background image is
 specified.
 .SH COPYRIGHT
