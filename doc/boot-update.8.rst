@@ -46,8 +46,12 @@ loader configuration file is stored at */boot/grub/grub.cfg*, is quite
 complex and is not intended to be edited directly by system administrators.
 
 *boot-update* has since been extended to support GRUB (*sys-boot/grub*), GRUB
-Legacy (*sys-boot/grub-legacy*) and LILO (*sys-boot/lilo*).  This allows a 
-single file, */etc/boot.conf*, to store boot-related information in a
+Legacy (*sys-boot/grub-legacy*) and LILO (*sys-boot/lilo*) to boot systems in
+MBR (legacy) mode. In addition, GRUB also supports auto-detecting and configuring
+UEFI booting. If boot-update detects that your system has booted in UEFI mode,
+it will create a UEFI-compatible configuration file automatically.
+
+Boot-update allows a single file, */etc/boot.conf*, to store boot-related information in a
 boot-loader-independent way, thus simplifying boot loader configuration and
 providing advanced features to all popular boot loaders.
 

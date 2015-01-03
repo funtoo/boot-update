@@ -26,6 +26,10 @@ class GRUBExtension(Extension):
 		self.GuppyMap()
 		self.defpos = 0
 		self.defname = "undefined"
+		if os.path.exists("/sys/firmware/efi"):
+			self.uefiboot = True
+		else:
+			self.uefiboot = False
 
 	def grubProbe(self):
 		gprobe = "/usr/sbin/grub-probe"
@@ -134,16 +138,27 @@ class GRUBExtension(Extension):
 
 		# Append graphics line
 		if self.config.hasItem("{s}/gfxmode".format(s = sect)):
-			l.append("  set gfxpayload={gm}".format(gm = self.config.item(sect, "gfxmode")))
+			l.append("  set gfxpayload=keep")
 		l.append("}")
 
 		return [ ok, allmsgs ]
+
+	def sanitizeDisplayMode(self,dm):
+		if self.uefiboot and dm == "text":
+			# UEFI doesn't support text mode:
+			return "640x480"
+		else:
+			return dm
 
 	def generateConfigFile(self):
 		l = []
 		c = self.config
 		ok = True
 		allmsgs = []
+		if self.uefiboot:
+			allmsgs.append(["warn","Detected UEFI boot. Configuring for UEFI booting."])
+		else:
+			allmsgs.append(["warn","Detected MBR boot. Configuring for Legacy MBR booting."])
 		l.append(c.condFormatSubItem("boot/timeout", "set timeout={s}"))
 		# pass our boot entry generator function to GenerateSections,
 		# and everything is taken care of for our boot entries
@@ -175,9 +190,8 @@ class GRUBExtension(Extension):
 					return [False, allmsgs, l]
 
 			l += [ "if loadfont {dst}; then".format(dst = self.r.RelativePathTo(dst_font,c["boot/path"])),
-				"   set gfxmode={gfx}".format(gfx = c["display/gfxmode"]),
-				"   insmod gfxterm",
-				"   insmod vbe",
+				"   set gfxmode={gfx}".format(gfx = self.sanitizeDisplayMode(c["display/gfxmode"])),
+				"   insmod all_video",
 				"   terminal_output gfxterm" ]
 			bg = c.item("display","background").split()
 			if len(bg):

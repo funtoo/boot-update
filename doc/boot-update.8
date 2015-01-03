@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH BOOT-UPDATE 8 "" "1.7.1" "Funtoo Linux Core System"
+.TH BOOT-UPDATE 8 "" "1.7.2" "Funtoo Linux Core System"
 .SH NAME
 boot-update \- Automatically create a boot loader configuration file
 .
@@ -76,8 +76,12 @@ loader configuration file is stored at \fI/boot/grub/grub.cfg\fP, is quite
 complex and is not intended to be edited directly by system administrators.
 .sp
 \fIboot\-update\fP has since been extended to support GRUB (\fIsys\-boot/grub\fP), GRUB
-Legacy (\fIsys\-boot/grub\-legacy\fP) and LILO (\fIsys\-boot/lilo\fP).  This allows a
-single file, \fI/etc/boot.conf\fP, to store boot\-related information in a
+Legacy (\fIsys\-boot/grub\-legacy\fP) and LILO (\fIsys\-boot/lilo\fP) to boot systems in
+MBR (legacy) mode. In addition, GRUB also supports auto\-detecting and configuring
+UEFI booting. If boot\-update detects that your system has booted in UEFI mode,
+it will create a UEFI\-compatible configuration file automatically.
+.sp
+Boot\-update allows a single file, \fI/etc/boot.conf\fP, to store boot\-related information in a
 boot\-loader\-independent way, thus simplifying boot loader configuration and
 providing advanced features to all popular boot loaders.
 .sp

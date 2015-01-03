@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH BOOT.CONF 5 "" "1.7.1" "Funtoo Linux Core System"
+.TH BOOT.CONF 5 "" "1.7.2" "Funtoo Linux Core System"
 .SH NAME
 boot.conf \- Funtoo global boot loader configuration file
 .
@@ -44,6 +44,11 @@ configuration files for various boot loaders as necessary.
 The benefit of \fI/etc/boot.conf\fP is that it provides a single location to
 store all boot\-related information. It also provides a single, consistent file
 format and feature set for configuring all boot loaders.
+.sp
+For MBR booting, GRUB, GRUB (legacy) and LILO boot loaders are supported. For
+UEFI booting, GRUB is supported. When using GRUB, boot\-update will auto\-enable
+UEFI boot configuration if it sees that your system has been booted in UEFI mode.
+Otherwise, MBR (legacy) boot mode will be used.
 .sp
 \fIboot\-update(8)\fP utilizes \fI/etc/boot.conf\fP to provide a consistent process for
 updating boot loader configuration, regardless of the actual boot loader used.
@@ -635,7 +640,7 @@ rootfstype=auto\fP\&.
 Specifies the video mode to be used by the boot loader\(aqs menus. This value is
 also inherited and used as the video mode for the kernel when a graphical boot
 (\fIuvesafb\fP, \fIvesafb\-tng\fP) is used. This option is only supported for
-\fIgrub\fP\&.
+\fIgrub\fP\&. Default value is "text" for MBR booting, or "640x480" for UEFI booting.
 .SS \fIdisplay :: background\fP
 .sp
 Specifies the graphical image to display at boot. The specified file should

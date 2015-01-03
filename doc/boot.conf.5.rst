@@ -26,6 +26,11 @@ The benefit of */etc/boot.conf* is that it provides a single location to
 store all boot-related information. It also provides a single, consistent file
 format and feature set for configuring all boot loaders.
 
+For MBR booting, GRUB, GRUB (legacy) and LILO boot loaders are supported. For
+UEFI booting, GRUB is supported. When using GRUB, boot-update will auto-enable
+UEFI boot configuration if it sees that your system has been booted in UEFI mode.
+Otherwise, MBR (legacy) boot mode will be used.
+
 *boot-update(8)* utilizes */etc/boot.conf* to provide a consistent process for
 updating boot loader configuration, regardless of the actual boot loader used.
 
@@ -465,7 +470,7 @@ rootfstype=auto*.
 Specifies the video mode to be used by the boot loader's menus. This value is
 also inherited and used as the video mode for the kernel when a graphical boot
 (*uvesafb*, *vesafb-tng*) is used. This option is only supported for
-*grub*.
+*grub*. Default value is "text" for MBR booting, or "640x480" for UEFI booting.
 
 *display :: background*
 ~~~~~~~~~~~~~~~~~~~~~~~~
