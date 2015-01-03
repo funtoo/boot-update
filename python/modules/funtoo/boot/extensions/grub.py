@@ -156,9 +156,9 @@ class GRUBExtension(Extension):
 		ok = True
 		allmsgs = []
 		if self.uefiboot:
-			allmsgs.append(["warn","Detected UEFI boot. Configuring for UEFI booting."])
+			allmsgs.append(["note","Detected UEFI boot. Configuring for UEFI booting."])
 		else:
-			allmsgs.append(["warn","Detected MBR boot. Configuring for Legacy MBR booting."])
+			allmsgs.append(["note","Detected MBR boot. Configuring for Legacy MBR booting."])
 		l.append(c.condFormatSubItem("boot/timeout", "set timeout={s}"))
 		# pass our boot entry generator function to GenerateSections,
 		# and everything is taken care of for our boot entries

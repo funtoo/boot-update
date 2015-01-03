@@ -33,7 +33,7 @@ def banner(extra=True):
 	""" prints the banner message """
 	print("")
 	print("{P}boot-update {O}{C}{ver}{O} /".format(P = PURP, O = OFF, C = CYANN, ver = version))
-	print("Copyright 2009-2012 Funtoo Technologies")
+	print("Copyright 2009-2015 Funtoo Technologies")
 	if extra:
 		print("")
 		print(" [use option \"-l\" for license info, \"-h\" for help]")
@@ -78,6 +78,8 @@ def mesg(msgtype, msg):
 		print("           {m}".format(m = msg))
 	elif msgtype == "defboot":
 		print("{C} DEFAULT > {G}{m}{O}".format(C = CYAN, G = GREEN, m = msg, O = OFF))
+	elif msgtype == "note":
+		print("{R} * NOTE :{O} {m}".format(R = CYAN, O = OFF, m = msg))
 	elif msgtype == "warn":
 		print("{R} * WARN :{O} {m}".format(R = RED, O = OFF, m = msg))
 	elif msgtype == "fatal":
