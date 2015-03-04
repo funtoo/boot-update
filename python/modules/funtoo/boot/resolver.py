@@ -155,8 +155,8 @@ class Resolver:
 		if "rootfstype=auto" in params:
 			params.remove("rootfstype=auto")
 			for item in params:
-				if item[0:5] == "root=":
-					myroot=item[5:]
+				if item.startswith("root=") or item.startswith("real_root="):
+					myroot=item.split("root=")[1]
 					fstype = fstabGetFilesystemOfDevice(myroot)
 					if fstype == "":
 						ok = False
