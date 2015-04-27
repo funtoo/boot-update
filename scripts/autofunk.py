@@ -35,7 +35,7 @@ for line in a[1].split("\n"):
 		if "[permanent]" in mydeps:
 			mydeps.remove("[permanent]")
 		deps[key] = [int(ls[2]), mydeps]
-		
+
 		# reverse deps - to get easy list of things that
 		# depend on me.
 

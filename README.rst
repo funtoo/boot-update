@@ -1,9 +1,9 @@
 ==================
-Funtoo boot-update 
+Funtoo boot-update
 ==================
 
 :keywords: boot, grub, funtoo, gentoo
-:description: 
+:description:
 
         This page contains information about the Funtoo boot-update software.
 
@@ -22,7 +22,7 @@ is the recommended, official way to configure Funtoo Linux systems for booting.
 Current Versions
 ================
 
-- sys-boot/boot-update-1.4.8 
+- sys-boot/boot-update-1.4.8
 
 Man Pages
 =========

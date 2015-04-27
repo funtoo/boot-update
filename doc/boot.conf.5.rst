@@ -391,7 +391,7 @@ options.
 ----------------
 
 Specifies the serial port settings for both boot-loader and kernel. Possible
-values are: 
+values are:
 
 *unit* (tty number, defaults to 0)
 *speed* (bps, defaults to 115200)

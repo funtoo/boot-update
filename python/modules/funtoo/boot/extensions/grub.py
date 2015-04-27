@@ -162,7 +162,7 @@ class GRUBExtension(Extension):
 		l.append(c.condFormatSubItem("boot/timeout", "set timeout={s}"))
 		# pass our boot entry generator function to GenerateSections,
 		# and everything is taken care of for our boot entries
-		if c.hasItem("boot/terminal") and c["boot/terminal"] == "serial": 
+		if c.hasItem("boot/terminal") and c["boot/terminal"] == "serial":
 			allmsgs.append(["warn","Configured for SERIAL input/output."])
 			l += [
 				"serial --unit=%s --speed=%s --word=%s --parity=%s --stop=%s" % ( c["serial/unit"], c["serial/speed"], c["serial/word"], c["serial/parity"], c["serial/stop"] ),
@@ -281,7 +281,7 @@ class GRUBExtension(Extension):
 		retval = cmdobj.poll()
 		if retval != 0:
 			raise ExtensionError("btrfs command failed: %s" % output)
-		return output.split()[6]	
+		return output.split()[6]
 
 	def RequiredGRUBModules(self, dev):
 		""" Determines required grub modules """

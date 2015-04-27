@@ -91,7 +91,7 @@ class Resolver:
 					initrd = os.path.normpath("{base_path}/{initrd}{kext}{iext}".format(base_path = base_path, initrd = head1, kext = kext, iext = tail2))
 				else:
 					#Shouldn't be here. just add original initrd value
-					initrd = os.path.normpath("{base_path}/{initrd}".format(base_path = base_path, initrd = initrd)) 
+					initrd = os.path.normpath("{base_path}/{initrd}".format(base_path = base_path, initrd = initrd))
 			else:
 				initrd=os.path.normpath("{base_path}/{initrd}".format(base_path = base_path, initrd = tail1))
 

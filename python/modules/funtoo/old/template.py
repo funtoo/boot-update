@@ -9,7 +9,7 @@ def pytext(myfile, globals):
 
 	globals["os"] = os
 	globals["sys"] = sys
-	
+
 	try:
 		a=open(myfile,'r')
 	except IOError:

@@ -145,11 +145,11 @@ class LILOExtension(Extension):
 		else:
 			timeout = ""
 
-		if c.hasItem("boot/terminal") and c["boot/terminal"] == "serial": 
+		if c.hasItem("boot/terminal") and c["boot/terminal"] == "serial":
 			allmsgs.append(["warn","Configured for SERIAL input/output."])
 			l += [
 				"serial=%s,%s%s%s" % ( c["serial/unit"], c["serial/speed"], c["serial/parity"][0], c["serial/word"] ),
-			]	
+			]
 		#Global options need to come first
 		l += [
 			timeout,
