@@ -116,7 +116,7 @@ class GRUBExtension(Extension):
 		if not ok:
 			return [ ok, allmsgs ]
 		if fstype == "btrfs":
-			params.append('%sflags=subvol=%s' % i( self.r.rootarg, self.BtrfsSubvol()))
+			params.append('%sflags=subvol=%s' % ( self.r.rootarg, self.BtrfsSubvol()))
 
 		initrds = self.config.item(sect, "initrd")
 		initrds = self.r.FindInitrds(initrds, kname, kext)
