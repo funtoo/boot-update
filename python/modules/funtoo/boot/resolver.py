@@ -10,9 +10,7 @@ from subprocess import Popen
 from subprocess import PIPE
 from subprocess import STDOUT
 
-from funtoo.boot.helper import fstabGetRootDevice
-from funtoo.boot.helper import fstabGetFilesystemOfDevice
-from funtoo.boot.helper import fstabHasEntry
+from funtoo.boot.helper import fstabInfo
 
 def bracketzap(instr, wild=True):
 	""" Removes various bracket types from the input string. """
@@ -42,7 +40,7 @@ class Resolver:
 	def __init__(self, config):
 		self.config = config
 		self.mounted = {}
-
+		self.fstabinfo = fstabInfo()
 		# The following 4 variables are for use in generating sections.
 		self._pos = 0
 		self._defpos = None
@@ -115,13 +113,15 @@ class Resolver:
 			self.rootarg="real_root"
 			doauto=True
 		if doauto:
-			rootdev = fstabGetRootDevice()
+			rootdev = self.fstabinfo.getRootDevice()
+			rootflags = self.fstabinfo.getRootMountFlags()
 			if ((rootdev[0:5] != "/dev/") and (rootdev[0:5] != "UUID=")
 					and (rootdev[0:6] != "LABEL=")):
 				ok = False
 				allmsgs.append(["fatal","(root=auto) - / entry in /etc/fstab not recognized ({dev}).".format(dev = rootdev)])
 			else:
 				params.append("{arg}={dev}".format(arg = self.rootarg, dev = rootdev ))
+				params.append("{arg}flags={flags}".format(arg = self.rootarg, flags = rootflags ))
 			return [ ok, allmsgs, rootdev ]
 		else:
 			# nothing to do - but we'll generate a warning if there is no root
@@ -157,7 +157,7 @@ class Resolver:
 			for item in params:
 				if item.startswith("root=") or item.startswith("real_root="):
 					myroot=item.split("root=")[1]
-					fstype = fstabGetFilesystemOfDevice(myroot)
+					fstype = self.fstabinfo.getFilesystemOfDevice(myroot)
 					if fstype == "":
 						ok = False
 						allmsgs.append(["fatal","(rootfstype=auto) - cannot find a valid / entry in /etc/fstab."])
@@ -181,7 +181,7 @@ class Resolver:
 		while True:
 			if mountpoint == "/":
 				break
-			elif  fstabHasEntry(mountpoint):
+			elif  self.fstabinfo.hasEntry(mountpoint):
 				return mountpoint
 			else:
 				# If we made it here, strip off last dir and try again
@@ -391,3 +391,5 @@ class Resolver:
 		else:
 			# No mount point, just return scanpath
 			return scanpath
+
+# vim: ts=4 sw=4 noet

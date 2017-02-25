@@ -13,7 +13,6 @@ class ExtensionError(Exception):
 		else:
 			return "(no message)"
 
-
 class Extension:
 	def __init__(self,config):
 		# initialization should always succeed.

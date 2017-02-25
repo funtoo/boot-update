@@ -19,6 +19,8 @@ import funtoo.boot.extensions
 from funtoo.boot.extension import ExtensionError
 from funtoo.core.config import ConfigFileError
 
+fstabinfo = funtoo.boot.helper.fstabInfo()
+
 BLUE = "\x1b[34;01m"
 CYAN = "\x1b[36;01m"
 CYANN = "\x1b[36m"
@@ -147,7 +149,7 @@ def update(config, success, messages):
 
 	imountedit = False
 
-	if funtoo.boot.helper.fstabHasEntry("/boot"):
+	if fstabinfo.hasEntry("/boot"):
 		if not os.path.ismount("/boot"):
 			mesg("info","Mounting filesystem /boot...")
 			os.system("mount /boot")
