@@ -54,6 +54,8 @@ class GRUBExtension(Extension):
 			mytype = "win7"
 		elif mytype in [ "windows 8", "win8" ]:
 			mytype = "win8"
+		elif mytype in [ "windows 10", "win10" ]:
+			mytype = "win10"
 		elif mytype in ["haiku", "haiku os"]:
 			mytype = "haiku"
 		else:
@@ -73,6 +75,8 @@ class GRUBExtension(Extension):
 			l.append("  chainloader +4")
 		elif mytype in ["vista", "dos", "winxp", "haiku"]:
 			l.append("  chainloader +1")
+		elif mytype in [ "win10" ]:
+			l.append("  chainloader /EFI/Microsoft/Boot/bootmgfw.efi")
 		l.append("}")
 		return [ ok, msgs ]
 
@@ -328,3 +332,5 @@ class GRUBExtension(Extension):
 		if retval == 0:
 			l.append("  search --no-floppy --fs-uuid --set {u}".format(u = uuid ))
 		# TODO: add error handling for retvals
+
+# vim: ts=4 sw=4 noet
