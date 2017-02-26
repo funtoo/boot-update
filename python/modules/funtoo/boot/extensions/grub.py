@@ -58,6 +58,8 @@ class GRUBExtension(Extension):
 			mytype = "win10"
 		elif mytype in ["haiku", "haiku os"]:
 			mytype = "haiku"
+		elif mytype in [ "linux16" ]:
+			mytype = "linux16"
 		else:
 			ok = False
 			msgs.append(["fatal", "Unrecognized boot entry type \"{mt}\"".format(mt = mytype)])
@@ -68,15 +70,23 @@ class GRUBExtension(Extension):
 		# TODO check for valid root entry
 		l.append("")
 		l.append("menuentry \"{mn}\" {{".format(mn = myname))
-		self.PrepareGRUBForDevice(myroot, l)
-		self.bootitems.append(myname)
-		self.DeviceGRUB(myroot)
-		if mytype in [ "win7", "win8" ]:
-			l.append("  chainloader +4")
-		elif mytype in ["vista", "dos", "winxp", "haiku"]:
-			l.append("  chainloader +1")
-		elif mytype in [ "win10" ]:
-			l.append("  chainloader /EFI/Microsoft/Boot/bootmgfw.efi")
+		if mytype in [ "linux16" ]:
+			k = self.r.StripMountPoint(self.config[sect+"/kernel"])
+			if not os.path.exists(self.config["boot/path"] + "/" + k):
+				msgs.append(["warn", "Image for section {sect} not found - {k}".format(sect=sect, k=k)])
+			else:
+				self.bootitems.append(myname)
+				l.append("  linux16 " + k)
+		else:
+			self.PrepareGRUBForDevice(myroot, l)
+			self.bootitems.append(myname)
+			self.DeviceGRUB(myroot)
+			if mytype in [ "win7", "win8" ]:
+				l.append("  chainloader +4")
+			elif mytype in ["vista", "dos", "winxp", "haiku"]:
+				l.append("  chainloader +1")
+			elif mytype in [ "win10" ]:
+				l.append("  chainloader /EFI/Microsoft/Boot/bootmgfw.efi")
 		l.append("}")
 		return [ ok, msgs ]
 
@@ -132,8 +142,8 @@ class GRUBExtension(Extension):
 			l.append("  module {ker} {params}".format(ker = kpath, params = " ".join(params)))
 			for initrd in initrds:
 				l.append("  module {initrd}".format(initrd = self.r.StripMountPoint(initrd)))
-		else :
-			l.append("  linux {k} {par}".format(k = kpath, par = " ".join(params)))
+		else:
+			l.append("  {t} {k} {par}".format(t=mytype, k = kpath, par = " ".join(params)))
 			if initrds:
 				initrds = (self.r.StripMountPoint(initrd) for initrd in initrds)
 				l.append("  initrd {rds}".format(rds = " ".join(initrds)))
