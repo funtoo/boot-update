@@ -100,6 +100,25 @@ class Resolver:
 	def GetBootEntryString(self,sect,kname):
 		return "{s} - {k}".format(s = sect, k = os.path.basename(kname) )
 
+	single_flags = set([ "async", "atime", "noatime", "auto", "noauto", "defaults", "rw", "ro", "suid", "nosuid", "dev", "nodev", "exec", "noexec", "nouser", "diratime", "nodiratime", "dirsync", "group", "iversion", "noiversion", "mand", "nomand", "_netdev", "relatime", "norelatime", "strictatime", "nostrictatime", "lazytime", "silent", "loud", "owner", "remount", "sync", "user", "nouser", "users" ])
+	arg_flags = [ "context", "fscontext", "defcontext", "rootcontext" ]
+
+	def filterRootFlags(self, flags):
+		# filter out non-fs-specific mount flags. These can cause the Linux kernel to choke on boot and should not appear on the
+		# cmdline.
+		new_flags = []
+		for f in flags.split(','):
+			if f in self.single_flags:
+				continue
+			else:
+				for af in self.arg_flags:
+					if f.startswith(af+"="):
+						continue
+			if f.startswith("x-"):
+				continue
+			new_flags.append(flags)
+		return ",".join(new_flags)
+
 	def DoRootAuto(self,params,ok,allmsgs):
 		""" Properly handle the root=auto and real_root=auto parameters in the boot.conf config file """
 
@@ -115,13 +134,16 @@ class Resolver:
 		if doauto:
 			rootdev = self.fstabinfo.getRootDevice()
 			rootflags = self.fstabinfo.getRootMountFlags()
+			# filter out ones that the kernel can't handle:
+			rootflags = self.filterRootFlags(rootflags)
 			if ((rootdev[0:5] != "/dev/") and (rootdev[0:5] != "UUID=")
 					and (rootdev[0:6] != "LABEL=")):
 				ok = False
 				allmsgs.append(["fatal","(root=auto) - / entry in /etc/fstab not recognized ({dev}).".format(dev = rootdev)])
 			else:
 				params.append("{arg}={dev}".format(arg = self.rootarg, dev = rootdev ))
-				params.append("{arg}flags={flags}".format(arg = self.rootarg, flags = rootflags ))
+				if len(rootflags):
+					params.append("{arg}flags={flags}".format(arg = self.rootarg, flags = rootflags ))
 			return [ ok, allmsgs, rootdev ]
 		else:
 			# nothing to do - but we'll generate a warning if there is no root
@@ -350,7 +372,6 @@ class Resolver:
 		# Generate sections
 		for sect in sections:
 			if self.config["{s}/type" .format(s = sect)] in [ "linux", "xen" ]:
-				print("gen", sect)
 				ok,  msgs = self. _GenerateLinuxSection(l, sect, sfunc)
 			elif ofunc:
 				ok, msgs = self._GenerateOtherSection(l, sect, ofunc)
