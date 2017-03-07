@@ -75,6 +75,7 @@ class Resolver:
 						# append the matching kernel, and the literal [-v]
 						# extension that was found on this kernel
 						found.append([match,match[len(scanpath)+1+pattern.find("["):]])
+		found.sort()
 		return found
 
 	def FindInitrds(self,initrds,kernel,kext):
