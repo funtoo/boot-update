@@ -101,7 +101,7 @@ class Resolver:
 	def GetBootEntryString(self,sect,kname):
 		return "{s} - {k}".format(s = sect, k = os.path.basename(kname) )
 
-	single_flags = set([ "async", "atime", "noatime", "auto", "noauto", "defaults", "rw", "ro", "suid", "nosuid", "dev", "nodev", "exec", "noexec", "nouser", "diratime", "nodiratime", "dirsync", "group", "iversion", "noiversion", "mand", "nomand", "_netdev", "relatime", "norelatime", "strictatime", "nostrictatime", "lazytime", "silent", "loud", "owner", "remount", "sync", "user", "nouser", "users" ])
+	single_flags = set([ "async", "atime", "noatime", "auto", "noauto", "defaults", "rw", "ro", "suid", "nosuid", "dev", "nodev", "exec", "noexec", "nouser", "diratime", "nodiratime", "dirsync", "group", "iversion", "noiversion", "mand", "nomand", "_netdev", "relatime", "norelatime", "strictatime", "nostrictatime", "lazytime", "silent", "loud", "owner", "remount", "sync", "user", "nouser", "users", "user_xattr", "nouser_xattr" ])
 	arg_flags = [ "context", "fscontext", "defcontext", "rootcontext" ]
 
 	def filterRootFlags(self, flags):
