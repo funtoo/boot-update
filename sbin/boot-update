@@ -35,7 +35,7 @@ def banner(extra=True):
 	""" prints the banner message """
 	print("")
 	print("{P}boot-update {O}{C}{ver}{O} /".format(P = PURP, O = OFF, C = CYANN, ver = version))
-	print("Copyright 2009-2015 Funtoo Technologies")
+	print("Copyright 2009-2017 Funtoo Technologies")
 	if extra:
 		print("")
 		print(" [use option \"-l\" for license info, \"-h\" for help]")
