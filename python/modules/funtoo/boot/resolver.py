@@ -117,7 +117,7 @@ class Resolver:
 						continue
 			if f.startswith("x-"):
 				continue
-			new_flags.append(flags)
+			new_flags.append(f)
 		return ",".join(new_flags)
 
 	def DoRootAuto(self,params,ok,allmsgs):
