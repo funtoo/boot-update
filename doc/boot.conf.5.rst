@@ -500,7 +500,7 @@ Currently, the color options are only supported for *grub*.
 *color :: normal*
 ~~~~~~~~~~~~~~~~~~~
 
-Specifies the regular display colors in *fg/bg* format. Defaults to *cyan/blue*.
+Specifies the menu box colors in *fg/bg* format. Defaults to *cyan/blue*.
 **HINT**: a *black* background will be transparent when a background image is
 specified.
 
@@ -508,6 +508,13 @@ specified.
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Specifies the menu highlight colors in *fg/bg* format. Defaults to *blue/cyan*.
+**HINT**: a *black* background will be transparent when a background image is
+specified.
+
+*color :: nonmenu*
+~~~~~~~~~~~~~~~~~~~~~~
+
+Specifies the non-menu-text colors in *fg/bg* format. Defaults to *white/black*.
 **HINT**: a *black* background will be transparent when a background image is
 specified.
 

@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH BOOT.CONF 5 "" "1.7.7" "Funtoo Linux Core System"
+.TH BOOT.CONF 5 "" "1.7.8" "Funtoo Linux Core System"
 .SH NAME
 boot.conf \- Funtoo global boot loader configuration file
 .
@@ -662,12 +662,17 @@ option is only supported for \fIgrub\fP, and will only be enabled when a
 Currently, the color options are only supported for \fIgrub\fP\&.
 .SS \fIcolor :: normal\fP
 .sp
-Specifies the regular display colors in \fIfg/bg\fP format. Defaults to \fIcyan/blue\fP\&.
+Specifies the menu box colors in \fIfg/bg\fP format. Defaults to \fIcyan/blue\fP\&.
 \fBHINT\fP: a \fIblack\fP background will be transparent when a background image is
 specified.
 .SS \fIcolor :: highlight\fP
 .sp
 Specifies the menu highlight colors in \fIfg/bg\fP format. Defaults to \fIblue/cyan\fP\&.
+\fBHINT\fP: a \fIblack\fP background will be transparent when a background image is
+specified.
+.SS \fIcolor :: nonmenu\fP
+.sp
+Specifies the non\-menu\-text colors in \fIfg/bg\fP format. Defaults to \fIwhite/black\fP\&.
 \fBHINT\fP: a \fIblack\fP background will be transparent when a background image is
 specified.
 .SH COPYRIGHT

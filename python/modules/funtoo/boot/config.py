@@ -34,7 +34,7 @@ class BootConfigFile(config.ConfigFile):
 		validmap={
 				"boot" : ["path", "generate", "timeout", "default", "bootdev","terminal"],
 				"display" : ["gfxmode", "background", "font"],
-				"color" : ["normal", "highlight"],
+				"color" : ["normal", "highlight", "nonmenu"],
 				"default" : ["scan", "gfxmode", "kernel", "initrd", "params", "type", "xenkernel", "xenparams"],
 				"grub" : ["dir", "file", "grub-mkdevicemap", "grub-probe", "font_src"],
 				"grub-legacy" : ["dir", "file"],

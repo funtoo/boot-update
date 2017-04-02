@@ -248,6 +248,7 @@ class GRUBExtension(Extension):
 				"",
 				c.condFormatSubItem("color/normal", "set menu_color_normal={s}"),
 				c.condFormatSubItem("color/highlight", "set menu_color_highlight={s}"),
+				c.condFormatSubItem("color/nonmenu", "set color_normal={s}"),
 			]
 		else:
 			if c.hasItem("display/background"):
