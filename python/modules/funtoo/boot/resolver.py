@@ -76,6 +76,7 @@ class Resolver:
 						# extension that was found on this kernel
 						found.append([match,match[len(scanpath)+1+pattern.find("["):]])
 		found.sort()
+		found.reverse()
 		return found
 
 	def FindInitrds(self,initrds,kernel,kext):
