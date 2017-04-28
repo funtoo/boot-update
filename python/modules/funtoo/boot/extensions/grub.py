@@ -66,6 +66,7 @@ class GRUBExtension(Extension):
 			return [ ok, msgs ]
 		params = self.config["{s}/params".format(s = sect)].split()
 		myroot = self.r.GetParam(params, "root=")
+		mychainloader = self.r.GetParam(params, "chainloader=")
 		myname = sect
 		# TODO check for valid root entry
 		l.append("")
@@ -82,11 +83,11 @@ class GRUBExtension(Extension):
 			self.bootitems.append(myname)
 			self.DeviceGRUB(myroot)
 			if mytype in [ "win7", "win8" ]:
-				l.append("  chainloader +4")
+				l.append("  chainloader " + mychainloader) if mychainloader else l.append("  chainloader +4")
 			elif mytype in ["vista", "dos", "winxp", "haiku"]:
-				l.append("  chainloader +1")
+				l.append("  chainloader " + mychainloader) if mychainloader else l.append("  chainloader +1")
 			elif mytype in [ "win10" ]:
-				l.append("  chainloader /EFI/Microsoft/Boot/bootmgfw.efi")
+				l.append("  chainloader " + mychainloader) if mychainloader else l.append("  chainloader /EFI/Microsoft/Boot/bootmgfw.efi")
 		l.append("}")
 		return [ ok, msgs ]
 
