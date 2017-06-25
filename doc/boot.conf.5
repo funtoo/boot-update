@@ -111,6 +111,13 @@ display {
         params root=/dev/sda4
 }
 
+"Funtoo Linux LVM encrypted root with encrypted swap and hibernation support" {
+	kernel kernel-genkernel-x86_64-4.8.15-1 
+	initrd initramfs-genkernel-x86_64-4.8.15-1
+	params += crypt_root=/dev/sda3 dolvm real_root=/dev/mapper/funtoo-root 
+	params += rootfstype=ext4 resume=swap:/dev/mapper/funtoo-swap quiet 
+}
+
 .ft P
 .fi
 .UNINDENT
