@@ -9,6 +9,7 @@ import os
 from subprocess import Popen
 from subprocess import PIPE
 from subprocess import STDOUT
+from subprocess import getstatusoutput, getoutput
 
 from funtoo.boot.helper import fstabInfo
 
@@ -47,6 +48,10 @@ class Resolver:
 		self._defnames = []
 		self._default = self.config.deburr(self.config["boot/default"])
 		self.rootarg = None
+		if self.isIntel():
+			self.intel_cpio = self.generateIntelInitramfs()
+		else:
+			self.intel_cpio = False
 
 	def resolvedev(self, dev):
 		if ((dev[0:5] == "UUID=") or (dev[0:6] == "LABEL=")):
@@ -79,9 +84,22 @@ class Resolver:
 		found.reverse()
 		return found
 
+	def isIntel(self):
+		a = getoutput("/usr/bin/lscpu | grep ^Vendor")
+		return a.endswith("GenuineIntel")
+
+	def generateIntelInitramfs(self):
+		s,o = getstatusoutput("rm /boot/early_ucode.cpio; /usr/sbin/iucode_tool --write-earlyfw=/boot/early_ucode.cpio /lib/firmware/intel-ucode/*")
+		print(o)
+		if s == 0:
+			return "/early_ucode.cpio"
+		return False
+
 	def FindInitrds(self,initrds,kernel,kext):
 		found=[]
 		base_path=os.path.dirname(kernel)
+		if self.intel_cpio != False:
+				found.append(self.intel_cpio)
 		for initrd in initrds.split():
 			# Split up initrd at bracket and replace glob with kernel version string if brackets exists.
 			head1, sep1, tail1 = initrd.rpartition("[")

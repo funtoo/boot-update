@@ -152,9 +152,9 @@ class GRUBExtension(Extension):
 		if self.config.hasItem("{s}/gfxmode".format(s = sect)):
 			skipgfx=False
 			for p in params:
-			    if p.startswith("vga=") or p.startswith("video=uvesafb:"):
-				skipgfx=True
-				break
+				if p.startswith("vga=") or p.startswith("video=uvesafb:"):
+					skipgfx=True
+					break
 			if not skipgfx:
 			    l.append("	set gfxpayload=keep")
 		l.append("}")

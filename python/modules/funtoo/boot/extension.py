@@ -130,3 +130,5 @@ class Extension:
 		self.mesg("info","Done.")
 
 		return [ "complete", True, allmsgs ]
+
+# vim: ts=4 sw=4 noet

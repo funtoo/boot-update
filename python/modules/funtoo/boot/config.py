@@ -50,3 +50,5 @@ class BootConfigFile(config.ConfigFile):
 				if itemkey not in validmap[cmpto]:
 					invalid.append("{sect}/{name}".format(sect = section, name = itemkey ))
 		return invalid
+
+# vim: ts=4 sw=4 noet
