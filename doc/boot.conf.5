@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH BOOT.CONF 5 "" "1.7.7" "Funtoo Linux Core System"
+.TH BOOT.CONF 5 "" "1.7.9" "Funtoo Linux Core System"
 .SH NAME
 boot.conf \- Funtoo global boot loader configuration file
 .
@@ -109,13 +109,6 @@ display {
 "Windows XP" {
         type winxp
         params root=/dev/sda4
-}
-
-"Funtoo Linux LVM encrypted root with encrypted swap and hibernation support" {
-	kernel kernel-genkernel-x86_64-4.8.15-1 
-	initrd initramfs-genkernel-x86_64-4.8.15-1
-	params += crypt_root=/dev/sda3 dolvm real_root=/dev/mapper/funtoo-root 
-	params += rootfstype=ext4 resume=swap:/dev/mapper/funtoo-swap quiet 
 }
 
 .ft P

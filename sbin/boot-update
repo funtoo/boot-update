@@ -28,7 +28,7 @@ GREEN = "\x1b[32;01m"
 RED = "\x1b[31;01m"
 PURP = "\x1b[35;01m"
 OFF = "\x1b[0m"
-version = "1.7.7"
+version = "1.7.9"
 verbose = False
 
 def banner(extra=True):
