@@ -95,7 +95,7 @@ class Extension:
 
 		# TRY VALIDATING CONFIG FILE
 
-		self.mesg("info","Validating config file {name}".format(name = self.fn))
+		self.mesg("debug","Validating config file {name}".format(name = self.fn))
 
 		ok, msgs = self.validateConfigFile(l)
 		allmsgs += msgs
@@ -104,7 +104,7 @@ class Extension:
 
 		# TRY BACKING UP CONFIG FILE
 
-		self.mesg("info","Backing up original config file to {name}.old".format(name = self.fn))
+		self.mesg("debug","Backing up original config file to {name}.old".format(name = self.fn))
 
 		ok, msgs = self.backupConfigFile()
 		allmsgs += msgs
@@ -113,7 +113,7 @@ class Extension:
 
 		# TRY WRITING CONFIG FILE
 
-		self.mesg("info","Writing new config file to {name}".format(name = self.fn))
+		self.mesg("debug","Writing new config file to {name}".format(name = self.fn))
 
 		ok, msgs = self.writeConfigFile(l)
 		allmsgs += msgs

@@ -4,6 +4,12 @@
 
 import os
 import sys
+import textwrap
+import shutil
+
+debug = 0
+
+term_size = shutil.get_terminal_size((80,20))
 
 # This is needed for testing from the root of the git repo - must come before
 # funtoo imports
@@ -28,7 +34,7 @@ GREEN = "\x1b[32;01m"
 RED = "\x1b[31;01m"
 PURP = "\x1b[35;01m"
 OFF = "\x1b[0m"
-version = "1.7.9"
+version = "1.8.0"
 verbose = False
 
 def banner(extra=True):
@@ -50,7 +56,7 @@ def versinfo():
  the Free Software Foundation. Alternatively you may (at your option) use any
  other license that has been publicly approved for use with this program by
  Funtoo Technologies, LLC. (or its successors, if any.)
- """    )
+ """	)
 
 def printhelp():
 	""" prints the help message """
@@ -61,36 +67,44 @@ def printhelp():
  lilo  config file.
 
  Options:
-   --showdefaults       Show hard-coded (user-overrideable) settings
-   --show <sect/var>    Display variable "var" defined in section "sect"
-   -C, --check          Validate configuration file, but do nothing else
-   -V, --verbose        Verbose mode
-   -h, --help           Display this information
-   -l, --license        Display license information
-"""     )
+   --showdefaults	Show hard-coded (user-overrideable) settings
+   --show <sect/var>	Display variable "var" defined in section "sect"
+   -C, --check		Validate configuration file, but do nothing else
+   -V, --verbose	Verbose mode
+   -h, --help		Display this information
+   -l, --license	Display license information
+"""	)
 
 
 def mesg(msgtype, msg):
+	global debug
+	global term_size
 	""" prints different types of messages to the console """
-	if verbose and msgtype == "info":
-		print("{G} *{O} {m}".format(G = GREEN, O = OFF, m = msg))
+	outstr = None
+	if msgtype == "debug":
+		if debug:
+			outstr = msg
+		else:
+			outstr = None
+	elif verbose and msgtype == "info":
+		outstr = "{G} *{O} {m}".format(G = GREEN, O = OFF, m = msg)
 	elif msgtype == "norm":
-		print("{G} *{O} {m}".format(G = GREEN, O = OFF, m = msg))
+		outstr = "{G} *{O} {m}".format(G = GREEN, O = OFF, m = msg)
 	elif msgtype == "boot":
-		print("           {m}".format(m = msg))
+		outstr = "           {m}".format(m = msg)
 	elif msgtype == "defboot":
-		print("{C} DEFAULT > {G}{m}{O}".format(C = CYAN, G = GREEN, m = msg, O = OFF))
+		outstr = "{C} DEFAULT > {G}{m}{O}".format(C = CYAN, G = GREEN, m = msg, O = OFF)
 	elif msgtype == "note":
-		print("{R} * NOTE :{O} {m}".format(R = CYAN, O = OFF, m = msg))
+		outstr = "{R} * NOTE:{O} {m}".format(R = CYAN, O = OFF, m = msg)
 	elif msgtype == "warn":
-		print("{R} * WARN :{O} {m}".format(R = RED, O = OFF, m = msg))
+		outstr ="{R} * WARN:{O} {m}".format(R = RED, O = OFF, m = msg)
 	elif msgtype == "fatal":
-		print("{R} * ERROR :{O} {m}".format(R = RED, O = OFF, m = msg))
-
+		outstr = "{R} * ERR :{O} {m}".format(R = RED, O = OFF, m = msg)
+	if outstr:
+		print(textwrap.fill(outstr, term_size[0], initial_indent=" ", subsequent_indent="          "))
 
 def cleanup(success, messages, ext = None):
 	""" prints accumulated errors and warnings and exits appropriately """
-
 	if ext != None:
 		# unmounts any non-/boot filesystems we may have mounted for scanning.
 		# /boot unmounting is handled via another process.
@@ -102,18 +116,19 @@ def cleanup(success, messages, ext = None):
 		if msgtype == "warn":
 			warnings = True
 		mesg(msgtype, msg)
-
+	print()
 	if not success:
-		print(RED + " * Did not complete successfully." + OFF)
-		print("")
+		mesg("fatal", "Did not complete successfully.")
+		print()
 		sys.exit(1)
 	else:
-		out = GREEN + " * " + OFF + "Completed successfully"
+		outstr = "Completed successfully"
 		if warnings:
-			print(out + " with warnings.")
+			outstr += " with warnings."
 		else:
-			print(out + ".")
-		print("")
+			outstr += "."
+		mesg("norm", outstr)
+		print()
 		sys.exit(0)
 
 def update(config, success, messages):
@@ -139,7 +154,7 @@ def update(config, success, messages):
 		cleanup(success, messages)
 
 	mesg("norm","Generating config for {gen}...".format(gen = generate))
-	print("")
+	print()
 
 	if not success:
 		cleanup(success, messages)
@@ -151,7 +166,7 @@ def update(config, success, messages):
 
 	if fstabinfo.hasEntry("/boot"):
 		if not os.path.ismount("/boot"):
-			mesg("info","Mounting filesystem /boot...")
+			mesg("debug","Mounting filesystem /boot...")
 			os.system("mount /boot")
 			imountedit = True
 	else:
@@ -159,11 +174,9 @@ def update(config, success, messages):
 
 	# Dynamically import the proper extension module (ie. grub.py,
 	# grub-legacy.py, lilo.py):
-
 	extname = "funtoo.boot.extensions.{gen}".format(gen = generate)
 	__import__(extname)
 	extmodule = sys.modules[extname]
-
 	# Create Boot Loader Extension object: and regenerate config file
 	ext = None
 	try:
@@ -184,11 +197,10 @@ def update(config, success, messages):
 			else:
 				mesg("boot", ext.bootitems[pos])
 			pos += 1
-		print
-
+	print()
 	# If we mounted /boot, we should unmount it:
 	if imountedit:
-		mesg("info","Unmounting /boot")
+		mesg("debug","Unmounting /boot")
 		os.system("umount /boot")
 
 	cleanup(success, allmsgs, ext)
@@ -236,3 +248,4 @@ else:
 		banner()
 		update(c, ok, allmsgs)
 
+# vim: ts=4 sw=4 noet

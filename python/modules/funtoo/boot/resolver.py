@@ -48,10 +48,11 @@ class Resolver:
 		self._defnames = []
 		self._default = self.config.deburr(self.config["boot/default"])
 		self.rootarg = None
-		if self.isIntel():
-			self.intel_cpio = self.generateIntelInitramfs()
-		else:
-			self.intel_cpio = False
+		self.intel_cpio = False
+		self.is_intel = self.isIntel()
+		if self.is_intel:
+			if os.path.exists("/lib/firmware/intel-ucode"):
+				self.intel_cpio = self.generateIntelInitramfs()
 
 	def resolvedev(self, dev):
 		if ((dev[0:5] == "UUID=") or (dev[0:6] == "LABEL=")):
@@ -89,8 +90,7 @@ class Resolver:
 		return a.endswith("GenuineIntel")
 
 	def generateIntelInitramfs(self):
-		s,o = getstatusoutput("rm /boot/early_ucode.cpio; /usr/sbin/iucode_tool --write-earlyfw=/boot/early_ucode.cpio /lib/firmware/intel-ucode/*")
-		print(o)
+		s,o = getstatusoutput("rm -f /boot/early_ucode.cpio; /usr/sbin/iucode_tool --write-earlyfw=/boot/early_ucode.cpio /lib/firmware/intel-ucode/* >/dev/null 2>&1")
 		if s == 0:
 			return "/early_ucode.cpio"
 		return False
@@ -99,7 +99,7 @@ class Resolver:
 		found=[]
 		base_path=os.path.dirname(kernel)
 		if self.intel_cpio != False:
-				found.append(self.intel_cpio)
+			found.append(self.intel_cpio)
 		for initrd in initrds.split():
 			# Split up initrd at bracket and replace glob with kernel version string if brackets exists.
 			head1, sep1, tail1 = initrd.rpartition("[")
@@ -407,6 +407,12 @@ class Resolver:
 			allmsgs.append(["warn","No boot/default match found - using first boot entry by default."])
 			# If we didn't find a specified default, use the first one
 			self._defpos = 0
+
+		if self.is_intel:
+			if not self.intel_cpio:
+				allmsgs.append([ "warn","Intel system detected - please emerge sys-firmware/intel-microcode and run boot-update again; boot-update will then patch your system with the latest Intel CPU and chipset microcode patches at boot-time, protecting you against important vulnerabilities and errata."])
+			else:
+				allmsgs.append([ "note","Intel microcode will be loaded at boot-time." ])
 
 		return [ ok, allmsgs, self._defpos, self._defnames[self._defpos] ]
 
