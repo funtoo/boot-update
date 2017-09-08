@@ -92,7 +92,7 @@ class Resolver:
 	def generateIntelInitramfs(self):
 		s,o = getstatusoutput("rm -f /boot/early_ucode.cpio; /usr/sbin/iucode_tool --write-earlyfw=/boot/early_ucode.cpio /lib/firmware/intel-ucode/* >/dev/null 2>&1")
 		if s == 0:
-			return "/early_ucode.cpio"
+			return self.StripMountPoint("/boot/early_ucode.cpio")
 		return False
 
 	def FindInitrds(self,initrds,kernel,kext):
