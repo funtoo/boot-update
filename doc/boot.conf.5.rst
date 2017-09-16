@@ -302,6 +302,7 @@ The *type* variable should be set to one of the operating system names that
 - win7
 - Windows 8
 - win8
+- win10
 - Haiku
 - Haiku OS
 
@@ -408,7 +409,7 @@ values are:
 Specifies the boot entry type; defaults to *linux*. Currently, DOS/Windows boot
 entries are also supported. Set to one of: *linux*, *dos*, *msdos*, *Windows
 2000*, *win2000*, *Windows XP*, *winxp*, *Windows Vista*, *vista*, *Windows 7*,
-*win7*. Here's how to specify a Windows 7 boot entry, which will automatically
+*win7*, *win8*, *win10*. Here's how to specify a Windows 7 boot entry, which will automatically
 use the proper chainloader +4 parameter to load Microsoft Windows 7::
 
         "My Windows 7" {
