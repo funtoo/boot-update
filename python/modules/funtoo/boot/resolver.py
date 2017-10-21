@@ -410,7 +410,7 @@ class Resolver:
 
 		if self.is_intel:
 			if not self.intel_cpio:
-				allmsgs.append([ "warn","Intel system detected - please emerge sys-firmware/intel-microcode and sys-apps/iucode-tool and run boot-update again; boot-update will then patch your system with the latest Intel CPU and chipset microcode patches at boot-time, protecting you against important vulnerabilities and errata."])
+				allmsgs.append([ "warn","Intel system detected - please emerge sys-firmware/intel-microcode and sys-apps/iucode_tool and run boot-update again; boot-update will then patch your system with the latest Intel CPU and chipset microcode patches at boot-time, protecting you against important vulnerabilities and errata."])
 			else:
 				allmsgs.append([ "note","Intel microcode will be loaded at boot-time." ])
 
