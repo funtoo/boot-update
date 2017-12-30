@@ -194,19 +194,45 @@ class GRUBExtension(Extension):
 			if c.hasItem("display/font"):
 				font = c["display/font"]
 			else:
-				font = "unifont.pf2"
+				font = None
 
-			src_font = "{src}/{f}".format(src = c["grub/font_src"], f = font)
-			dst_font = "{path}/{f}".format(path = self.grubpath, f = font)
+			dst_font = None
 
-			if not os.path.exists(dst_font):
-				if os.path.exists(src_font):
-					# copy from /usr/share location to /boot/grub:
-					import shutil
-					shutil.copy(src_font,dst_font)
-				else:
+			if font is None:
+				fonts = ["unicode.pf2", "unifont.pf2"]
+			else:
+				fonts = [ font ]
+
+			for fontpath in [ self.grubpath, self.grubpath + "/fonts" ]:
+				if dst_font is not None:
+					break
+				for font in fonts:
+					path_to_font = fontpath + "/" + font
+					if os.path.exists(path_to_font):
+						dst_font = path_to_font
+						break
+
+			if dst_font is None:
+				# font does not exist at destination... so we will need to find it somewhere and copy into /boot/grub
+				for fontpath in c["grub/font_src"].split():
+					if dst_font is not None:
+						break
+					for font in fonts:
+						path_to_font = fontpath + "/" + font
+						if os.path.exists(path_to_font):
+							src_font = path_to_font
+							dst_font = self.grubpath + '/fonts' + font
+							if not os.path.exists(dst_font):
+								import shutil
+								shutil.copy(src_font, dst_font)
+							break
+
+			if dst_font is None:
+				if font:
 					allmsgs.append(["fatal", "specified font \"{ft}\" not found at {dst}; aborting.".format(ft = font, dst = dst_font)] )
-					return [False, allmsgs, l]
+				else:
+					allmsgs.append(["fatal", "Could not find one of %s to copy into boot directory; aborting." % ",".join(fonts)])
+				return [False, allmsgs, l]
 
 			l += [ "if loadfont {dst}; then".format(dst = self.r.RelativePathTo(dst_font,c["boot/path"])),
 				"   set gfxmode={gfx}".format(gfx = self.sanitizeDisplayMode(c["display/gfxmode"])),
