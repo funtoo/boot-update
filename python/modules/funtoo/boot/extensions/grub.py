@@ -157,7 +157,7 @@ class GRUBExtension(Extension):
 					skipgfx=True
 					break
 			if not skipgfx:
-			    l.append("	set gfxpayload=keep")
+			    l.append("  set gfxpayload=keep")
 		l.append("}")
 
 		return [ ok, allmsgs ]
