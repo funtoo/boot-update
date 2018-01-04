@@ -38,7 +38,7 @@ grub {
 	file grub.cfg
 	grub-probe /sbin/grub-probe
 	grub-mkdevicemap /sbin/grub-mkdevicemap
-	font_src /usr/share/grub/fonts
+	font_src /usr/share/grub /usr/share/grub/fonts
 }
 
 grub-legacy {

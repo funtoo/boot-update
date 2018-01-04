@@ -311,6 +311,15 @@ For non-Linux operating systems, the *params* variable is used to specify the
 root partition for chain loading. For consistency with Linux boot entries, the
 syntax used is *root=device*.
 
+Users can manually set the chainloader option if they require a special value 
+other than the normal default set by boot.conf::
+        "Windows 10" {
+                type win10
+                params root=/dev/sda6
+		params += chainloader=+4
+        }
+
+
 *boot* Section
 ----------------
 
@@ -486,12 +495,10 @@ supported for *grub*, and defaults to being unset.
 *display :: font*
 ~~~~~~~~~~~~~~~~~
 
-Specifies a font used to display text in graphical mode (ie. when
-``display::gfxmode`` is enabled) at boot. Defaults to
-``unifont.pf2``, which is included with Funtoo's `grub` ebuild.
-If the font does not exist in ``/boot/grub``, it will be copied from
-``/usr/share/grub/fonts`` if it exists. This
-option is only supported for *grub*, and will only be enabled when a
+Specifies a font used to display text in graphical mode (ie. when ``display::gfxmode`` is enabled) at boot. Defaults to
+``unifont.pf2``, which is included with Funtoo's `grub` ebuild, or ``unicode.pf2``, which is included in Gentoo's
+ebuild. If the font does not exist in ``/boot/grub`` or ``/boot/grub/fonts``, it will be copied from ``/usr/share/grub``
+or ``/usr/share/grub/fonts``, if it exists. This option is only supported for *grub*, and will only be enabled when a
 ``gfxmode`` has been specified.
 
 *color* Section
