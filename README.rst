@@ -22,7 +22,7 @@ is the recommended, official way to configure Funtoo Linux systems for booting.
 Current Versions
 ================
 
-- sys-boot/boot-update-1.4.8
+- sys-boot/boot-update-1.8.2
 
 Man Pages
 =========
