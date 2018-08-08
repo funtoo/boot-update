@@ -294,9 +294,9 @@ class Resolver:
 		# Process boot entry section (which can generate multiple boot
 		# entries if multiple kernel matches are found)
 		findlist, skiplist = self.config.flagItemList("{s}/kernel".format(s = sect))
-		findmatch=[]
+		findmatch = []
 
-		scanpaths = self.config.item(sect,"scan").split()
+		scanpaths = self.config.item(sect, "scan").split()
 
 		for scanpath in scanpaths:
 			mesgs = self.MountIfNecessary(scanpath)
@@ -311,7 +311,7 @@ class Resolver:
 		for kname, kext in findmatch:
 			if (self._default == sect) or (self._default == os.path.basename(kname)):
 				# default match
-				if self._defpos != None:
+				if self._defpos is not None:
 					found_multi = True
 					curtime = os.stat(kname)[8]
 					if curtime > def_mtime:
