@@ -127,8 +127,6 @@ class Extension:
 		if not ok:
 			return [ "boot loader update", ok, allmsgs ]
 
-		self.mesg("info","Done.")
-
 		return [ "complete", True, allmsgs ]
 
 # vim: ts=4 sw=4 noet

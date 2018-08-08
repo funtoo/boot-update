@@ -76,7 +76,7 @@ class Resolver:
 						continue
 					# append the matching kernel, and "" representing that no
 					# [-v] extension was used
-					found.append([match, ""])
+					found.append([match, "", os.path.getmtime(match)])
 			if base_glob != wild_glob:
 				for match in glob.glob(wild_glob):
 					if match not in skip and match not in found:
@@ -85,9 +85,7 @@ class Resolver:
 							continue
 						# append the matching kernel, and the literal [-v]
 						# extension that was found on this kernel
-						found.append([match, match[len(scanpath)+1+pattern.find("["):]])
-		found.sort()
-		found.reverse()
+						found.append([match, match[len(scanpath)+1+pattern.find("["):], os.path.getmtime(match)])
 		return mesgs, found
 
 	def isIntel(self):
@@ -296,9 +294,13 @@ class Resolver:
 		allmsgs = []
 		def_mtime = None
 
-		# Process boot entry section (which can generate multiple boot
-		# entries if multiple kernel matches are found)
+
+		# Process a section, such as "genkernel" section.
+
 		findlist, skiplist = self.config.flagItemList("{s}/kernel".format(s = sect))
+		
+		# findlist == special patterns to match (i.e. kernel[-v])
+		# skiplist == patterns to skip.
 		
 		findmatch = []
 		skipmatch = []
@@ -310,31 +312,36 @@ class Resolver:
 			allmsgs += mesgs
 			mesgs = []
 			if len(skiplist):
+				# find kernels to skip...
 				mesgs, matches = self.GetMatchingKernels(scanpath, skiplist)
 				skipmatch += matches
 			if len(findlist):
+				# find kernels to match (skipping any kernels we should skip...)
 				mesgs, matches = self.GetMatchingKernels(scanpath, findlist, skipmatch)
 				findmatch += matches
 			allmsgs += mesgs
+			
 		# Generate individual boot entry using extension-supplied function
 
 		found_multi = False
 
-		for kname, kext in findmatch:
+		# sort by modification time:
+		findmatch = sorted(findmatch, key=lambda x: x[2], reverse=True)
+
+		for kname, kext, mtime in findmatch:
 			if (self._default == sect) or (self._default == os.path.basename(kname)):
 				# default match
 				if self._defpos is not None:
 					found_multi = True
-					curtime = os.stat(kname)[8]
-					if curtime > def_mtime:
+					if mtime > def_mtime:
 						# this kernel is newer, use it instead
 						self._defpos = self._pos
-						def_mtime = curtime
+						def_mtime = mtime
 				else:
 					self._defpos = self._pos
 					def_mtime = os.stat(kname)[8]
 			self._defnames.append(kname)
-			ok, msgs = sfunc(l,sect,kname,kext)
+			ok, msgs = sfunc(l, sect, kname, kext)
 			allmsgs += msgs
 			if not ok:
 				break
@@ -415,8 +422,8 @@ class Resolver:
 			allmsgs.append(["fatal","No matching kernels or boot entries found in /etc/boot.conf."])
 			self._defpos = None
 			return [ ok, allmsgs, self._defpos, None ]
-		elif self._defpos == None:
-			allmsgs.append(["warn","No boot/default match found - using first boot entry by default."])
+		elif self._defpos is None:
+			allmsgs.append(["note","No boot/default match found - using most recently updated kernel (by mtime) by default."])
 			# If we didn't find a specified default, use the first one
 			self._defpos = 0
 

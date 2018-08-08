@@ -88,7 +88,7 @@ def mesg(msgtype, msg):
 			outstr = None
 	elif verbose and msgtype == "info":
 		outstr = "{G} *{O} {m}".format(G = GREEN, O = OFF, m = msg)
-	elif msgtype == "norm":
+	elif msgtype in [ "norm", "info" ]:
 		outstr = "{G} *{O} {m}".format(G = GREEN, O = OFF, m = msg)
 	elif msgtype == "boot":
 		outstr = "           {m}".format(m = msg)
@@ -98,7 +98,7 @@ def mesg(msgtype, msg):
 		outstr = "{R} * NOTE:{O} {m}".format(R = CYAN, O = OFF, m = msg)
 	elif msgtype == "warn":
 		outstr ="{R} * WARN:{O} {m}".format(R = RED, O = OFF, m = msg)
-	elif msgtype == "fatal":
+	elif msgtype == "fatal" or True:
 		outstr = "{R} * ERR :{O} {m}".format(R = RED, O = OFF, m = msg)
 	if outstr:
 		print(textwrap.fill(outstr, term_size[0], initial_indent=" ", subsequent_indent="          "))
