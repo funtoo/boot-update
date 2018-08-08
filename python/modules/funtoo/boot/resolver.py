@@ -64,26 +64,31 @@ class Resolver:
 
 	def GetMatchingKernels(self, scanpath, globlist, skip=[]):
 		# find kernels in scanpath that match globs in globlist, and return them
-		found=[]
+		found = []
+		mesgs = []
 		for pattern in globlist:
-			#base_glob = os.path.normpath(scanpath+"/"+ pattern.replace("[-v]",""))
-			base_glob = os.path.normpath(scanpath+"/"+ bracketzap(pattern,wild=False))
-			#wild_glob = os.path.normpath(scanpath+"/"+ pattern.replace("[-v]","-*"))
-			wild_glob = os.path.normpath(scanpath+"/"+ bracketzap(pattern,wild=True))
+			base_glob = os.path.normpath(scanpath+"/"+ bracketzap(pattern, wild=False))
+			wild_glob = os.path.normpath(scanpath+"/"+ bracketzap(pattern, wild=True))
 			for match in glob.glob(base_glob):
 				if match not in skip and match not in found:
+					if not os.path.exists(match):
+						mesgs.append(["warn", "Could not read file %s -- skipping" % match])
+						continue
 					# append the matching kernel, and "" representing that no
 					# [-v] extension was used
-					found.append([match,""])
+					found.append([match, ""])
 			if base_glob != wild_glob:
 				for match in glob.glob(wild_glob):
 					if match not in skip and match not in found:
+						if not os.path.exists(match):
+							mesgs.append(["warn", "Could not read file %s -- skipping" % match])
+							continue
 						# append the matching kernel, and the literal [-v]
 						# extension that was found on this kernel
-						found.append([match,match[len(scanpath)+1+pattern.find("["):]])
+						found.append([match, match[len(scanpath)+1+pattern.find("["):]])
 		found.sort()
 		found.reverse()
-		return found
+		return mesgs, found
 
 	def isIntel(self):
 		a = getoutput("/usr/bin/lscpu | grep ^Vendor")
@@ -294,16 +299,23 @@ class Resolver:
 		# Process boot entry section (which can generate multiple boot
 		# entries if multiple kernel matches are found)
 		findlist, skiplist = self.config.flagItemList("{s}/kernel".format(s = sect))
+		
 		findmatch = []
-
+		skipmatch = []
+		
 		scanpaths = self.config.item(sect, "scan").split()
 
 		for scanpath in scanpaths:
 			mesgs = self.MountIfNecessary(scanpath)
 			allmsgs += mesgs
-			skipmatch = self.GetMatchingKernels(scanpath, skiplist)
-			findmatch += self.GetMatchingKernels(scanpath, findlist, skipmatch)
-
+			mesgs = []
+			if len(skiplist):
+				mesgs, matches = self.GetMatchingKernels(scanpath, skiplist)
+				skipmatch += matches
+			if len(findlist):
+				mesgs, matches = self.GetMatchingKernels(scanpath, findlist, skipmatch)
+				findmatch += matches
+			allmsgs += mesgs
 		# Generate individual boot entry using extension-supplied function
 
 		found_multi = False
