@@ -363,7 +363,8 @@ default. If you had the following boot entry::
         }
 
 This is also a handy mechanism if you want to boot the most recently created
-kernel by default. To do this, specify the name of the boot entry rather than
+kernel by default. The kernel with the most recent modification time will be
+selected. To do this, specify the name of the boot entry rather than
 the kernel image name::
 
         boot {
@@ -371,7 +372,11 @@ the kernel image name::
         }
 
 If multiple "Funtoo Linux" boot entries are created, the one that has the most
-recently created kernel (by file mtime) will be booted by default.
+recently created kernel (by file modification time) will be booted by default.
+
+Also note that if no ``default`` setting is specified, or no match is found,
+boot-update will select the most recent kernel by file modification time and
+set it as the default selection for booting.
 
 Note that double-quotes are optional both in section names and in the
 *boot/default* value.
@@ -381,7 +386,7 @@ Note that double-quotes are optional both in section names and in the
 
 Specifies which device or partition to install the bootloader to. This is
 currently only used for lilo and is the equivalent of setting "boot = <bootdev>"
-in /etc/lilo.conf. Other bootloaders will just ignore it if set::
+in ``/etc/lilo.conf``. Other bootloaders will just ignore it if set::
 
         boot {
                 bootdev /dev/sda
@@ -431,7 +436,7 @@ use the proper chainloader +4 parameter to load Microsoft Windows 7::
 ~~~~~~~~~~~~~~~~~~~
 
 This setting specifies one or more directories to scan for kernels and
-initrds. Defaults to */boot*.
+initrds. Defaults to ``/boot``.
 
 *default :: kernel*
 ~~~~~~~~~~~~~~~~~~~~~
