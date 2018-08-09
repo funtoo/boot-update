@@ -27,6 +27,7 @@ class GRUBExtension(Extension):
 		self.GuppyMap()
 		self.defpos = 0
 		self.defname = "undefined"
+
 		if os.path.exists("/sys/firmware/efi"):
 			self.uefiboot = True
 		else:
@@ -90,12 +91,12 @@ class GRUBExtension(Extension):
 		l.append("}")
 		return True
 	
-	def generateBootEntry(self, l, sect, kname, kext):
+	def generateBootEntry(self, l, sect, k_full_path, kext):
 		""" Generates the boot entry """
 		ok = True
 		mytype = self.config["{s}/type".format(s=sect)]
 		l.append("")
-		label = self.r.GetBootEntryString(sect, kname)
+		label = self.r.GetBootEntryString(sect, k_full_path)
 		l.append("menuentry \"{l}\" {{".format(l=label))
 		
 		# self.bootitems records all our boot items
@@ -103,9 +104,7 @@ class GRUBExtension(Extension):
 		
 		self.PrepareGRUBForFilesystem(self.config["{s}/scan".format(s=sect)], l)
 		
-
-		
-		kpath = self.r.StripMountPoint(kname)
+		k_sub_path = self.r.StripMountPoint(k_full_path)
 		c = self.config
 		params = []
 		if c.hasItem("boot/terminal") and c["boot/terminal"] == "serial":
@@ -123,7 +122,7 @@ class GRUBExtension(Extension):
 			return False
 		
 		initrds = self.config.item(sect, "initrd")
-		initrds = self.r.FindInitrds(initrds, kname, kext)
+		initrds = self.r.FindInitrds(initrds, k_full_path, kext)
 		if myroot and ('root=' + myroot) in params and 0 == len(initrds):
 			params.remove('root=' + myroot)
 			params.append('root=' + self.r.resolvedev(myroot))
@@ -140,14 +139,16 @@ class GRUBExtension(Extension):
 			xenpath = self.r.StripMountPoint(xenkernel)
 			xenparams = self.config["{s}/xenparams".format(s=sect)].split()
 		
+		# Add unique identifier that can be used to determine if kernel booted.
+		params.append("rand_id=%s" % self.r.idmapper.get(k_full_path))
 		# Append kernel lines based on type
 		if mytype == "xen":
 			l.append("  multiboot {xker} {xparams}".format(xker=xenpath, xparams=" ".join(xenparams)))
-			l.append("  module {ker} {params}".format(ker=kpath, params=" ".join(params)))
+			l.append("  module {ker} {params}".format(ker=k_sub_path, params=" ".join(params)))
 			for initrd in initrds:
 				l.append("  module {initrd}".format(initrd=self.r.StripMountPoint(initrd)))
 		else:
-			l.append("  {t} {k} {par}".format(t=mytype, k=kpath, par=" ".join(params)))
+			l.append("  {t} {k} {par}".format(t=mytype, k=k_sub_path, par=" ".join(params)))
 			if initrds:
 				initrds = (self.r.StripMountPoint(initrd) for initrd in initrds)
 				l.append("  initrd {rds}".format(rds=" ".join(initrds)))

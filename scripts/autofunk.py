@@ -91,7 +91,7 @@ for key in fs:
 	if key in modcat["fs"]:
 		result_list.append(key)
 
-# result_list contains the modules we want to load, but now we want to get
+# result_list contains the modules we want to load_mappings, but now we want to get
 # list of our result_list, plus *all the modules* needed by our result_list.
 # this is recursive:
 
@@ -111,7 +111,7 @@ for mod in result_list:
 
 master_list=set(master_list)
 
-print "TODO: need to add USB auto-load or rely on initrd for that (for keyboard)"
+print "TODO: need to add USB auto-load_mappings or rely on initrd for that (for keyboard)"
 out=""
 for mod in master_list:
 	out+="%s," % mod

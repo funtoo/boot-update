@@ -7,8 +7,8 @@ boot {
 	path /boot
 	generate grub
 	timeout 5
-	default bzImage
 	terminal video
+	autopick mtime
 }
 
 color {

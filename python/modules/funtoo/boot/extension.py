@@ -22,6 +22,7 @@ class Extension:
 		self.r = Resolver(config, self.msgs)
 
 
+
 	def APIVersion(self) -> int:
 		""" Returns API version, a monotonically increasing integer. """
 		return 1

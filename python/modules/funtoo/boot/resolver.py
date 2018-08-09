@@ -5,9 +5,8 @@ the [-v] in a file path to the various files it can match. """
 
 import glob
 import os
-
-from subprocess import Popen
 from subprocess import PIPE
+from subprocess import Popen
 from subprocess import STDOUT
 from subprocess import getstatusoutput, getoutput
 
@@ -24,12 +23,12 @@ def bracketzap(instr, wild=True):
 	if wstart > wstop:
 		return instr
 	if wild:
-		if instr[wstart:wstop+1] == "[-v]":
-			return instr[0:wstart]+"-*"+instr[wstop+1:]
+		if instr[wstart:wstop + 1] == "[-v]":
+			return instr[0:wstart] + "-*" + instr[wstop + 1:]
 		else:
-			return instr[0:wstart]+instr[wstart+1:wstop]+instr[wstop+1:]
+			return instr[0:wstart] + instr[wstart + 1:wstop] + instr[wstop + 1:]
 	else:
-		return instr[0:wstart]+instr[wstop+1:]
+		return instr[0:wstart] + instr[wstop + 1:]
 
 
 class Resolver:
@@ -38,16 +37,17 @@ class Resolver:
 	extension to generate the proper boot-loader-specific configuration file based
 	on what the resolver found.
 	"""
-
+	
 	def __init__(self, config, msgs):
 		self.config = config
 		self.mounted = {}
 		self.fstabinfo = fstabInfo()
-		# The following 4 variables are for use in generating sections.
+		# The following 4 variables are for use in generating sections:
+		# a position counter -- if 0, we processed no kernels...
 		self._pos = 0
 		self._defpos = None
 		self._defnames = []
-		self._default = self.config.deburr(self.config["boot/default"])
+		self._default, self._default_mode = self.config.get_default_boot_setting()
 		self.rootarg = None
 		self.intel_cpio = False
 		self.is_intel = self.isIntel()
@@ -55,23 +55,24 @@ class Resolver:
 			if os.path.exists("/lib/firmware/intel-ucode"):
 				self.intel_cpio = self.generateIntelInitramfs()
 		self.msgs = msgs
-		
+		self.idmapper = self.config.idmapper
+	
 	def resolvedev(self, dev):
 		if ((dev[0:5] == "UUID=") or (dev[0:6] == "LABEL=")):
-			cmdobj = Popen(["/sbin/findfs", dev], bufsize = -1, stdout = PIPE, stderr = PIPE, shell = False)
+			cmdobj = Popen(["/sbin/findfs", dev], bufsize=-1, stdout=PIPE, stderr=PIPE, shell=False)
 			output = cmdobj.communicate()
 			return output[0].decode()
 		else:
 			return dev
-
+	
 	def GetMatchingKernels(self, scanpath, globlist, skip=None):
 		# find kernels in scanpath that match globs in globlist, and return them
 		found = []
 		if skip is None:
 			skip = []
 		for pattern in globlist:
-			base_glob = os.path.normpath(scanpath+"/"+ bracketzap(pattern, wild=False))
-			wild_glob = os.path.normpath(scanpath+"/"+ bracketzap(pattern, wild=True))
+			base_glob = os.path.normpath(scanpath + "/" + bracketzap(pattern, wild=False))
+			wild_glob = os.path.normpath(scanpath + "/" + bracketzap(pattern, wild=True))
 			for match in glob.glob(base_glob):
 				if match not in skip and match not in found:
 					if not os.path.exists(match):
@@ -88,22 +89,23 @@ class Resolver:
 							continue
 						# append the matching kernel, and the literal [-v]
 						# extension that was found on this kernel
-						found.append([match, match[len(scanpath)+1+pattern.find("["):], os.path.getmtime(match)])
+						found.append([match, match[len(scanpath) + 1 + pattern.find("["):], os.path.getmtime(match)])
 		return found
-
+	
 	def isIntel(self):
 		a = getoutput("/usr/bin/lscpu | grep ^Vendor")
 		return a.endswith("GenuineIntel")
-
+	
 	def generateIntelInitramfs(self):
-		s,o = getstatusoutput("rm -f /boot/early_ucode.cpio; /usr/sbin/iucode_tool --write-earlyfw=/boot/early_ucode.cpio /lib/firmware/intel-ucode/* >/dev/null 2>&1")
+		s, o = getstatusoutput(
+			"rm -f /boot/early_ucode.cpio; /usr/sbin/iucode_tool --write-earlyfw=/boot/early_ucode.cpio /lib/firmware/intel-ucode/* >/dev/null 2>&1")
 		if s == 0:
 			return self.StripMountPoint("/boot/early_ucode.cpio")
 		return False
-
-	def FindInitrds(self,initrds,kernel,kext):
+	
+	def FindInitrds(self, initrds, kernel, kext):
 		found = []
-		base_path=os.path.dirname(kernel)
+		base_path = os.path.dirname(kernel)
 		if self.intel_cpio is not False:
 			found.append(self.intel_cpio)
 		for initrd in initrds.split():
@@ -112,23 +114,26 @@ class Resolver:
 			if sep1:
 				head2, sep2, tail2 = tail1.partition("]")
 				if sep2:
-					initrd = os.path.normpath("{base_path}/{initrd}{kext}{iext}".format(base_path = base_path, initrd = head1, kext = kext, iext = tail2))
+					initrd = os.path.normpath("{base_path}/{initrd}{kext}{iext}".format(base_path=base_path, initrd=head1, kext=kext, iext=tail2))
 				else:
-					#Shouldn't be here. just add original initrd value
-					initrd = os.path.normpath("{base_path}/{initrd}".format(base_path = base_path, initrd = initrd))
+					# Shouldn't be here. just add original initrd value
+					initrd = os.path.normpath("{base_path}/{initrd}".format(base_path=base_path, initrd=initrd))
 			else:
-				initrd=os.path.normpath("{base_path}/{initrd}".format(base_path = base_path, initrd = tail1))
-
+				initrd = os.path.normpath("{base_path}/{initrd}".format(base_path=base_path, initrd=tail1))
+			
 			if os.path.exists(initrd):
 				found.append(initrd)
 		return found
-
-	def GetBootEntryString(self,sect,kname):
-		return "{s} - {k}".format(s = sect, k = os.path.basename(kname) )
-
-	single_flags = set([ "async", "atime", "noatime", "auto", "noauto", "defaults", "rw", "ro", "suid", "nosuid", "dev", "nodev", "exec", "noexec", "nouser", "diratime", "nodiratime", "dirsync", "group", "iversion", "noiversion", "mand", "nomand", "_netdev", "relatime", "norelatime", "strictatime", "nostrictatime", "lazytime", "silent", "loud", "owner", "remount", "sync", "user", "nouser", "users", "user_xattr", "nouser_xattr" ])
-	arg_flags = [ "context", "fscontext", "defcontext", "rootcontext" ]
-
+	
+	def GetBootEntryString(self, sect, kname):
+		return "{s} - {k}".format(s=sect, k=os.path.basename(kname))
+	
+	single_flags = set(
+		["async", "atime", "noatime", "auto", "noauto", "defaults", "rw", "ro", "suid", "nosuid", "dev", "nodev", "exec", "noexec", "nouser", "diratime",
+		 "nodiratime", "dirsync", "group", "iversion", "noiversion", "mand", "nomand", "_netdev", "relatime", "norelatime", "strictatime", "nostrictatime",
+		 "lazytime", "silent", "loud", "owner", "remount", "sync", "user", "nouser", "users", "user_xattr", "nouser_xattr"])
+	arg_flags = ["context", "fscontext", "defcontext", "rootcontext"]
+	
 	def filterRootFlags(self, flags):
 		# filter out non-fs-specific mount flags. These can cause the Linux kernel to choke on boot and should not appear on the
 		# cmdline.
@@ -138,13 +143,13 @@ class Resolver:
 				continue
 			else:
 				for af in self.arg_flags:
-					if f.startswith(af+"="):
+					if f.startswith(af + "="):
 						continue
 			if f.startswith("x-"):
 				continue
 			new_flags.append(f)
 		return ",".join(new_flags)
-
+	
 	def calculate_rootfs_for_section(self, params):
 		""" Properly handle the root=auto and real_root=auto parameters in the boot.conf config file. This method also
 		 modifies params, setting root= or real_root= appropriately. Self.rootarg gets set to either "root" or "real_root".
@@ -158,11 +163,11 @@ class Resolver:
 		if "root=auto" in params:
 			params.remove("root=auto")
 			self.rootarg = "root"
-			doauto=True
+			doauto = True
 		if "real_root=auto" in params:
 			params.remove("real_root=auto")
 			self.rootarg = "real_root"
-			doauto=True
+			doauto = True
 		if doauto:
 			rootdev = self.fstabinfo.getRootDevice()
 			rootflags = self.fstabinfo.getRootMountFlags()
@@ -188,23 +193,23 @@ class Resolver:
 			# if we got here, we didn't find a root or real_root
 			self.msgs.append(["warn", "(root=auto) - cannot find a root= or real_root= setting in params."])
 			return ok, None
-
-	def ZapParam(self,params,param):
+	
+	def ZapParam(self, params, param):
 		pos = 0
 		while pos < len(params):
 			if params[pos][0:len(param)] == param:
 				del params[pos]
 				continue
 			pos += 1
-
-	def GetParam(self,params,param):
+	
+	def GetParam(self, params, param):
 		pos = 0
 		while pos < len(params):
 			if params[pos][0:len(param)] == param:
 				return params[pos][len(param):]
 			pos += 1
 		return None
-
+	
 	def calculate_filesystem_for_section(self, params):
 		ok = True
 		if "rootfstype=auto" in params:
@@ -224,15 +229,15 @@ class Resolver:
 				if param[0:11] == "rootfstype=":
 					return ok, param[11:]
 		return ok, None
-
+	
 	def GetMountPoint(self, scanpath):
 		"""Searches through scanpath for a matching mountpoint in /etc/fstab"""
 		mountpoint = scanpath
-
+		
 		# Avoids problems
 		if os.path.isabs(mountpoint) == False:
 			return None
-
+		
 		while True:
 			if mountpoint == "/":
 				break
@@ -241,7 +246,7 @@ class Resolver:
 			else:
 				# If we made it here, strip off last dir and try again
 				mountpoint = os.path.dirname(mountpoint)
-
+		
 		# If here, no entry in fstab. Let's try searching for it
 		mountpoint = scanpath
 		while True:
@@ -252,13 +257,13 @@ class Resolver:
 			else:
 				# If we made it here, strip off last dir and try again
 				mountpoint = os.path.dirname(mountpoint)
-
+	
 	def MountIfNecessary(self, scanpath):
-
+		
 		if os.path.normpath(scanpath) == "/boot":
 			# /boot mounting is handled via another process, so skip:
 			return
-
+		
 		# we record things to a self.mounted list, which is used later to track when we personally mounted
 		# something, so we can unmount it. If it's already mounted, we leave it mounted:
 		mountpoint = self.GetMountPoint(scanpath)
@@ -272,10 +277,10 @@ class Resolver:
 				return
 			else:
 				# not mounted, and mountable, so we should mount it.
-				cmdobj = Popen(["mount",  mountpoint], bufsize = -1, stdout = PIPE, stderr = STDOUT, shell = False)
+				cmdobj = Popen(["mount", mountpoint], bufsize=-1, stdout=PIPE, stderr=STDOUT, shell=False)
 				output = cmdobj.communicate()
 				if cmdobj.poll() != 0:
-					self.msgs.append(["fatal", "Error mounting {mp}, Output was :\n{out}".format(mp = mountpoint, out = output[0].decode())])
+					self.msgs.append(["fatal", "Error mounting {mp}, Output was :\n{out}".format(mp=mountpoint, out=output[0].decode())])
 					return
 				else:
 					self.mounted[mountpoint] = True
@@ -283,27 +288,25 @@ class Resolver:
 		else:
 			# No mountpoint, just return
 			return
-
-
+	
 	def UnmountIfNecessary(self) -> None:
 		for mountpoint, we_mounted in iter(self.mounted.items()):
 			if we_mounted is False:
 				continue
 			else:
-				cmdobj = Popen(["umount", mountpoint], bufsize = -1, stdout = PIPE, stderr = STDOUT, shell = False)
+				cmdobj = Popen(["umount", mountpoint], bufsize=-1, stdout=PIPE, stderr=STDOUT, shell=False)
 				output = cmdobj.communicate()
 				if cmdobj.poll() != 0:
-					self.msgs.append(["warn", "Error unmounting {mp}, Output was :\n{out}".format(mp = mountpoint, out = output[0].decode())])
-
+					self.msgs.append(["warn", "Error unmounting {mp}, Output was :\n{out}".format(mp=mountpoint, out=output[0].decode())])
+	
 	def _GenerateLinuxSection(self, l, sect, sfunc) -> bool:
 		"""Generates section for Linux systems"""
 		ok = True
-		def_mtime = None
 
-
+		
 		# Process a section, such as "genkernel" section.
-
-		findlist, skiplist = self.config.flagItemList("{s}/kernel".format(s = sect))
+		
+		findlist, skiplist = self.config.flagItemList("{s}/kernel".format(s=sect))
 		
 		# findlist == special patterns to match (i.e. kernel[-v])
 		# skiplist == patterns to skip.
@@ -312,7 +315,7 @@ class Resolver:
 		skipmatch = []
 		
 		scanpaths = self.config.item(sect, "scan").split()
-
+		
 		for scanpath in scanpaths:
 			self.MountIfNecessary(scanpath)
 			if len(skiplist):
@@ -323,55 +326,66 @@ class Resolver:
 				# find kernels to match (skipping any kernels we should skip...)
 				matches = self.GetMatchingKernels(scanpath, findlist, skipmatch)
 				findmatch += matches
-			
+		
 		# Generate individual boot entry using extension-supplied function
-
+		
 		found_multi = False
-
+		
+		# logic for finding a kernel to boot, based on default setting:
 		# sort by modification time:
 		findmatch = sorted(findmatch, key=lambda x: x[2], reverse=True)
+		
+		if self._default_mode == "autopick: mtime":
+			# pick newest kernel by mtime, which happens to be top-of-list
+			self._defpos = 0
+			for kname, kext, mtime in findmatch:
+				self._defnames.append(kname)
+				ok = sfunc(l, sect, kname, kext)
+				self._pos += 1
 
-		for kname, kext, mtime in findmatch:
-			if (self._default == sect) or (self._default == os.path.basename(kname)):
-				# default match
-				if self._defpos is not None:
-					found_multi = True
-					if mtime > def_mtime:
-						# this kernel is newer, use it instead
+		else:
+			def_mtime = None
+			for kname, kext, mtime in findmatch:
+				if (self._default == sect) or (self._default == kname) or (self._default == os.path.basename(kname)):
+					# default match
+					if self._defpos is not None:
+						found_multi = True
+						if mtime > def_mtime:
+							# this kernel is newer, use it instead
+							self._defpos = self._pos
+							def_mtime = mtime
+					else:
 						self._defpos = self._pos
-						def_mtime = mtime
-				else:
-					self._defpos = self._pos
-					def_mtime = os.stat(kname)[8]
-			self._defnames.append(kname)
-			ok = sfunc(l, sect, kname, kext)
-			if not ok:
-				break
-			self._pos += 1
-
-		if found_multi:
-			self.msgs.append(["warn", "multiple matches found for default \"{name}\" - most recent used.".format(name = self._default)])
+						def_mtime = os.stat(kname)[8]
+				self._defnames.append(kname)
+				ok = sfunc(l, sect, kname, kext)
+				if not ok:
+					break
+				self._pos += 1
+			
+			if found_multi:
+				self.msgs.append(["warn", "multiple matches found for default \"{name}\" - most recent used.".format(name=self._default)])
 
 		return ok
-
+	
 	def _GenerateOtherSection(self, l, sect, ofunc) -> bool:
 		"""Generate section for non-Linux systems"""
-
-		ok = ofunc(l,sect)
+		
+		ok = ofunc(l, sect)
 		self._defnames.append(sect)
 		if self._default == sect:
-			if self._defpos != None:
-				self.msgs.append(["warn", "multiple matches found for default boot entry \"{name}\" - first match used.".format(name = self._default)])
+			if self._defpos is not None:
+				self.msgs.append(["warn", "multiple matches found for default boot entry \"{name}\" - first match used.".format(name=self._default)])
 			else:
 				self._defpos = self._pos
 		self._pos += 1
 		return ok
-
+	
 	def GenerateSections(self, l, sfunc, ofunc=None) -> (bool, object, object):
 		"""Generates sections using passed in extension-supplied functions"""
-
+		
 		ok = True
-
+		
 		try:
 			timeout = int(self.config["boot/timeout"])
 		except ValueError:
@@ -383,66 +397,71 @@ class Resolver:
 			self.msgs.append(["warn", "boot/timeout value is zero - boot menu will not appear!"])
 		elif timeout < 3:
 			self.msgs.append(["norm", "boot/timeout value is below 3 seconds."])
-
+		
 		# Remove builtins from list of sections
 		sections = self.config.getSections()
 		for sect in sections[:]:
 			if sect in self.config.builtins:
 				sections.remove(sect)
-
+		
 		# If we have no boot entries, throw an error - force user to be
 		# explicit.
 		if len(sections) == 0:
-			self.msgs.append(["fatal","No boot entries are defined in /etc/boot.conf."])
-			ok=False
+			self.msgs.append(["fatal", "No boot entries are defined in /etc/boot.conf."])
+			ok = False
 			return ok, None, None
-
+		
 		# Warn if there are no linux entries
 		has_linux = False
 		for sect in sections:
-			if self.config["{s}/{t}" .format(s=sect, t="type")] == "linux":
+			if self.config["{s}/{t}".format(s=sect, t="type")] == "linux":
 				has_linux = True
 				break
 		if has_linux is False:
 			self.msgs.append(["warn", "No Linux boot entries are defined. You may not be able to re-enter Linux."])
-
+		
 		# Generate sections
 		for sect in sections:
-			if self.config["{s}/type" .format(s = sect)] in [ "linux", "xen" ]:
-				ok = self. _GenerateLinuxSection(l, sect, sfunc)
+			if self.config["{s}/type".format(s=sect)] in ["linux", "xen"]:
+				ok = self._GenerateLinuxSection(l, sect, sfunc)
 			elif ofunc:
 				ok = self._GenerateOtherSection(l, sect, ofunc)
-
+		
 		if self._pos == 0:
+			# this means we processed no kernels -- so we have nothing to boot!
 			ok = False
 			self.msgs.append(["fatal", "No matching kernels or boot entries found in /etc/boot.conf."])
 			self._defpos = None
 			return ok, self._defpos, None
 		elif self._defpos is None:
-			self.msgs.append(["note", "No boot/default match found - using most recently updated kernel (by mtime) by default."])
+			# this means we didn't pick a default kernel to boot!
+			self.msgs.append(["warn", "Had difficulty finding a default kernel -- using first one. (report this error.)"])
 			# If we didn't find a specified default, use the first one
 			self._defpos = 0
-
+		else:
+			self.msgs.append(["note", "Default kernel selected via: %s." % self._default_mode])
+		if self._default_mode == "autopick: mtime" and self.config.item("boot", "autopick") == "last":
+				self.msgs.append(["warn", "Falling back to last modification time booting due to lack of last-booted info."])
 		if self.is_intel:
 			if not self.intel_cpio:
 				self.msgs.append(["warn", "Intel system detected - please emerge sys-firmware/intel-microcode and sys-apps/iucode_tool and run boot-update again; boot-update will then patch your system with the latest Intel CPU and chipset microcode patches at boot-time, protecting you against important vulnerabilities and errata."])
 			else:
 				self.msgs.append(["note", "Intel microcode will be loaded at boot-time."])
-
+		
 		return ok, self._defpos, self._defnames[self._defpos]
-
+	
 	def RelativePathTo(self, imagepath, mountpath):
 		# we expect /boot to be mounted if it is available when this is run
 		if os.path.ismount("/boot"):
-			return "/"+os.path.relpath(imagepath, mountpath)
+			return "/" + os.path.relpath(imagepath, mountpath)
 		else:
 			return os.path.normpath(imagepath)
-
+	
 	def StripMountPoint(self, scanpath):
 		"""Strips mount point from scanpath"""
-
+		
 		mountpoint = self.GetMountPoint(scanpath)
-
+		
 		if mountpoint:
 			split_path = scanpath.split(mountpoint, 1)
 			if len(split_path) != 2:

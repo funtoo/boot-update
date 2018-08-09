@@ -41,7 +41,7 @@ def banner(extra=True):
 	""" prints the banner message """
 	print("")
 	print("{P}boot-update {O}{C}{ver}{O} /".format(P = PURP, O = OFF, C = CYANN, ver = version))
-	print("Copyright 2009-2017 Funtoo Technologies")
+	print("Copyright 2009-2018 Funtoo Solutions, Inc.")
 	if extra:
 		print("")
 		print(" [use option \"-l\" for license info, \"-h\" for help]")
@@ -248,7 +248,11 @@ else:
 				sys.stdout.write(line)
 	elif len(sys.argv) >=2 and (sys.argv[1] in ["-h", "--help"]):
 		printhelp()
+	elif len(sys.argv) >=2 and (sys.argv[1]) in ["--success"]:
+		pass
+		# TODO:
 	else:
+		# default behavior -- regenerate boot config:
 		banner()
 		update(c, ok)
 
