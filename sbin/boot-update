@@ -103,16 +103,19 @@ def mesg(msgtype, msg):
 	if outstr:
 		print(textwrap.fill(outstr, term_size[0], initial_indent=" ", subsequent_indent="          "))
 
-def cleanup(success, messages, ext = None):
+
+def cleanup(success, msgs=None, ext=None):
 	""" prints accumulated errors and warnings and exits appropriately """
-	if ext != None:
+	if msgs is None:
+		msgs = []
+	if ext is not None:
 		# unmounts any non-/boot filesystems we may have mounted for scanning.
 		# /boot unmounting is handled via another process.
-		mesgs = ext.r.UnmountIfNecessary()
-		messages += mesgs
+		ext.r.UnmountIfNecessary()
+		msgs += ext.msgs
 
 	warnings = False
-	for msgtype, msg in messages:
+	for msgtype, msg in msgs:
 		if msgtype == "warn":
 			warnings = True
 		mesg(msgtype, msg)
@@ -131,11 +134,13 @@ def cleanup(success, messages, ext = None):
 		print()
 		sys.exit(0)
 
-def update(config, success, messages):
+
+def update(config, success):
+	global allmsgs
 	""" update configuration """
 	# Generate warnings for any invalid config file entries...
 	for invalid in config.validate():
-		messages.append(["warn", "invalid config setting \"{iv}\"; ignored.".format(iv = invalid)])
+		allmsgs.append(["warn", "invalid config setting \"{iv}\"; ignored.".format(iv = invalid)])
 
 	# Figure out what extension we should be loading...
 
@@ -143,21 +148,21 @@ def update(config, success, messages):
 
 	if generate == "":
 		success = False
-		messages.append(["fatal", "boot/generate does not specify a valid boot loader to generate a config for."])
+		allmsgs.append(["fatal", "boot/generate does not specify a valid boot loader to generate a config for."])
 
 	if generate not in funtoo.boot.extensions.__all__:
 		success = False
-		messages.append(["fatal", "extension for boot loader \"{gen}\" (specified in boot/generate) not found.".format(g = generate)])
+		allmsgs.append(["fatal", "extension for boot loader \"%s\" (specified in boot/generate) not found." % generate])
 
 	if ("-C" in sys.argv) or ("--check" in sys.argv):
-		messages.append(["norm","Configuration file {cf} checked.".format(cf = cfile)])
-		cleanup(success, messages)
+		allmsgs.append(["norm", "Configuration file {cf} checked.".format(cf = cfile)])
+		cleanup(success)
 
-	mesg("norm","Generating config for {gen}...".format(gen = generate))
+	mesg("norm", "Generating config for {gen}...".format(gen=generate))
 	print()
 
 	if not success:
-		cleanup(success, messages)
+		cleanup(success, msgs=allmsgs)
 
 	# Before loading extension, we want to auto-mount boot if it isn't
 	# already mounted:
@@ -182,12 +187,10 @@ def update(config, success, messages):
 	try:
 		ext = extmodule.getExtension(config)
 		ext.mesg = mesg
-		success, msgs = ext.regenerate()[1:]
+		success = ext.regenerate()[1:]
 	except ExtensionError as e:
 		success = False
-		messages.append(["fatal",  e])
-	else:
-		messages += msgs
+		allmsgs.append(["fatal", e])
 
 	if success:
 		pos = 0
@@ -203,14 +206,15 @@ def update(config, success, messages):
 		mesg("debug","Unmounting /boot")
 		os.system("umount /boot")
 
-	cleanup(success, allmsgs, ext)
+	cleanup(success, msgs=allmsgs, ext=ext)
+
 
 if os.geteuid() != 0:
 	print("")
 	mesg("fatal", "boot-update requires root privileges")
 	print("")
 else:
-	if len(sys.argv)>=2 and (( "-l" in sys.argv ) or ( "--license" in sys.argv )):
+	if len(sys.argv) >= 2 and (("-l" in sys.argv) or ("--license" in sys.argv)):
 		versinfo()
 		sys.exit(0)
 
@@ -225,27 +229,27 @@ else:
 		c = funtoo.boot.config.BootConfigFile(cfile)
 		if not c.fileExists():
 			ok = False
-			allmsgs.append(["fatal", "Master configuration file \"{cf}\" does not exist.".format(cf = cfile)])
+			allmsgs.append(["fatal", "Master configuration file \"{cf}\" does not exist.".format(cf=cfile)])
 	except ConfigFileError as e:
 		ok = False
 		banner()
-		allmsgs.append(["fatal", "Parse Error: {err}".format(err = e)])
+		allmsgs.append(["fatal", "Parse Error: {err}".format(err=e)])
 	if not ok:
-		cleanup(ok, allmsgs)
+		cleanup(ok, msgs=allmsgs)
 
-	if len(sys.argv)>=3 and sys.argv[1] == "--show":
+	if len(sys.argv) >= 3 and sys.argv[1] == "--show":
 		print(c[sys.argv[2]])
-	elif len(sys.argv)>=2 and sys.argv[1] == "--showdefaults":
+	elif len(sys.argv) >= 2 and sys.argv[1] == "--showdefaults":
 		print("# These are the default settings that can be overridden by")
 		print("# the /etc/boot.conf file.")
 		print("")
 		for line in c.parent.dump():
 			if not line.startswith("#"):
 				sys.stdout.write(line)
-	elif len(sys.argv)>=2 and (sys.argv[1] in [ "-h", "--help"]):
+	elif len(sys.argv) >=2 and (sys.argv[1] in ["-h", "--help"]):
 		printhelp()
 	else:
 		banner()
-		update(c, ok, allmsgs)
+		update(c, ok)
 
 # vim: ts=4 sw=4 noet

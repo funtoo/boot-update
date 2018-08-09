@@ -1,3 +1,2 @@
 # -*- coding: ascii -*-
-__all__ = [ "config" ]
-
+__all__ = ["config"]

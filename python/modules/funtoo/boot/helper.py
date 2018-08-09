@@ -9,7 +9,7 @@ class fstabInfo:
 		for line in fn.readlines():
 			line = line[0:line.find("#")]
 			split=line.split()
-			if (len(split) != 6):
+			if len(split) != 6:
 				continue
 			self.devices[split[0]] = split
 			self.mountpoints[split[1]] = split

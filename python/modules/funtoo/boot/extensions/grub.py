@@ -43,7 +43,6 @@ class GRUBExtension(Extension):
 	def generateOtherBootEntry(self, l, sect):
 		""" Generates the boot entry for other systems """
 		ok = True
-		msgs = []
 		mytype = self.config["{s}/type".format(s=sect)].lower()
 		if mytype in ["dos", "msdos"]:
 			mytype = "dos"
@@ -62,9 +61,8 @@ class GRUBExtension(Extension):
 		elif mytype in ["linux16"]:
 			mytype = "linux16"
 		else:
-			ok = False
-			msgs.append(["fatal", "Unrecognized boot entry type \"{mt}\"".format(mt=mytype)])
-			return [ok, msgs]
+			self.msgs.append(["fatal", "Unrecognized boot entry type \"{mt}\"".format(mt=mytype)])
+			return False
 		params = self.config["{s}/params".format(s=sect)].split()
 		myroot = self.r.GetParam(params, "root=")
 		mychainloader = self.r.GetParam(params, "chainloader=")
@@ -75,7 +73,7 @@ class GRUBExtension(Extension):
 		if mytype in ["linux16"]:
 			k = self.r.StripMountPoint(self.config[sect + "/kernel"])
 			if not os.path.exists(self.config["boot/path"] + "/" + k):
-				msgs.append(["warn", "Image for section {sect} not found - {k}".format(sect=sect, k=k)])
+				self.msgs.append(["warn", "Image for section {sect} not found - {k}".format(sect=sect, k=k)])
 			else:
 				self.bootitems.append(myname)
 				l.append("  linux16 " + k)
@@ -90,12 +88,11 @@ class GRUBExtension(Extension):
 			elif mytype in ["win10"]:
 				l.append("  chainloader " + mychainloader) if mychainloader else l.append("  chainloader /EFI/Microsoft/Boot/bootmgfw.efi")
 		l.append("}")
-		return [ok, msgs]
+		return True
 	
 	def generateBootEntry(self, l, sect, kname, kext):
 		""" Generates the boot entry """
 		ok = True
-		allmsgs = []
 		mytype = self.config["{s}/type".format(s=sect)]
 		l.append("")
 		label = self.r.GetBootEntryString(sect, kname)
@@ -106,14 +103,7 @@ class GRUBExtension(Extension):
 		
 		self.PrepareGRUBForFilesystem(self.config["{s}/scan".format(s=sect)], l)
 		
-		# Populate xen variables if type is xen
-		if mytype == "xen":
-			xenkernel = self.config["{s}/xenkernel".format(s=sect)]
-			# Add leading / if needed
-			if not xenkernel.startswith("/"):
-				xenkernel = "/{xker}".format(xker=xenkernel)
-			xenpath = self.r.StripMountPoint(xenkernel)
-			xenparams = self.config["{s}/xenparams".format(s=sect)].split()
+
 		
 		kpath = self.r.StripMountPoint(kname)
 		c = self.config
@@ -125,18 +115,30 @@ class GRUBExtension(Extension):
 			]
 		params += self.config["{s}/params".format(s=sect)].split()
 		
-		ok, allmsgs, myroot = self.r.DoRootAuto(params, ok, allmsgs)
+		ok, myroot = self.r.calculate_rootfs_for_section(params)
 		if not ok:
-			return [ok, allmsgs]
-		ok, allmsgs, fstype = self.r.DoRootfstypeAuto(params, ok, allmsgs)
+			return False
+		ok, fstype = self.r.calculate_rootfs_for_section(params)
 		if not ok:
-			return [ok, allmsgs]
+			return False
 		
 		initrds = self.config.item(sect, "initrd")
 		initrds = self.r.FindInitrds(initrds, kname, kext)
 		if myroot and ('root=' + myroot) in params and 0 == len(initrds):
 			params.remove('root=' + myroot)
 			params.append('root=' + self.r.resolvedev(myroot))
+		
+		xenpath = None
+		xenparams = None
+		
+		# Populate xen variables if type is xen
+		if mytype == "xen":
+			xenkernel = self.config["{s}/xenkernel".format(s=sect)]
+			# Add leading / if needed
+			if not xenkernel.startswith("/"):
+				xenkernel = "/{xker}".format(xker=xenkernel)
+			xenpath = self.r.StripMountPoint(xenkernel)
+			xenparams = self.config["{s}/xenparams".format(s=sect)].split()
 		
 		# Append kernel lines based on type
 		if mytype == "xen":
@@ -161,7 +163,7 @@ class GRUBExtension(Extension):
 				l.append("  set gfxpayload=keep")
 		l.append("}")
 		
-		return [ok, allmsgs]
+		return ok
 	
 	def sanitizeDisplayMode(self, dm):
 		if self.uefiboot and dm == "text":
@@ -173,17 +175,15 @@ class GRUBExtension(Extension):
 	def generateConfigFile(self):
 		l = []
 		c = self.config
-		ok = True
-		allmsgs = []
 		if self.uefiboot:
-			allmsgs.append(["note", "Detected UEFI boot. Configuring for UEFI booting."])
+			self.msgs.append(["note", "Detected UEFI boot. Configuring for UEFI booting."])
 		else:
-			allmsgs.append(["note", "Detected MBR boot. Configuring for Legacy MBR booting."])
+			self.msgs.append(["note", "Detected MBR boot. Configuring for Legacy MBR booting."])
 		l.append(c.condFormatSubItem("boot/timeout", "set timeout={s}"))
 		# pass our boot entry generator function to GenerateSections,
 		# and everything is taken care of for our boot entries
 		if c.hasItem("boot/terminal") and c["boot/terminal"] == "serial":
-			allmsgs.append(["warn", "Configured for SERIAL input/output."])
+			self.msgs.append(["warn", "Configured for SERIAL input/output."])
 			l += [
 				"serial --unit=%s --speed=%s --word=%s --parity=%s --stop=%s" % (
 				c["serial/unit"], c["serial/speed"], c["serial/word"], c["serial/parity"], c["serial/stop"]),
@@ -231,10 +231,10 @@ class GRUBExtension(Extension):
 			
 			if dst_font is None:
 				if font:
-					allmsgs.append(["fatal", "specified font \"{ft}\" not found at {dst}; aborting.".format(ft=font, dst=dst_font)])
+					self.msgs.append(["fatal", "specified font \"{ft}\" not found at {dst}; aborting.".format(ft=font, dst=dst_font)])
 				else:
-					allmsgs.append(["fatal", "Could not find one of %s to copy into boot directory; aborting." % ",".join(fonts)])
-				return [False, allmsgs, l]
+					self.msgs.append(["fatal", "Could not find one of %s to copy into boot directory; aborting." % ",".join(fonts)])
+				return False, l
 			
 			l += ["if loadfont {dst}; then".format(dst=self.r.RelativePathTo(dst_font, c["boot/path"])),
 				  "   set gfxmode={gfx}".format(gfx=self.sanitizeDisplayMode(c["display/gfxmode"])),
@@ -270,9 +270,9 @@ class GRUBExtension(Extension):
 							"   background_image {img}".format(img=self.r.RelativePathTo(rel_cfgpath, c["boot/path"]))
 						]
 					else:
-						allmsgs.append(["warn", "background image \"{img}\" does not exist - skipping.".format(img=bgimg)])
+						self.msgs.append(["warn", "background image \"{img}\" does not exist - skipping.".format(img=bgimg)])
 				else:
-					allmsgs.append(["warn", "background image \"{img}\" (format \"{ext}\") not recognized - skipping.".format(img=bgimg, ext=bgext)])
+					self.msgs.append(["warn", "background image \"{img}\" (format \"{ext}\") not recognized - skipping.".format(img=bgimg, ext=bgext)])
 			l += ["fi",
 				  "",
 				  c.condFormatSubItem("color/normal", "set menu_color_normal={s}"),
@@ -280,19 +280,18 @@ class GRUBExtension(Extension):
 				  ]
 		else:
 			if c.hasItem("display/background"):
-				allmsgs.append(["warn", "display/gfxmode not provided - display/background \"{bg}\" will not be displayed.".format(bg=c["display/background"])])
+				self.msgs.append(["warn", "display/gfxmode not provided - display/background \"{bg}\" will not be displayed.".format(bg=c["display/background"])])
 		
-		ok, msgs, self.defpos, self.defname = self.r.GenerateSections(l, self.generateBootEntry, self.generateOtherBootEntry)
-		allmsgs += msgs
+		ok, self.defpos, self.defname = self.r.GenerateSections(l, self.generateBootEntry, self.generateOtherBootEntry)
 		if not ok:
-			return [ok, allmsgs, l]
+			return ok, l
 		
 		l += [
 			""
 			"set default={pos}".format(pos=self.defpos)
 		]
 		
-		return [ok, allmsgs, l]
+		return ok, l
 	
 	def GuppyMap(self):
 		""" Creates the device map """

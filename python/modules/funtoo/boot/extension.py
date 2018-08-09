@@ -7,6 +7,7 @@ from funtoo.boot.resolver import Resolver
 class ExtensionError(Exception):
 	def __init__(self, *args):
 		self.args = args
+		
 	def __str__(self):
 		if len(self.args) == 1:
 			return str(self.args[0])
@@ -17,47 +18,48 @@ class Extension:
 	def __init__(self,config):
 		# initialization should always succeed.
 		self.config = config
-		self.r = Resolver(config)
+		self.msgs = []
+		self.r = Resolver(config, self.msgs)
 
-	def APIVersion(self):
+
+	def APIVersion(self) -> int:
 		""" Returns API version, a monotonically increasing integer. """
 		return 1
 
-	def isAvailable(self):
+	def isAvailable(self) -> bool:
 		""" Checks to ensure boot loader is available for use and all required local dependencies are satisfied. True = OK, False = not OK """
-		return [True,[]]
+		return True
 
-	def generateConfigFile(self):
+	def generateConfigFile(self) -> (bool, list):
 		""" Generate new config file based on config data. Returns a list of all lines of the config file, without trailing newlines. """
-		return [True, [] ,[]]
+		return True, []
 
-	def writeConfigFile(self,lines):
+	def writeConfigFile(self, lines) -> bool:
 		"""
 		Create a new config file on disk - rather than call generateConfigFile() ourselves, we are passed the
 		lines we want to print. This allows us to only generate them once, allowing validateConfigFile() to
 		take a look at them first to print any warnings, etc.
 		"""
-		out=open(self.fn,"w")
+		out = open(self.fn, "w")
 		for line in lines:
 			out.write(line+"\n")
 		out.close()
-		return [ True, []]
+		return True
 
-	def mesg(self,type,line):
+	def mesg(self, type, line) -> None:
 		""" This used for all informational messages, and can be overridden (as we do in boot-update to unify the output)"""
-		print("*",type,line)
+		print("*", type, line)
 
-	def backupConfigFile(self):
+	def backupConfigFile(self) -> bool:
 		""" Create backup as necessary """
 		oldfn = self.fn+".old"
 		if os.path.exists(self.fn):
 			if os.path.exists(oldfn):
 				os.unlink(oldfn)
 			os.rename(self.fn,oldfn)
-		return [ True, []]
+		return True
 
-
-	def validateConfigFile(self,lines):
+	def validateConfigFile(self, lines: list) -> bool:
 		"""
 		This method should be overridden - it looks at the config file specified in the "lines" list, and
 		prints any warnings or throws any errors as required.
@@ -66,67 +68,59 @@ class Extension:
 			[ True, [list of warnings] ] - OK
 			[ False, [list of warnings, errors] - Not OK, should abort.
 		"""
-		return [ True, []]
+		return True
 
-	def updateBootLoader(self):
+	def updateBootLoader(self) -> bool:
 		""" This method should be overridden. For LILO, run it to update the boot loader map. For grub, probably do nothing. """
-		return [ True, []]
+		return True
 
-	def regenerate(self):
+	def regenerate(self) -> (str, bool):
 		""" This method performs the main loop that calls all our sub-steps - you should not need to override this method. If you do, an API upgrade is probably in order. """
-
-		allmsgs = []
 
 		# CHECK DEPENDENCIES
 
-		ok, msgs = self.isAvailable()
-		allmsgs += msgs
+		ok = self.isAvailable()
 		if not ok:
-			return [ "dependency check", ok, allmsgs ]
+			return "dependency check", False
 
 		# TRY GENERATING CONFIG FILE - in memory, not yet written to disk
 
-		ok, msgs, l = self.generateConfigFile()
-		allmsgs += msgs
+		ok, l = self.generateConfigFile()
 		if not ok:
-			return [ "config generation", ok, allmsgs ]
+			return "config generation", False
 
-		allmsgs.append(["info","Configuration file {name} generated - {num} lines.".format(name = self.fn, num = len(l))])
+		self.msgs.append(["info","Configuration file {name} generated - {num} lines.".format(name=self.fn, num=len(l))])
 
 		# TRY VALIDATING CONFIG FILE
 
-		self.mesg("debug","Validating config file {name}".format(name = self.fn))
+		self.mesg("debug","Validating config file {name}".format(name=self.fn))
 
-		ok, msgs = self.validateConfigFile(l)
-		allmsgs += msgs
+		ok = self.validateConfigFile(l)
 		if not ok:
-			return [ "validation", ok, allmsgs ]
+			return "validation", False
 
 		# TRY BACKING UP CONFIG FILE
 
-		self.mesg("debug","Backing up original config file to {name}.old".format(name = self.fn))
+		self.mesg("debug", "Backing up original config file to {name}.old".format(name=self.fn))
 
-		ok, msgs = self.backupConfigFile()
-		allmsgs += msgs
+		ok = self.backupConfigFile()
 		if not ok:
-			return [ "config file backup", ok, allmsgs ]
-
+			return "config file backup", False
+			
 		# TRY WRITING CONFIG FILE
 
-		self.mesg("debug","Writing new config file to {name}".format(name = self.fn))
+		self.mesg("debug","Writing new config file to {name}".format(name=self.fn))
 
-		ok, msgs = self.writeConfigFile(l)
-		allmsgs += msgs
+		ok = self.writeConfigFile(l)
 		if not ok:
-			return [ "config file write", ok, allmsgs ]
+			return "config file write", False
 
 		# TRY UPDATING BOOT LOADER
 
-		ok, msgs = self.updateBootLoader()
-		allmsgs += msgs
+		ok = self.updateBootLoader()
 		if not ok:
-			return [ "boot loader update", ok, allmsgs ]
+			return "boot loader update", False
 
-		return [ "complete", True, allmsgs ]
+		return "complete", True
 
 # vim: ts=4 sw=4 noet

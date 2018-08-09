@@ -9,10 +9,9 @@ class DefaultBootConfigFile(config.ConfigFile):
 			return "default"
 		return None
 
-	def __init__(self,fn="/etc/boot.conf.defaults",existing=True):
+	def __init__(self, fn="/etc/boot.conf.defaults", existing=True):
 		self.builtins = ["boot", "default", "color", "grub", "grub-legacy", "lilo"]
-		config.ConfigFile.__init__(self,fn,existing)
-
+		config.ConfigFile.__init__(self, fn, existing)
 
 
 class BootConfigFile(config.ConfigFile):
@@ -30,25 +29,25 @@ class BootConfigFile(config.ConfigFile):
 		self.parent=DefaultBootConfigFile()
 
 	def validate(self):
-		invalid=[]
-		validmap={
-				"boot" : ["path", "generate", "timeout", "default", "bootdev","terminal"],
-				"display" : ["gfxmode", "background", "font"],
-				"color" : ["normal", "highlight"],
-				"default" : ["scan", "gfxmode", "kernel", "initrd", "params", "type", "xenkernel", "xenparams"],
-				"grub" : ["dir", "file", "grub-mkdevicemap", "grub-probe", "font_src"],
-				"grub-legacy" : ["dir", "file"],
-				"lilo" : ["file", "bin", "gparams"],
-				"serial" : [ "parity", "port", "speed", "stop", "unit", "word" ]
+		invalid = []
+		validmap = {
+				"boot": ["path", "generate", "timeout", "default", "bootdev", "terminal"],
+				"display": ["gfxmode", "background", "font"],
+				"color": ["normal", "highlight"],
+				"default": ["scan", "gfxmode", "kernel", "initrd", "params", "type", "xenkernel", "xenparams"],
+				"grub": ["dir", "file", "grub-mkdevicemap", "grub-probe", "font_src"],
+				"grub-legacy": ["dir", "file"],
+				"lilo": ["file", "bin", "gparams"],
+				"serial": ["parity", "port", "speed", "stop", "unit", "word"]
 		}
 		for section in self.sectionData.keys():
 			if section not in validmap.keys():
-				cmpto="default"
+				cmpto = "default"
 			else:
-				cmpto=section
+				cmpto = section
 			for itemkey in self.sectionData[section].keys():
 				if itemkey not in validmap[cmpto]:
-					invalid.append("{sect}/{name}".format(sect = section, name = itemkey ))
+					invalid.append("{sect}/{name}".format(sect=section, name=itemkey))
 		return invalid
 
 # vim: ts=4 sw=4 noet

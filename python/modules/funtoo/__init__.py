@@ -1,2 +1,2 @@
 # -*- coding: ascii -*-
-__all__ = [ "core", "boot" ]
+__all__ = ["core", "boot"]
