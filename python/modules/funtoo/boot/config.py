@@ -45,15 +45,37 @@ class KernelIDMapper:
 		self.kernel_to_rand_map = {}
 		self.load_mappings(self.file_path)
 	
+	def update_last_id(self):
+		"""Update the id of the last booted kernel -- used after a successful boot."""
+		current_id = self.get_active_rand_id()
+		if current_id is not None:
+			self.record_rand_id_to_file(current_id, self.last_path)
+	
+	def promote_kernel(self) -> (bool, str):
+		"""If a rand_id is in the promote file, this method tells us to set it as the default. Used for fallback."""
+		promote_id = self.load_promote_rand_id()
+		if promote_id is not None:
+			if promote_id == self.get_active_rand_id():
+				# we've booted the to-be-promoted kernel -- let's make it default:
+				self.record_rand_id_to_file(promote_id, self.default_path)
+				return True, self.get_kname_of_rand_id(promote_id)
+			else:
+				# remove promote file -- promote didn't appear to work
+				os.unlink(self.promote_path)
+		return False, None
+	
 	def get_kname_of_rand_id(self, rand_id) -> str:
 		return self.rand_to_kernel_map[rand_id]
 	
-	def load_last_successful_rand_id(self) -> object:
+	def load_last_successful_rand_id(self) -> str:
 		"""Get the rand_id of the last successful boot, if any."""
 		return self.load_id_file(self.last_path)
 	
-	def load_default_rand_id(self) -> object:
+	def load_default_rand_id(self) -> str:
 		return self.load_id_file(self.default_path)
+	
+	def load_promote_rand_id(self) -> str:
+		return self.load_id_file(self.promote_path)
 	
 	def get_default_kname(self) -> object:
 		"""Return None if no default set in default_path, else the default kname."""
@@ -64,6 +86,13 @@ class KernelIDMapper:
 			return self.rand_to_kernel_map[default_rand_id]
 		else:
 			return None
+	
+	def set_default_kname(self, kname) -> bool:
+		"""Set the default to-be-booted kernel by kname."""
+		if kname not in self.kernel_to_rand_map:
+			return False
+		self.record_rand_id_to_file(self.kernel_to_rand_map[kname], self.default_path)
+		return True
 		
 	def get_last_booted_kname(self) -> object:
 		"""Return kname of last-booted kernel"""

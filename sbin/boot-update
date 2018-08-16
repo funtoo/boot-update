@@ -1,20 +1,19 @@
 #!/usr/bin/python3
-# -*- coding: ascii -*-
 """ Runs the boot-update program from command line """
 
 import os
+import shutil
 import sys
 import textwrap
-import shutil
 
 debug = 0
 
-term_size = shutil.get_terminal_size((80,20))
+term_size = shutil.get_terminal_size((80, 20))
 
 # This is needed for testing from the root of the git repo - must come before
 # funtoo imports
 if os.path.isdir(".git") and os.path.basename(os.getcwd()) == "boot-update":
-	sys.path = [ "python/modules" ] + sys.path
+	sys.path = ["python/modules"] + sys.path
 
 # Import Funtoo extensions that we use:
 
@@ -36,16 +35,19 @@ PURP = "\x1b[35;01m"
 OFF = "\x1b[0m"
 version = "1.8.2"
 verbose = False
+cfile = "/etc/boot.conf"
+
 
 def banner(extra=True):
 	""" prints the banner message """
 	print("")
-	print("{P}boot-update {O}{C}{ver}{O} /".format(P = PURP, O = OFF, C = CYANN, ver = version))
+	print("{P}boot-update {O}{C}{ver}{O} /".format(P=PURP, O=OFF, C=CYANN, ver=version))
 	print("Copyright 2009-2018 Funtoo Solutions, Inc.")
 	if extra:
 		print("")
 		print(" [use option \"-l\" for license info, \"-h\" for help]")
 	print("")
+
 
 def versinfo():
 	""" prints version information """
@@ -56,7 +58,8 @@ def versinfo():
  the Free Software Foundation. Alternatively you may (at your option) use any
  other license that has been publicly approved for use with this program by
  Funtoo Technologies, LLC. (or its successors, if any.)
- """	)
+ """)
+
 
 def printhelp():
 	""" prints the help message """
@@ -73,38 +76,34 @@ def printhelp():
    -V, --verbose	Verbose mode
    -h, --help		Display this information
    -l, --license	Display license information
-"""	)
+""")
 
 
 def mesg(msgtype, msg):
-	global debug
 	global term_size
-	""" prints different types of messages to the console """
 	outstr = None
 	if msgtype == "debug":
-		if debug:
-			outstr = msg
-		else:
-			outstr = None
+		# TODO: tweak this so we get output -- but avoid using a global.
+		outstr = None
 	elif verbose and msgtype == "info":
-		outstr = "{G} *{O} {m}".format(G = GREEN, O = OFF, m = msg)
-	elif msgtype in [ "norm", "info" ]:
-		outstr = "{G} *{O} {m}".format(G = GREEN, O = OFF, m = msg)
+		outstr = "{G} *{O} {m}".format(G=GREEN, O=OFF, m=msg)
+	elif msgtype in ["norm", "info"]:
+		outstr = "{G} *{O} {m}".format(G=GREEN, O=OFF, m=msg)
 	elif msgtype == "boot":
-		outstr = "           {m}".format(m = msg)
+		outstr = "           {m}".format(m=msg)
 	elif msgtype == "defboot":
-		outstr = "{C} DEFAULT > {G}{m}{O}".format(C = CYAN, G = GREEN, m = msg, O = OFF)
+		outstr = "{C} DEFAULT > {G}{m}{O}".format(C=CYAN, G=GREEN, m=msg, O=OFF)
 	elif msgtype == "note":
-		outstr = "{R} * NOTE:{O} {m}".format(R = CYAN, O = OFF, m = msg)
+		outstr = "{R} * NOTE:{O} {m}".format(R=CYAN, O=OFF, m=msg)
 	elif msgtype == "warn":
-		outstr ="{R} * WARN:{O} {m}".format(R = RED, O = OFF, m = msg)
+		outstr = "{R} * WARN:{O} {m}".format(R=RED, O=OFF, m=msg)
 	elif msgtype == "fatal" or True:
-		outstr = "{R} * ERR :{O} {m}".format(R = RED, O = OFF, m = msg)
+		outstr = "{R} * ERR :{O} {m}".format(R=RED, O=OFF, m=msg)
 	if outstr:
 		print(textwrap.fill(outstr, term_size[0], initial_indent=" ", subsequent_indent="          "))
 
 
-def cleanup(success, msgs=None, ext=None):
+def cleanup(success, msgs=None, ext=None, quiet=False):
 	""" prints accumulated errors and warnings and exits appropriately """
 	if msgs is None:
 		msgs = []
@@ -113,12 +112,13 @@ def cleanup(success, msgs=None, ext=None):
 		# /boot unmounting is handled via another process.
 		ext.r.UnmountIfNecessary()
 		msgs += ext.msgs
-
+	
 	warnings = False
 	for msgtype, msg in msgs:
 		if msgtype == "warn":
 			warnings = True
-		mesg(msgtype, msg)
+		if not quiet:
+			mesg(msgtype, msg)
 	print()
 	if not success:
 		mesg("fatal", "Did not complete successfully.")
@@ -135,51 +135,53 @@ def cleanup(success, msgs=None, ext=None):
 		sys.exit(0)
 
 
-def update(config, success):
+def update(config, success, quiet=False):
 	global allmsgs
+	global cfile
+	
 	""" update configuration """
 	# Generate warnings for any invalid config file entries...
 	for invalid in config.validate():
-		allmsgs.append(["warn", "invalid config setting \"{iv}\"; ignored.".format(iv = invalid)])
-
+		allmsgs.append(["warn", "invalid config setting \"{iv}\"; ignored.".format(iv=invalid)])
+	
 	# Figure out what extension we should be loading...
-
+	
 	generate = config["boot/generate"]
-
+	
 	if generate == "":
 		success = False
 		allmsgs.append(["fatal", "boot/generate does not specify a valid boot loader to generate a config for."])
-
+	
 	if generate not in funtoo.boot.extensions.__all__:
 		success = False
 		allmsgs.append(["fatal", "extension for boot loader \"%s\" (specified in boot/generate) not found." % generate])
-
+	
 	if ("-C" in sys.argv) or ("--check" in sys.argv):
-		allmsgs.append(["norm", "Configuration file {cf} checked.".format(cf = cfile)])
-		cleanup(success)
-
+		allmsgs.append(["norm", "Configuration file {cf} checked.".format(cf=cfile)])
+		cleanup(success, quiet=quiet)
+	
 	mesg("norm", "Generating config for {gen}...".format(gen=generate))
 	print()
-
+	
 	if not success:
-		cleanup(success, msgs=allmsgs)
-
+		cleanup(success, msgs=allmsgs, quiet=quiet)
+	
 	# Before loading extension, we want to auto-mount boot if it isn't
 	# already mounted:
-
+	
 	imountedit = False
-
+	
 	if fstabinfo.hasEntry("/boot"):
 		if not os.path.ismount("/boot"):
-			mesg("debug","Mounting filesystem /boot...")
+			mesg("debug", "Mounting filesystem /boot...")
 			os.system("mount /boot")
 			imountedit = True
 	else:
 		mesg("info", "No /etc/fstab entry for /boot; not mounting.")
-
+	
 	# Dynamically import the proper extension module (ie. grub.py,
 	# grub-legacy.py, lilo.py):
-	extname = "funtoo.boot.extensions.{gen}".format(gen = generate)
+	extname = "funtoo.boot.extensions.{gen}".format(gen=generate)
 	__import__(extname)
 	extmodule = sys.modules[extname]
 	# Create Boot Loader Extension object: and regenerate config file
@@ -191,8 +193,8 @@ def update(config, success):
 	except ExtensionError as e:
 		success = False
 		allmsgs.append(["fatal", e])
-
-	if success:
+	
+	if success and not quiet:
 		pos = 0
 		while pos < len(ext.bootitems):
 			if pos == ext.defpos:
@@ -203,10 +205,28 @@ def update(config, success):
 	print()
 	# If we mounted /boot, we should unmount it:
 	if imountedit:
-		mesg("debug","Unmounting /boot")
+		mesg("debug", "Unmounting /boot")
 		os.system("umount /boot")
+	
+	cleanup(success, msgs=allmsgs, ext=ext, quiet=quiet)
 
-	cleanup(success, msgs=allmsgs, ext=ext)
+
+def get_config():
+	# Load /etc/boot.conf master configuration file:
+	
+	global cfile
+	msgs = []
+	
+	try:
+		config = funtoo.boot.config.BootConfigFile(cfile)
+		if not config.fileExists():
+			msgs.append(["fatal", "Master configuration file \"{cf}\" does not exist.".format(cf=cfile)])
+		else:
+			return config
+	except ConfigFileError as e:
+		banner()
+		allmsgs.append(["fatal", "Parse Error: {err}".format(err=e)])
+		cleanup(ok, msgs=allmsgs)
 
 
 if os.geteuid() != 0:
@@ -217,43 +237,44 @@ else:
 	if len(sys.argv) >= 2 and (("-l" in sys.argv) or ("--license" in sys.argv)):
 		versinfo()
 		sys.exit(0)
-
+	
 	if "-V" in sys.argv or ("--verbose" in sys.argv):
 		verbose = True
-
+	
 	ok = True
 	allmsgs = []
-	cfile = "/etc/boot.conf"
-	# Load /etc/boot.conf master configuration file:
-	try:
-		c = funtoo.boot.config.BootConfigFile(cfile)
-		if not c.fileExists():
-			ok = False
-			allmsgs.append(["fatal", "Master configuration file \"{cf}\" does not exist.".format(cf=cfile)])
-	except ConfigFileError as e:
-		ok = False
-		banner()
-		allmsgs.append(["fatal", "Parse Error: {err}".format(err=e)])
-	if not ok:
-		cleanup(ok, msgs=allmsgs)
-
+	
+	config = get_config()
+	
 	if len(sys.argv) >= 3 and sys.argv[1] == "--show":
-		print(c[sys.argv[2]])
-	elif len(sys.argv) >= 2 and sys.argv[1] == "--showdefaults":
+		print(config[sys.argv[2]])
+	elif len(sys.argv) >= 2 and sys.argv[1] in ["--showdefaults", "--show-defaults"]:
 		print("# These are the default settings that can be overridden by")
 		print("# the /etc/boot.conf file.")
 		print("")
-		for line in c.parent.dump():
+		for line in config.parent.dump():
 			if not line.startswith("#"):
 				sys.stdout.write(line)
-	elif len(sys.argv) >=2 and (sys.argv[1] in ["-h", "--help"]):
+	elif len(sys.argv) >= 2 and (sys.argv[1] in ["-h", "--help"]):
 		printhelp()
-	elif len(sys.argv) >=2 and (sys.argv[1]) in ["--success"]:
-		pass
-		# TODO:
+	elif len(sys.argv) >= 2 and (sys.argv[1]) in ["--boot-success"]:
+		# Update our record of the last kernel booted:
+		config.idmapper.update_last_id()
+		# If a kernel is waiting to be promoted to default, then do it:
+		promoted, kname = config.idmapper.promote_kernel()
+		if promoted:
+			# new default kernel, so update boot configuration:
+			banner()
+			update(config, ok)
+			allmsgs.append(["info", "Boot success -- %s promoted to default kernel." % kname])
+	elif len(sys.argv) >= 3 and (sys.argv[1]) == "--set-default":
+		success = config.idmapper.set_default_kname(sys.argv[2])
+		if success:
+			allmsgs.append(["info", "%s set to default kernel." % sys.argv[2]])
+			update(config, ok, quiet=True)
 	else:
 		# default behavior -- regenerate boot config:
 		banner()
-		update(c, ok)
+		update(config, ok)
 
 # vim: ts=4 sw=4 noet
